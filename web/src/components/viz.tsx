@@ -337,3 +337,16 @@ export function XYChart({ series, xMax, yMin = 0, yMax, xLabel, yLabel, diagonal
     </svg>
   );
 }
+
+/* ---------- geometric-difference scale (g from 1 to sqrt(N), log axis) ---------- */
+export function GScale({ g, n }: { g: number; n: number }) {
+  const max = Math.sqrt(n), pos = Math.min(Math.log(g) / Math.log(max), 1);
+  return (
+    <div>
+      <div style={{ position: "relative", height: 10, borderRadius: 6, background: "linear-gradient(90deg, var(--surface-2), var(--violet-soft), var(--violet))", margin: "8px 0 4px" }}>
+        <div style={{ position: "absolute", left: `calc(${Math.max(pos, 0) * 100}% - 7px)`, top: -4, width: 14, height: 18, borderRadius: 4, background: "var(--ink)", border: "2px solid var(--surface)" }} />
+      </div>
+      <div className="row tiny muted" style={{ justifyContent: "space-between" }}><span>g = 1, classical can match</span><span>g = √N = {max.toFixed(1)}, maximal room</span></div>
+    </div>
+  );
+}

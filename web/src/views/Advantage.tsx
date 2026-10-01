@@ -21,7 +21,7 @@ const QUANTUM_KEYS = new Set(["proj", "fid", "proj_up", "proj_noent", "proj_kta"
 interface EngineResult { cohort: string; patients: number; construction: { g: number; quantum_scale: number; classical_kernel: string }; engineered: EngineRow[]; real: EngineRow[]; real_label: string }
 
 export default function Advantage() {
-  const { model, cohort } = useApp();
+  const { model, cohort, go } = useApp();
   const [res, setRes] = useState<AdvResult | null>(null);
   const [prog, setProg] = useState<{ p: number; msg: string } | null>(null);
   const [eng, setEng] = useState<EngineResult | null>(null);
@@ -151,7 +151,8 @@ export default function Advantage() {
         <div className="panel">
           <div className="h2">What this shows</div>
           <p className="small" style={{ marginTop: 0 }}>On data with quantum structure, the quantum kernel learns from far fewer patients than classical models. On real cancer outcomes it does not: across two registered cohorts (86 oral and 1,975 breast cancer patients) it matched the classical kernel exactly. SANKET's advantage test tells the two situations apart before any claim is made.</p>
-          <p className="tiny muted" style={{ marginBottom: 0 }}>Flexible classical learners can catch up on engineered data as training sets grow; the advantage is in how much data is needed.</p>
+          <p className="tiny muted">Flexible classical learners can catch up on engineered data as training sets grow; the advantage is in how much data is needed.</p>
+          <button className="btn btn-primary" onClick={() => go("readiness")}>Run this test on your own data →</button>
         </div>
         <div className="panel">
           <div className="h2">Where quantum already wins: cost</div>

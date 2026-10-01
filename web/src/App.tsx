@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp, View } from "./store";
-import { ICase, ICircuit, IChip, IData, IEvidence, IOverview, ISpark, IStars, ITheme, Mark } from "./icons";
+import { ICase, ICircuit, IChip, IData, IEvidence, IGauge, IOverview, ISpark, IStars, ITheme, Mark } from "./icons";
 import Overview from "./views/Overview";
 import PatientCase from "./views/PatientCase";
 import Constellation from "./views/Constellation";
@@ -8,6 +8,7 @@ import QuantumLab from "./views/QuantumLab";
 import Evidence from "./views/Evidence";
 import Advantage from "./views/Advantage";
 import Hardware from "./views/Hardware";
+import Readiness from "./views/Readiness";
 import Workbench from "./views/Workbench";
 
 const NAV: { id: View; label: string; icon: () => JSX.Element }[] = [
@@ -17,13 +18,14 @@ const NAV: { id: View; label: string; icon: () => JSX.Element }[] = [
   { id: "lab", label: "Circuit and noise", icon: ICircuit },
   { id: "evidence", label: "Evidence", icon: IEvidence },
   { id: "advantage", label: "When quantum wins", icon: ISpark },
+  { id: "readiness", label: "Readiness check", icon: IGauge },
   { id: "hardware", label: "Hardware", icon: IChip },
   { id: "workbench", label: "Data", icon: IData },
 ];
 
 export default function App() {
   const { view, go, cohort, theme, cycleTheme } = useApp();
-  const Page = { overview: Overview, case: PatientCase, constellation: Constellation, lab: QuantumLab, evidence: Evidence, advantage: Advantage, hardware: Hardware, workbench: Workbench }[view];
+  const Page = { overview: Overview, case: PatientCase, constellation: Constellation, lab: QuantumLab, evidence: Evidence, advantage: Advantage, readiness: Readiness, hardware: Hardware, workbench: Workbench }[view];
   return (
     <div className="shell">
       <nav className="rail" aria-label="Sections">
