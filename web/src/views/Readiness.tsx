@@ -11,7 +11,7 @@ import { IDownload, IPlay, IUpload } from "../icons";
 import golubCsv from "../data/golub_leukaemia.csv?raw";
 
 interface Loaded { file: string; table: Table; cols: Column[]; sample?: "golub" | "oral" | "control" }
-interface Done { prep: Prepared; options: EncodingOption[]; res: ReadinessResult; verdict: Verdict }
+interface Done { prep: Prepared; options: EncodingOption[]; res: ReadinessResult; verdict: Verdict; file: string; source: "browser" | "engine"; control: boolean }
 
 const STAGES = [
   { key: "encode", label: "Encode", at: 0 },
@@ -37,6 +37,7 @@ export default function Readiness() {
   const [prog, setProg] = useState<{ p: number; msg: string } | null>(null);
   const [done, setDone] = useState<Done | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  const engineIn = useRef<HTMLInputElement>(null);
   const results = useRef<HTMLDivElement>(null);
 
   const load = (file: string, text: string, sample?: Loaded["sample"]) => {
@@ -82,16 +83,27 @@ export default function Readiness() {
       const s = { ...setup, features };
       const { prep, options } = await chooseEncoding(data.table, data.cols, s, (p, msg) => setProg({ p: p * 0.08, msg }));
       const res = await runReadiness(prep, (p, msg) => setProg({ p: 0.08 + 0.92 * p, msg }));
-      setDone({ prep, options, res, verdict: judge(prep, res) });
+      setDone({ prep, options, res, verdict: judge(prep, res), file: data.file, source: "browser", control: data.sample === "control" });
       setTimeout(() => results.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
     } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
     setProg(null);
   };
+  /** Results of `python -m engine.readiness` (every row): same structure, so they render exactly like a browser run. */
+  const loadEngine = async (f: File) => {
+    setErr(null);
+    try {
+      const d = JSON.parse(await f.text());
+      if (d.tool !== "sanket-readiness" || !d.res || !d.verdict || !d.prep) throw new Error();
+      setData(null); setSetup(null);
+      setDone({ prep: d.prep, options: d.options ?? [], res: d.res, verdict: d.verdict, file: d.file, source: "engine", control: false });
+      setTimeout(() => results.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    } catch { setErr(`${f.name} is not a results_readiness_*.json file from python -m engine.readiness.`); }
+  };
   const download = () => {
-    if (!done || !data) return;
+    if (!done) return;
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([reportMarkdown(data.file, done.prep, done.res, done.verdict)], { type: "text/markdown" }));
-    a.download = `readiness_${data.file.replace(/\.[^.]+$/, "")}.md`; a.click();
+    a.href = URL.createObjectURL(new Blob([reportMarkdown(done.file, done.prep, done.res, done.verdict)], { type: "text/markdown" }));
+    a.download = `readiness_${done.file.replace(/\.[^.]+$/, "")}.md`; a.click();
   };
   const up = (patch: Partial<Setup>) => setSetup((s) => (s ? { ...s, ...patch } : s));
 
@@ -115,7 +127,12 @@ export default function Readiness() {
             <button className="btn btn-primary" onClick={() => input.current?.click()}><IUpload /> Choose file</button>
             <input ref={input} type="file" accept=".csv,.tsv,.txt,text/csv" hidden onChange={(e) => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = ""; }} />
           </div>
-          <div className="tiny muted" style={{ marginTop: 10 }}>Your file never leaves this browser. Up to {MAX_ROWS} rows are analysed here (a stratified sample if there are more); the Python engine runs the full protocol on any size.</div>
+          <div className="tiny muted" style={{ marginTop: 10 }}>Your file never leaves this browser. Up to {MAX_ROWS} rows are analysed here (a stratified sample if there are more). For every row, run <code>python -m engine.readiness your.csv</code>: it is a line-for-line port that gives identical numbers on the same rows.</div>
+          <div className="row" style={{ marginTop: 10 }}>
+            <button className="btn" onClick={() => engineIn.current?.click()}>Load engine results</button>
+            <span className="tiny muted">results_readiness_*.json from the Python engine</span>
+            <input ref={engineIn} type="file" accept=".json,application/json" hidden onChange={(e) => { if (e.target.files?.[0]) loadEngine(e.target.files[0]); e.target.value = ""; }} />
+          </div>
           {err && <div className="tier tier-high" style={{ marginTop: 12 }}><b>Something is off</b>{err}</div>}
         </div>
         <div className="panel">
@@ -262,9 +279,9 @@ export default function Readiness() {
       </AnimatePresence>
 
       {/* ---------- results ---------- */}
-      {done && data && (
+      {done && (
         <div ref={results} className="grid" style={{ scrollMarginTop: 16 }}>
-          <VerdictHero v={done.verdict} control={data.sample === "control"} onDownload={download} res={done.res} />
+          <VerdictHero v={done.verdict} control={done.control} engine={done.source === "engine" ? `${done.file}: Python engine, ${done.res.n.toLocaleString()} rows` : null} onDownload={download} res={done.res} />
           <div className="checks">
             {done.verdict.checks.map((c, i) => (
               <motion.div key={c.key} className="check" data-status={c.status} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.08 }}>
@@ -348,7 +365,7 @@ export default function Readiness() {
 
           <section className="panel-flat">
             <div className="h3">How to read this</div>
-            <p className="small muted" style={{ margin: 0 }}>Headroom and quantum structure ask whether an advantage is <i>possible</i> on these inputs; only the held-out test on your outcome says whether it is <i>real</i>. All three use the same inputs and tuning budget for quantum and classical models. Analysed {done.res.n} of {done.prep.rowsLabelled} labelled rows in {done.res.seconds.toFixed(1)} s, entirely in this browser. Simulated, noise-free circuits; the Circuit and noise page shows what hardware noise does.</p>
+            <p className="small muted" style={{ margin: 0 }}>Headroom and quantum structure ask whether an advantage is <i>possible</i> on these inputs; only the held-out test on your outcome says whether it is <i>real</i>. All three use the same inputs and tuning budget for quantum and classical models. Analysed {done.res.n} of {done.prep.rowsLabelled} labelled rows in {done.res.seconds.toFixed(1)} s, {done.source === "engine" ? "by the Python engine" : "entirely in this browser"}. Simulated, noise-free circuits; the Circuit and noise page shows what hardware noise does.</p>
           </section>
         </div>
       )}
@@ -376,7 +393,7 @@ function SampleCard({ title, text, chip, on, active }: { title: string; text: st
   );
 }
 
-function VerdictHero({ v, control, onDownload, res }: { v: Verdict; control: boolean; onDownload: () => void; res: ReadinessResult }) {
+function VerdictHero({ v, control, engine, onDownload, res }: { v: Verdict; control: boolean; engine: string | null; onDownload: () => void; res: ReadinessResult }) {
   const st = VERDICT_STYLE[v.kind];
   return (
     <motion.section className="verdict" style={{ borderColor: st.color, background: `linear-gradient(135deg, ${st.soft}, var(--surface) 70%)` }}
@@ -385,6 +402,7 @@ function VerdictHero({ v, control, onDownload, res }: { v: Verdict; control: boo
         <div className="row" style={{ gap: 8 }}>
           <span className="verdict-tag" style={{ background: st.color }}>{st.tag}</span>
           {control && <span className="chip chip-amber">positive control: labels are synthetic</span>}
+          {engine && <span className="chip chip-teal">{engine}</span>}
         </div>
         <h3 className="verdict-title" style={{ color: st.color }}>{v.title}</h3>
         <p className="verdict-sum">{v.summary}</p>

@@ -201,6 +201,7 @@ sanket/
 │   ├── clinical.py               Calibration, Brier, decision curves, screening threshold, multimodal
 │   ├── shift.py                  METABRIC leave-one-cohort-out validation
 │   ├── qubits.py, noise.py       Qubit-count curve and expressivity-versus-noise test
+│   ├── readiness.py              Quantum Readiness Check for any CSV (same results as the web page)
 │   ├── hardware.py               IBM Quantum runs (Estimator, Batch mode)
 │   ├── resources.py              Gate-count study on IBM Heron
 │   └── crosscheck.py             Export for browser-vs-Qiskit verification
@@ -312,7 +313,18 @@ python -m engine.hardware --backend fake --patients 4  # noisy local dry run
 python -m engine.hardware --backend least_busy         # real QPU (IBM Quantum account)
 ```
 
-Load any `out/*.json` file on the app's **Data** or **When quantum wins** pages to explore results interactively.
+### 8 · Quantum Readiness Check on your own data
+
+```bash
+python -m engine.readiness data.csv                                   # outcome and features detected automatically
+python -m engine.readiness data.csv --outcome diagnosis --positive AML
+python -m engine.readiness data.csv --time os_months --event status --event-level dead --horizon 60
+python -m engine.readiness data.csv --max-rows 150                    # exactly what the web page computes
+```
+
+Writes `out/results_readiness_<file>.json` and a Markdown report. The web page analyses at most 150 rows; the engine uses every row. It is a line-for-line port of `web/src/lib/readiness.ts` with the same seeded random numbers, so on the same rows the two agree to floating-point precision (largest difference 6 × 10⁻¹² across four test datasets, with identical verdicts and text).
+
+Load any `out/*.json` file on the app's **Data**, **When quantum wins** or **Readiness check** pages to explore results interactively.
 
 ---
 
@@ -326,7 +338,7 @@ Load any `out/*.json` file on the app's **Data** or **When quantum wins** pages 
 | **Circuit and noise** | Gate-by-gate circuit step-through, hardware cost table, depolarising-noise and finite-shot laboratories with kernel repair, expressivity-versus-noise comparison |
 | **Evidence** | Nested cross-validation forest plot, calibration, decision curves and a screening-first referral threshold, qubit-count curve, geometric difference, Kaplan–Meier risk groups with log-rank test, data-size curve, kernel heatmaps |
 | **When quantum wins** | Live engineered-advantage experiment, full engine benchmark, diagnosis-task tables |
-| **Readiness check** | Upload any CSV (or try a sample) and get a go / wait / classical verdict on whether quantum is worth the cost: label-free encoding search, quantum headroom (geometric difference), a learning test on labels with quantum structure, a held-out comparison on your real outcome against tuned RBF and linear models, hardware cost, and a downloadable report. Includes a positive control that must come out "go" |
+| **Readiness check** | Upload any CSV (or try a sample) and get a go / wait / classical verdict on whether quantum is worth the cost: label-free encoding search, quantum headroom (geometric difference), a learning test on labels with quantum structure, a held-out comparison on your real outcome against tuned RBF and linear models, hardware cost, and a downloadable report. Includes a positive control that must come out "go". Also displays full-size results from `python -m engine.readiness` |
 | **Hardware** | Circuit budget, recorded IBM job ledger, measured versus simulated Bloch vectors |
 | **Data** | Load cohorts, generate synthetic data, verify the browser simulator against Qiskit |
 

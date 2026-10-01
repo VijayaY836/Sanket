@@ -8,7 +8,8 @@
  *   2. Capacity   - engineered labels with quantum structure: does the circuit actually learn that structure faster?
  *   3. Real test  - repeated stratified cross-validation on the user's own outcome: quantum vs classical RBF vs linear.
  *   4. Cost       - qubits, two-qubit gates and circuits the projected kernel would need on IBM hardware.
- * Everything runs in the browser on up to MAX_ROWS rows; the Python engine runs the full protocol.
+ * The browser analyses up to MAX_ROWS rows; engine/readiness.py is a line-for-line port that runs the same check on
+ * every row (and reproduces this file's numbers exactly when given --max-rows 150).
  */
 import { blochVectors, DEFAULT_SPEC, SCALE_GRID, simulate, angleOf, Vec3 } from "./quantum";
 import { eigSym, Mat } from "./linalg";
@@ -147,7 +148,7 @@ export interface Prepared {
   outcome: string;
 }
 
-export function prepare(t: Table, cols: Column[], s: Setup): Prepared {
+export function prepare(t: Table, cols: Column[], s: Setup, maxRows = MAX_ROWS): Prepared {
   if (s.features.length < 2) throw new Error("Pick at least two numeric feature columns.");
   // outcome
   const y: number[] = [];
@@ -174,11 +175,11 @@ export function prepare(t: Table, cols: Column[], s: Setup): Prepared {
   }
   let keep = y.map((v, i) => (Number.isFinite(v) ? i : -1)).filter((i) => i >= 0);
   const rowsLabelled = keep.length;
-  if (keep.length > MAX_ROWS) { // stratified, seeded subsample so every run on the same file is identical
+  if (keep.length > maxRows) { // stratified, seeded subsample so every run on the same file is identical
     const rand = mulberry32(2026);
     const pos = shuffle(keep.filter((i) => y[i] === 1), rand), neg = shuffle(keep.filter((i) => y[i] === 0), rand);
-    const nPos = Math.max(1, Math.round((MAX_ROWS * pos.length) / keep.length));
-    keep = [...pos.slice(0, nPos), ...neg.slice(0, MAX_ROWS - nPos)].sort((a, b) => a - b);
+    const nPos = Math.max(1, Math.round((maxRows * pos.length) / keep.length));
+    keep = [...pos.slice(0, nPos), ...neg.slice(0, maxRows - nPos)].sort((a, b) => a - b);
   }
   // features: median impute, standardise, drop constants
   let X = keep.map((i) => s.features.map((f) => cols[f].values[i]));
@@ -295,16 +296,16 @@ export interface EncodingOption { qubits: number; method: Prepared["method"]; ex
  * of the feature variance are eligible (fewer qubits always raise g, but can throw the signal away); if none do, the
  * largest qubit count is used. Ties (within 5%) go to fewer qubits.
  */
-export async function chooseEncoding(t: Table, cols: Column[], s: Setup, onProgress: (frac: number, msg: string) => void = () => {}) {
+export async function chooseEncoding(t: Table, cols: Column[], s: Setup, onProgress: (frac: number, msg: string) => void = () => {}, maxRows = MAX_ROWS) {
   if (s.features.length < 2) throw new Error("Pick at least two numeric feature columns.");
-  if (s.qubits) return { prep: prepare(t, cols, s), options: [] as EncodingOption[] };
+  if (s.qubits) return { prep: prepare(t, cols, s, maxRows), options: [] as EncodingOption[] };
   const d = s.features.length, top = Math.min(d, MAX_QUBITS);
   const qs = [...new Set([4, 6, 8, top].filter((q) => q >= 2 && q <= top))].sort((a, b) => a - b);
   const preps: Prepared[] = [], options: EncodingOption[] = [];
   for (const [i, q] of qs.entries()) {
     onProgress(i / qs.length, `Encoding search: ${q} qubits`);
     await tick();
-    const p = prepare(t, cols, { ...s, qubits: q });
+    const p = prepare(t, cols, { ...s, qubits: q }, maxRows);
     const { Kq, Kc } = await kernels(p, [ADV_SCALE]);
     const { g } = await engineerLabels(Kq[0], Kc);
     preps.push(p);
@@ -435,7 +436,7 @@ export function judge(p: Prepared, r: ReadinessResult): Verdict {
     next: [`Collect more labelled rows (aim for 80+ with 20+ in each class).`, "Re-run this check; the analysis is deterministic, so changes reflect the data, not luck."] };
   if (realStatus === "pass") return { kind: "go", title: "Quantum is worth pursuing", checks,
     summary: `The quantum kernel beats the best classical model on your real outcome in held-out data, by ${sgn(r.diff.mean)} AUC, with an interval that excludes zero.`,
-    next: ["Confirm on the full dataset with the Python engine (repeated CV, Holm-corrected tests).", "Pre-register the confirmatory analysis on OSF before looking at new data.", `Run the ${r.cost.circuits.toLocaleString()} projected-kernel circuits on IBM hardware and compare with simulation.`] };
+    next: [`Confirm on every row with the Python engine: python -m engine.readiness <your file>.`, "Pre-register the confirmatory analysis on OSF before looking at new data.", `Run the ${r.cost.circuits.toLocaleString()} projected-kernel circuits on IBM hardware and compare with simulation.`] };
   if (refWins) return { kind: "classical", title: "Classical is enough", checks,
     summary: `A linear model on all ${p.features.length} features (${f3(r.reference!.auc)} AUC) beats the quantum kernel (${f3(q.auc)}), which sees only a ${r.cost.qubits}-qubit compression of them. Squeezing this data onto today's qubit counts throws away more signal than any quantum effect could add back.`,
     next: [`Use the linear model on all features: better accuracy, no quantum hardware.`, "Revisit when larger, less noisy devices allow encoding more of the features."] };
@@ -483,7 +484,7 @@ SANKET feature map, ${DEFAULT_SPEC.reps} Trotter steps; bandwidth chosen by inne
 ## Next steps
 ${v.next.map((x) => `- ${x}`).join("\n")}
 
-_Generated in the browser by SANKET's Quantum Readiness Check in ${r.seconds.toFixed(1)} s. Engineered-label results use synthetic labels by construction. Research prototype._
+_Generated by SANKET's Quantum Readiness Check in ${r.seconds.toFixed(1)} s. Engineered-label results use synthetic labels by construction. Research prototype._
 `;
 }
 

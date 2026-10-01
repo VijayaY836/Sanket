@@ -137,7 +137,9 @@ export async function engineerLabels(Kq: Mat, Kcs: Mat[], onStep: (c: number) =>
     const M = matmul(matmul(sqQ, inv), sqQ);
     const e = eigSym(M.map((r, i) => r.map((x, j) => (x + M[j][i]) / 2)));
     let top = 0; e.values.forEach((v, k) => { if (v > e.values[top]) top = k; });
-    scan.push({ mult: RBF_MULTS[c], g: Math.sqrt(Math.max(e.values[top], 0)), v: e.vectors.map((row) => row[top]) });
+    const v = e.vectors.map((row) => row[top]);
+    const sign = v.reduce((a, b) => a + b, 0) < 0 ? -1 : 1; // eigenvectors have arbitrary sign: fix it so every implementation agrees
+    scan.push({ mult: RBF_MULTS[c], g: Math.sqrt(Math.max(e.values[top], 0)), v: v.map((x) => x * sign) });
     await onStep(c);
   }
   const worst = scan.reduce((a, b) => (b.g < a.g ? b : a));
@@ -150,7 +152,7 @@ export async function engineerLabels(Kq: Mat, Kcs: Mat[], onStep: (c: number) =>
 
 /** Test AUC against training-set size: 12 random splits, 30% held out, both kernels tuned by inner 3-fold CV. */
 export async function learningCurve(idxPool: number[], y: number[], tgt: number[], qKernels: Mat[], cKernels: Mat[], onRep: (r: number, reps: number) => Promise<void> = async () => {}) {
-  const sizes = [10, 20, 40, 80].filter((s) => s <= Math.floor(idxPool.length * 0.7));
+  const sizes = [10, 20, 40, 80, 160, 320, 640].filter((s) => s <= Math.floor(idxPool.length * 0.7));
   const reps = 12, rows: AdvCurveRow[] = [];
   const res: Record<number, { q: number[]; c: number[] }> = {};
   sizes.forEach((s) => (res[s] = { q: [], c: [] }));
