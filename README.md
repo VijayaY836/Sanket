@@ -108,7 +108,7 @@ flowchart TB
 
     subgraph APP["④ Web application · React + TypeScript"]
         direction LR
-        SIM["In-browser 12-qubit<br/>statevector simulator"] --> VIEWS["Patient case · Constellation<br/>Evidence · Readiness check"]
+        SIM["In-browser 12-qubit<br/>statevector simulator"] --> VIEWS["Patient case · Constellation<br/>Evidence · When quantum wins"]
         VIEWS --> FHIR["HL7 FHIR R4<br/>clinical report"]
     end
 
@@ -325,7 +325,6 @@ Load any `out/*.json` file on the app's **Data** or **When quantum wins** pages 
 | **Circuit and noise** | Gate-by-gate circuit step-through, hardware cost table, depolarising-noise and finite-shot laboratories with kernel repair, expressivity-versus-noise comparison |
 | **Evidence** | Nested cross-validation forest plot, calibration, decision curves and a screening-first referral threshold, qubit-count curve, geometric difference, Kaplan–Meier risk groups with log-rank test, data-size curve, kernel heatmaps |
 | **When quantum wins** | Live engineered-advantage experiment, full engine benchmark, diagnosis-task tables |
-| **Readiness check** | Upload any CSV: quantum headroom (geometric difference), an engineered demonstration on your own features, a fair test of your real outcome, and a plain-language verdict on whether quantum is worth the cost |
 | **Hardware** | Circuit budget, recorded IBM job ledger, measured versus simulated Bloch vectors |
 | **Data** | Load cohorts, generate synthetic data, verify the browser simulator against Qiskit |
 
@@ -364,7 +363,7 @@ Light and dark themes, responsive down to phone width, with every number compute
 - [x] Engineered quantum-advantage benchmark and diagnosis tasks
 - [x] Hardware-aware circuit design and gate-count study
 - [ ] Full projected-kernel run on IBM Heron hardware
-- [x] Quantum Readiness Check: upload any dataset, get a quantum-headroom verdict
+- [ ] Quantum Readiness Check: upload any dataset, get a quantum-headroom verdict
 - [ ] Technical report on Zenodo, then a preprint
 - [ ] Indian oral precancer cohort through a clinical partner
 - [ ] Quantum-sensor data (biomagnetic signals), where theory predicts genuine advantage
