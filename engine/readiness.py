@@ -23,7 +23,7 @@ import re
 import time
 from pathlib import Path
 import numpy as np
-from scipy.linalg import cho_factor, cho_solve
+from scipy.linalg import cho_factor, cho_solve, eigh
 from .common import OUT, save_json
 from .fastsim import bloch_batch
 
@@ -323,27 +323,34 @@ def auc(score, y):
     return (sum_pos - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg) if n_pos and n_neg else 0.5
 
 
+def krr_alphas(K, tr, te, target, alphas):
+    """Kernel ridge predictions for several penalties; the submatrices are extracted once and shared."""
+    tr, te = np.asarray(tr), np.asarray(te)
+    t = target[tr] - target[tr].mean()
+    sub, cross = K[np.ix_(tr, tr)], K[np.ix_(te, tr)]
+    out, diag = [], np.diag_indices(len(tr))
+    for alpha in alphas:
+        A = sub.copy(); A[diag] += alpha
+        out.append(cross @ cho_solve(cho_factor(A, overwrite_a=True, check_finite=False), t, check_finite=False))
+    return out
+
+
 def krr(K, tr, te, target, alpha):
-    t = target[tr]; mu = t.mean()
-    A = K[np.ix_(tr, tr)] + alpha * np.eye(len(tr))
-    coef = cho_solve(cho_factor(A), t - mu)
-    return K[np.ix_(te, tr)] @ coef
+    return krr_alphas(K, tr, te, target, [alpha])[0]
 
 
 def tuned_fit(Ks, tr, te, y, target, rand):
     folds, order = 3, shuffle(tr, rand)
+    splits = [([order[j] for j in range(len(order)) if j % folds == f], [order[j] for j in range(len(order)) if j % folds != f]) for f in range(folds)]
+    splits = [(ite, itr) for ite, itr in splits if len(set(y[ite])) >= 2]
     best, best_a = (0, ALPHAS[0]), -1.0
     for k, K in enumerate(Ks):
-        for a in ALPHAS:
-            s = c = 0
-            for f in range(folds):
-                ite = [order[j] for j in range(len(order)) if j % folds == f]
-                itr = [order[j] for j in range(len(order)) if j % folds != f]
-                if len(set(y[ite])) < 2:
-                    continue
-                s += auc(krr(K, itr, ite, target, a), y[ite]); c += 1
-            if c and s / c > best_a:
-                best_a, best = s / c, (k, a)
+        sums = np.zeros(len(ALPHAS))
+        for ite, itr in splits:
+            sums += [auc(pred, y[ite]) for pred in krr_alphas(K, itr, ite, target, ALPHAS)]
+        for a_i, a in enumerate(ALPHAS):  # same order and strict comparison as the browser, so ties resolve identically
+            if splits and sums[a_i] / len(splits) > best_a:
+                best_a, best = sums[a_i] / len(splits), (k, a)
     return auc(krr(Ks[best[0]], tr, te, target, best[1]), y[te]), best[0]
 
 
@@ -361,12 +368,12 @@ def engineer_labels(Kq, Kcs, lam=0.01):
     sqQ = spectral(normalise(Kq), lambda w: np.sqrt(np.clip(w, 0, None)))
     scan = []
     for c, Kc in enumerate(Kcs):
-        inv = spectral(normalise(Kc) + lam * np.eye(n), lambda w: 1 / w)
-        M = sqQ @ inv @ sqQ; M = (M + M.T) / 2
-        w, V = np.linalg.eigh(M)
-        top = int(np.argmax(w)); v = V[:, top]
+        # sqrt(K_Q) (K_C + lam I)^-1 sqrt(K_Q) via a Cholesky solve, then only its top eigenpair
+        M = sqQ @ cho_solve(cho_factor(normalise(Kc) + lam * np.eye(n), check_finite=False), sqQ, check_finite=False)
+        w, V = eigh((M + M.T) / 2, subset_by_index=[n - 1, n - 1], check_finite=False)
+        v = V[:, 0]
         v = -v if v.sum() < 0 else v  # eigenvectors have arbitrary sign: same convention as the browser
-        scan.append({"mult": RBF_MULTS[c], "g": float(np.sqrt(max(w[top], 0))), "v": v})
+        scan.append({"mult": RBF_MULTS[c], "g": float(np.sqrt(max(w[0], 0))), "v": v})
     worst = min(scan, key=lambda s_: s_["g"])
     yc = sqQ @ worst["v"]
     sd = float(np.sqrt(((yc - yc.mean()) ** 2).sum() / n)) or 1.0
