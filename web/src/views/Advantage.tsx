@@ -13,7 +13,11 @@ const MODEL_NAMES: Record<string, string> = {
 };
 interface EngineRow { size: number; [m: string]: { mean: number; sd: number } | number }
 interface ClassifyResult { task: string; label: string; cohort: string; n: number; positives: number; summary: Record<string, { auc: number; auc_sd: number; accuracy: number }>; tests_vs_projected: { vs: string; auc_diff: number; p: number; p_holm: number; primary: boolean }[] }
-const CLS_NAMES: Record<string, string> = { proj: "Projected quantum kernel", fid: "Fidelity quantum kernel", rbf: "Classical RBF kernel", logistic: "Logistic regression", random_forest: "Random forest", gradient_boosting: "Gradient boosting" };
+const CLS_NAMES: Record<string, string> = {
+  proj: "Projected quantum kernel", fid: "Fidelity quantum kernel", rbf: "Classical RBF kernel", logistic: "Logistic regression", random_forest: "Random forest", gradient_boosting: "Gradient boosting",
+  proj_up: "Quantum kernel, upgraded tuning", proj_noent: "Quantum kernel, no entanglement", proj_kta: "Quantum kernel, trained (alignment)", hybrid: "Hybrid quantum + linear kernel", rbf_up: "Classical RBF, wider grid", linear_svm: "Linear SVM",
+};
+const QUANTUM_KEYS = new Set(["proj", "fid", "proj_up", "proj_noent", "proj_kta", "hybrid"]);
 interface EngineResult { cohort: string; patients: number; construction: { g: number; quantum_scale: number; classical_kernel: string }; engineered: EngineRow[]; real: EngineRow[]; real_label: string }
 
 export default function Advantage() {
@@ -29,7 +33,7 @@ export default function Advantage() {
     setErr(null);
     const next = [...cls];
     for (const f of Array.from(files)) {
-      try { const d = JSON.parse(await f.text()); if (!d.summary || !d.task) throw new Error(); next.splice(0, next.length, ...next.filter((x) => x.task !== d.task), d); }
+      try { const d = JSON.parse(await f.text()); if (!d.summary || !d.task) throw new Error(); const key = d.task + (d.upgrades ? "_upgrades" : ""); d.task = key; if (d.upgrades) d.cohort = d.cohort + " (with exploratory upgrades)"; next.splice(0, next.length, ...next.filter((x) => x.task !== key), d); }
       catch { setErr(`${f.name} is not a results_classify_*.json file from python -m engine.classify.`); }
     }
     setCls(next);
@@ -132,7 +136,7 @@ export default function Advantage() {
                 <div className="scroll-x"><table className="table">
                   <thead><tr><th>Model</th><th>AUC</th><th>Accuracy</th></tr></thead>
                   <tbody>{order.map((m) => (
-                    <tr key={m}><td style={{ fontWeight: m === "proj" ? 700 : 400, color: m === "proj" ? "var(--violet)" : undefined }}>{CLS_NAMES[m] ?? m}</td>
+                    <tr key={m}><td style={{ fontWeight: QUANTUM_KEYS.has(m) ? 700 : 400, color: QUANTUM_KEYS.has(m) ? "var(--violet)" : undefined }}>{CLS_NAMES[m] ?? m}</td>
                       <td><b>{c.summary[m].auc.toFixed(3)}</b> <span className="muted tiny">± {c.summary[m].auc_sd.toFixed(3)}</span></td><td>{c.summary[m].accuracy.toFixed(3)}</td></tr>
                   ))}</tbody>
                 </table></div>
