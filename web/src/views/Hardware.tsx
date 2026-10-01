@@ -60,6 +60,24 @@ export default function Hardware() {
       </section>
 
       <section className="panel">
+        <div className="h2">Resource efficiency</div>
+        <p className="small muted" style={{ marginTop: 0 }}>What each model needs. The quantum kernels tune a single bandwidth; their cost is in circuits and shots, which the pathway wiring keeps small.</p>
+        <div className="scroll-x">
+          <table className="table">
+            <thead><tr><th>Model</th><th>Qubits</th><th>Two-qubit gates per circuit</th><th>Circuits for {n} patients</th><th>Values tuned or learned</th></tr></thead>
+            <tbody>
+              <tr><td><b>Projected quantum kernel</b></td><td>{cohort.pathways.length}</td><td>{HW_TABLE[0].twoq}</td><td>{n.toLocaleString()} (one measurement set each)</td><td>1 bandwidth</td></tr>
+              <tr><td>Fidelity quantum kernel</td><td>{cohort.pathways.length}</td><td>{HW_TABLE[1].twoq}</td><td>{fidCircuits.toLocaleString()}</td><td>1 bandwidth</td></tr>
+              <tr><td>Standard ZZ quantum kernel</td><td>{cohort.pathways.length}</td><td>{HW_TABLE[3].twoq}</td><td>{fidCircuits.toLocaleString()}</td><td>1 bandwidth</td></tr>
+              <tr><td>Classical RBF kernel</td><td>none</td><td>none</td><td>none</td><td>1 bandwidth</td></tr>
+              <tr><td>Elastic-net Cox</td><td>none</td><td>none</td><td>none</td><td>1 penalty + {cohort.pathways.length} coefficients</td></tr>
+              <tr><td>Random survival forest</td><td>none</td><td>none</td><td>none</td><td>200 trees, thousands of split rules</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="panel">
         <div className="row">
           <div className="h2">What finite shots look like</div>
           <span className="spacer" />

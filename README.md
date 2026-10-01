@@ -4,8 +4,6 @@
 
 ### Hybrid quantum machine learning for early cancer detection, with an honest test of when quantum actually helps
 
-*Sanket (संकेत) — "signal"*
-
 [![Smart India Hackathon 2026](https://img.shields.io/badge/Smart%20India%20Hackathon-2026-1f3864)](https://sih.gov.in)
 [![Problem Statement](https://img.shields.io/badge/PS-SIH26139-5b4bc4)](#overview)
 [![Qiskit](https://img.shields.io/badge/Qiskit-2.x-6929c4)](https://www.ibm.com/quantum/qiskit)
@@ -110,7 +108,7 @@ flowchart TB
 
     subgraph APP["④ Web application · React + TypeScript"]
         direction LR
-        SIM["In-browser 12-qubit<br/>statevector simulator"] --> VIEWS["Patient case · Constellation<br/>Evidence · When quantum wins"]
+        SIM["In-browser 12-qubit<br/>statevector simulator"] --> VIEWS["Patient case · Constellation<br/>Evidence · Readiness check"]
         VIEWS --> FHIR["HL7 FHIR R4<br/>clinical report"]
     end
 
@@ -200,6 +198,9 @@ sanket/
 │   ├── scale.py                  Large-cohort evaluation and data-size curve
 │   ├── classify.py               Diagnosis tasks and exploratory upgrades
 │   ├── advantage.py              Engineered quantum-advantage benchmark
+│   ├── clinical.py               Calibration, Brier, decision curves, screening threshold, multimodal
+│   ├── shift.py                  METABRIC leave-one-cohort-out validation
+│   ├── qubits.py, noise.py       Qubit-count curve and expressivity-versus-noise test
 │   ├── hardware.py               IBM Quantum runs (Estimator, Batch mode)
 │   ├── resources.py              Gate-count study on IBM Heron
 │   └── crosscheck.py             Export for browser-vs-Qiskit verification
@@ -282,7 +283,27 @@ python -m engine.classify --task metabric_basal
 python -m engine.classify --task golub --upgrades      # exploratory
 ```
 
-### 5 · Hardware
+### 5 · Clinical usefulness and cohort shift
+
+Declare first (`docs/osf_clinical_shift.md`), then:
+
+```bash
+python -m engine.clinical --cohort out/cohort.json                       # calibration, Brier, decision curves, screening threshold, multimodal
+python -m engine.clinical --cohort out/metabric_cohort.json --repeats 1
+python -m engine.shift                                                   # METABRIC leave-one-cohort-out
+```
+
+### 6 · Qubit count and noise robustness
+
+Declare first (`docs/osf_qubits_noise.md`), then:
+
+```bash
+python -m engine.qubits --task survival --cohort out/metabric_cohort.json   # performance vs number of qubits
+python -m engine.qubits --task metabric_basal
+python -m engine.noise --task survival --cohort out/metabric_cohort.json    # gentle vs expressive encodings under noise
+```
+
+### 7 · Hardware
 
 ```bash
 python -m engine.resources                             # gate counts on IBM Heron
@@ -301,9 +322,10 @@ Load any `out/*.json` file on the app's **Data** or **When quantum wins** pages 
 | **Overview** | Two patients with the same clinical picture and diverging predicted futures |
 | **Patient case** | Animated pipeline (genes → pathways → qubits → risk), survival curve, referral tier, pathway attributions, most similar patients, live what-if sliders, outcome reveal, HL7 FHIR R4 export |
 | **Constellation** | Twelve Bloch spheres per patient, compared qubit by qubit with a similar progressor or stable patient |
-| **Circuit and noise** | Gate-by-gate circuit step-through, hardware cost table, depolarising-noise and finite-shot laboratories with kernel repair |
-| **Evidence** | Nested cross-validation forest plot, geometric difference, Kaplan–Meier risk groups with log-rank test, data-size curve, kernel heatmaps |
+| **Circuit and noise** | Gate-by-gate circuit step-through, hardware cost table, depolarising-noise and finite-shot laboratories with kernel repair, expressivity-versus-noise comparison |
+| **Evidence** | Nested cross-validation forest plot, calibration, decision curves and a screening-first referral threshold, qubit-count curve, geometric difference, Kaplan–Meier risk groups with log-rank test, data-size curve, kernel heatmaps |
 | **When quantum wins** | Live engineered-advantage experiment, full engine benchmark, diagnosis-task tables |
+| **Readiness check** | Upload any CSV: quantum headroom (geometric difference), an engineered demonstration on your own features, a fair test of your real outcome, and a plain-language verdict on whether quantum is worth the cost |
 | **Hardware** | Circuit budget, recorded IBM job ledger, measured versus simulated Bloch vectors |
 | **Data** | Load cohorts, generate synthetic data, verify the browser simulator against Qiskit |
 
@@ -342,7 +364,7 @@ Light and dark themes, responsive down to phone width, with every number compute
 - [x] Engineered quantum-advantage benchmark and diagnosis tasks
 - [x] Hardware-aware circuit design and gate-count study
 - [ ] Full projected-kernel run on IBM Heron hardware
-- [ ] Quantum Readiness Check: upload any dataset, get a quantum-headroom verdict
+- [x] Quantum Readiness Check: upload any dataset, get a quantum-headroom verdict
 - [ ] Technical report on Zenodo, then a preprint
 - [ ] Indian oral precancer cohort through a clinical partner
 - [ ] Quantum-sensor data (biomagnetic signals), where theory predicts genuine advantage

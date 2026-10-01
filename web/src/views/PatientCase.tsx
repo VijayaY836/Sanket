@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "../store";
 import { attribution, predictPatient, Prediction, whatIf } from "../lib/analysis";
 import { Bars, GeneStrip, PathwayGraph, pct, RiskDial, SurvivalChart } from "../components/viz";
+import { screeningPoint } from "../lib/clinical";
 import { IDownload, IReplay } from "../icons";
 
 const TIER: Record<Prediction["tier"], { title: string; action: string; color: string }> = {
@@ -47,6 +48,7 @@ export default function PatientCase() {
   const wi = useMemo(() => whatIf(model, sel, wz), [model, sel, wz]);
   const changed = wz.some((v, k) => v !== p.pathways[k]);
   const tier = TIER[pred.tier];
+  const screen = useMemo(() => screeningPoint(model.loo.proj, model.times, model.events, cohort.horizon, 0.9), [model, cohort]);
 
   return (
     <div className="case">
@@ -121,7 +123,12 @@ export default function PatientCase() {
                   <div className="h2">Risk of progression</div>
                   <div style={{ display: "grid", placeItems: "center" }}><RiskDial risk={pred.risk} /></div>
                   <div className={`tier tier-${pred.tier}`}><b>{tier.title}</b>{tier.action}</div>
-                  <div className="tiny muted">Thresholds are illustrative and would be set with the clinical team. Based on {pred.effN.toFixed(1)} effective neighbours.</div>
+                  {screen && pred.tier !== "uncertain" && (
+                    <div className="small" style={{ borderLeft: "3px solid var(--violet)", paddingLeft: 10 }}>
+                      <b>Screening rule:</b> refer if risk ≥ {pct(screen.threshold)}, which catches {pct(screen.sensitivity)} of progressions in this cohort while referring {pct(screen.referral)} of patients. This patient: <b>{pred.risk >= screen.threshold ? "refer" : "routine surveillance"}</b>.
+                    </div>
+                  )}
+                  <div className="tiny muted">Tier labels are illustrative; the screening rule is derived from this cohort's out-of-sample predictions. Based on {pred.effN.toFixed(1)} effective neighbours.</div>
                   <label className="row small" style={{ cursor: "pointer" }}>
                     <input type="checkbox" checked={reveal} onChange={(e) => setReveal(e.target.checked)} /> Reveal what actually happened
                   </label>

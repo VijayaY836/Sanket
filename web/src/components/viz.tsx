@@ -311,3 +311,29 @@ export function GeneStrip({ z, labels, run, height = 150, onDone }: { z: number[
   }, [run, z.join(","), height]);
   return <div ref={wrap} style={{ width: "100%" }}><canvas ref={ref} aria-label="Gene expression collapsing into pathway scores" /></div>;
 }
+
+/* ---------- simple x/y line chart (calibration, decision curves) ---------- */
+export function XYChart({ series, xMax, yMin = 0, yMax, xLabel, yLabel, diagonal = false, height = 240, xFmt = (v: number) => `${Math.round(v * 100)}%`, yFmt = (v: number) => `${Math.round(v * 100)}%` }:
+  { series: { label: string; color: string; pts: { x: number; y: number }[]; dash?: string; dots?: boolean }[]; xMax: number; yMin?: number; yMax: number; xLabel: string; yLabel: string; diagonal?: boolean; height?: number; xFmt?: (v: number) => string; yFmt?: (v: number) => string }) {
+  const W = 560, H = height, L = 48, R = 14, T = 26, B = 38;
+  const x = (v: number) => L + (Math.min(Math.max(v, 0), xMax) / xMax) * (W - L - R);
+  const y = (v: number) => T + (1 - (Math.min(Math.max(v, yMin), yMax) - yMin) / (yMax - yMin)) * (H - T - B);
+  const xt = [0, 0.25, 0.5, 0.75, 1].map((f) => f * xMax), yt = [0, 0.25, 0.5, 0.75, 1].map((f) => yMin + f * (yMax - yMin));
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`${yLabel} versus ${xLabel}`}>
+      {yt.map((v) => (<g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="var(--line)" /><text x={L - 6} y={y(v) + 4} textAnchor="end" fontSize={11} fill="var(--ink-3)">{yFmt(v)}</text></g>))}
+      {xt.map((v) => (<text key={v} x={x(v)} y={H - 20} textAnchor="middle" fontSize={11} fill="var(--ink-3)">{xFmt(v)}</text>))}
+      <text x={(W + L) / 2} y={H - 4} textAnchor="middle" fontSize={11} fill="var(--ink-3)">{xLabel}</text>
+      <text x={4} y={12} fontSize={10.5} fill="var(--ink-3)">{yLabel}</text>
+      {yMin < 0 && <line x1={L} x2={W - R} y1={y(0)} y2={y(0)} stroke="var(--ink-3)" />}
+      {diagonal && <line x1={x(0)} y1={y(0)} x2={x(Math.min(xMax, yMax))} y2={y(Math.min(xMax, yMax))} stroke="var(--ink-3)" strokeDasharray="4 4" />}
+      {series.map((s) => (
+        <g key={s.label}>
+          <motion.path d={s.pts.map((p, i) => `${i ? "L" : "M"}${x(p.x)},${y(p.y)}`).join("")} fill="none" stroke={s.color} strokeWidth={2.4} strokeDasharray={s.dash}
+            initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.9 }} />
+          {s.dots && s.pts.map((p, i) => <circle key={i} cx={x(p.x)} cy={y(p.y)} r={4} fill={s.color} />)}
+        </g>
+      ))}
+    </svg>
+  );
+}

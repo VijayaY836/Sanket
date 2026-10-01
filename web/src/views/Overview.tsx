@@ -66,6 +66,19 @@ export default function Overview() {
         </div>
       </section>
 
+      <section className="panel-flat" style={{ padding: "16px 20px" }}>
+        <div className="row" style={{ gap: 10 }}>
+          <b className="small">Where SANKET fits</b>
+          {["Oral screening by a dentist", "Biopsy of the suspicious patch", "SANKET risk from the biopsy's gene activity", "Referral or routine surveillance"].map((x, i, arr) => (
+            <span key={x} className="row" style={{ gap: 10 }}>
+              <span className={`chip ${i === 2 ? "chip-violet" : "chip-grey"}`}>{x}</span>
+              {i < arr.length - 1 && <span className="muted">→</span>}
+            </span>
+          ))}
+        </div>
+        <div className="tiny muted" style={{ marginTop: 6 }}>Decision support after biopsy, not a replacement for it. Research prototype, not for clinical use.</div>
+      </section>
+
       <section className="panel-flat" style={{ padding: 0 }}>
         <div className="facts-strip">
           <div className="fact"><div className="num">{model.n}</div><div className="small muted">patients with precancer</div></div>

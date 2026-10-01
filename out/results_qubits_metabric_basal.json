@@ -1,0 +1,130 @@
+{
+ "task": "metabric_basal",
+ "cohort": "METABRIC breast cancer (cBioPortal brca_metabric)",
+ "n": 1000,
+ "metric": "AUC",
+ "order": [
+  "MYC",
+  "UPR",
+  "p53",
+  "EMT",
+  "E2F",
+  "OXPHOS",
+  "DNA repair",
+  "TNF-α",
+  "G2M",
+  "Hypoxia",
+  "Inflammation",
+  "mTORC1"
+ ],
+ "rows": [
+  {
+   "qubits": 2,
+   "pathways": [
+    "MYC",
+    "UPR"
+   ],
+   "edges": 0,
+   "proj": 0.6164470920360069,
+   "proj_sd": 0.09065049333040419,
+   "rbf": 0.6062304547131455,
+   "rbf_sd": 0.08965689352942181,
+   "diff": 0.010216637322861384
+  },
+  {
+   "qubits": 4,
+   "pathways": [
+    "MYC",
+    "UPR",
+    "p53",
+    "EMT"
+   ],
+   "edges": 0,
+   "proj": 0.6928920496729526,
+   "proj_sd": 0.04951104230964569,
+   "rbf": 0.7081915174866413,
+   "rbf_sd": 0.06157960035190688,
+   "diff": -0.015299467813688686
+  },
+  {
+   "qubits": 6,
+   "pathways": [
+    "MYC",
+    "UPR",
+    "p53",
+    "EMT",
+    "E2F",
+    "OXPHOS"
+   ],
+   "edges": 1,
+   "proj": 0.8402653253741659,
+   "proj_sd": 0.02354293177129527,
+   "rbf": 0.8597199128141474,
+   "rbf_sd": 0.026099161302080728,
+   "diff": -0.01945458743998155
+  },
+  {
+   "qubits": 8,
+   "pathways": [
+    "MYC",
+    "UPR",
+    "p53",
+    "EMT",
+    "E2F",
+    "OXPHOS",
+    "DNA repair",
+    "TNF-α"
+   ],
+   "edges": 4,
+   "proj": 0.8727846974292786,
+   "proj_sd": 0.031706638379999465,
+   "rbf": 0.9078483701830807,
+   "rbf_sd": 0.02623543102100051,
+   "diff": -0.035063672753802164
+  },
+  {
+   "qubits": 10,
+   "pathways": [
+    "MYC",
+    "UPR",
+    "p53",
+    "EMT",
+    "E2F",
+    "OXPHOS",
+    "DNA repair",
+    "TNF-α",
+    "G2M",
+    "Hypoxia"
+   ],
+   "edges": 8,
+   "proj": 0.858910530624821,
+   "proj_sd": 0.04322527341847134,
+   "rbf": 0.9059122853985945,
+   "rbf_sd": 0.025948452081452526,
+   "diff": -0.04700175477377336
+  },
+  {
+   "qubits": 12,
+   "pathways": [
+    "MYC",
+    "UPR",
+    "p53",
+    "EMT",
+    "E2F",
+    "OXPHOS",
+    "DNA repair",
+    "TNF-α",
+    "G2M",
+    "Hypoxia",
+    "Inflammation",
+    "mTORC1"
+   ],
+   "edges": 14,
+   "proj": 0.8650410441092135,
+   "proj_sd": 0.044417539546547424,
+   "rbf": 0.9073399324067934,
+   "rbf_sd": 0.028503646183760698,
+   "diff": -0.042298888297580065
+  }
+ ]
+}
