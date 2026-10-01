@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../store";
 import { sizeCurve, verdict, KERNEL_LABEL } from "../lib/analysis";
 import { kaplanMeier, logRank } from "../lib/survival";
-import { Forest, Heatmap, LineBand, SurvivalChart, XYChart } from "../components/viz";
+import { Forest, GScale, Heatmap, LineBand, SurvivalChart, XYChart } from "../components/viz";
 import { brier, calibration, decisionCurve, screeningPoint } from "../lib/clinical";
 import { qubitCurve } from "../lib/experiments";
 
@@ -117,18 +117,6 @@ export default function Evidence() {
           </div>
         </div>
       </section>
-    </div>
-  );
-}
-
-function GScale({ g, n }: { g: number; n: number }) {
-  const max = Math.sqrt(n), pos = Math.min(Math.log(g) / Math.log(max), 1);
-  return (
-    <div>
-      <div style={{ position: "relative", height: 10, borderRadius: 6, background: "linear-gradient(90deg, var(--surface-2), var(--violet-soft), var(--violet))", margin: "8px 0 4px" }}>
-        <div style={{ position: "absolute", left: `calc(${Math.max(pos, 0) * 100}% - 7px)`, top: -4, width: 14, height: 18, borderRadius: 4, background: "var(--ink)", border: "2px solid var(--surface)" }} />
-      </div>
-      <div className="row tiny muted" style={{ justifyContent: "space-between" }}><span>g = 1, classical can match</span><span>g = √N = {max.toFixed(1)}, maximal room</span></div>
     </div>
   );
 }

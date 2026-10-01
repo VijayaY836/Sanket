@@ -237,3 +237,70 @@ pre.code { margin: 0; padding: 14px; border-radius: var(--r-ctl); background: va
   .pipeline, .steps { grid-template-columns: 1fr; }
   .stage { border-right: 0; border-bottom: 1px solid var(--line); }
 }
+
+/* ---------- readiness check ---------- */
+.samples { display: grid; gap: 10px; margin-top: 10px; }
+.sample { display: grid; gap: 4px; text-align: left; padding: 12px 14px; border-radius: var(--r-ctl); border: 1px solid var(--line); background: var(--surface); cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.1s; }
+.sample:hover { border-color: var(--violet); }
+.sample[aria-pressed="true"] { border-color: var(--violet); background: var(--violet-soft); }
+.table.preview th { vertical-align: top; white-space: nowrap; }
+.table.preview th div { color: var(--ink); margin-bottom: 4px; }
+.table.preview td { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
+.setup-grid { display: flex; flex-wrap: wrap; gap: 14px 24px; margin-top: 16px; align-items: flex-end; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > label { font-size: 12.5px; font-weight: 600; color: var(--ink-3); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.input { padding: 8px 10px; border-radius: var(--r-ctl); border: 1px solid var(--line); background: var(--surface); min-width: 170px; }
+.feature-chips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 150px; overflow-y: auto; }
+.fchip { border: 1px solid var(--line); background: var(--surface); color: var(--ink-3); border-radius: 999px; padding: 3px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.fchip[aria-pressed="true"] { background: var(--violet-soft); border-color: transparent; color: var(--violet); }
+.btn-lg { padding: 12px 20px; font-size: 15px; }
+.btn.tiny { padding: 2px 6px; font-size: 12px; }
+
+.stepper { display: flex; gap: 6px; flex-wrap: wrap; }
+.stepper-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--ink-3); background: var(--surface-2); transition: all 0.3s; }
+.stepper-dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--surface); color: var(--ink-3); }
+.stepper-item[data-state="active"] { background: var(--violet-soft); color: var(--ink); }
+.stepper-item[data-state="active"] .stepper-dot { background: var(--violet); color: #fff; animation: pulse 1.2s ease-in-out infinite; }
+.stepper-item[data-state="done"] { color: var(--ink-2); }
+.stepper-item[data-state="done"] .stepper-dot { background: var(--teal); color: #fff; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--violet) 25%, transparent); } }
+.bar { height: 6px; background: var(--surface-2); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+.bar > div { height: 100%; background: var(--violet); transition: width 0.25s; }
+
+.verdict { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; padding: clamp(18px, 3vw, 30px); border: 2px solid; border-radius: var(--r-panel); box-shadow: var(--shadow); }
+.verdict-tag { color: #fff; font: 700 12px/1 var(--body); letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 10px; border-radius: 6px; }
+.verdict-title { font: 800 clamp(30px, 4.2vw, 46px)/1 var(--display); letter-spacing: -0.03em; margin: 14px 0 10px; }
+.verdict-sum { font-size: 16.5px; color: var(--ink); margin: 0 0 16px; max-width: 62ch; }
+.verdict-side { border-left: 1px solid var(--line); padding-left: 24px; display: grid; gap: 10px; align-content: start; }
+.verdict-side ol { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.verdict-nums { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 6px; }
+.checks { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.check { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--line); border-radius: var(--r-panel); padding: 14px; display: grid; gap: 6px; align-content: start; box-shadow: var(--shadow); }
+.check[data-status="pass"] { border-top-color: var(--teal); }
+.check[data-status="mixed"] { border-top-color: var(--amber); }
+.check[data-status="fail"] { border-top-color: var(--eosin); }
+.check-head { font-weight: 600; font-size: 13.5px; }
+.scorebars { display: grid; gap: 10px; margin-top: 8px; }
+.scorebar { display: grid; grid-template-columns: 170px minmax(0, 1fr) 126px; gap: 12px; align-items: center; }
+.scorebar[data-ref] { opacity: 0.75; border-top: 1px dashed var(--line); padding-top: 8px; }
+.scorebar-axis { justify-content: space-between; padding-left: 182px; padding-right: 138px; }
+.scorebar-track { position: relative; height: 16px; background: var(--surface-2); border-radius: 5px; }
+.scorebar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; opacity: 0.9; }
+.scorebar-sd { position: absolute; top: 50%; height: 2px; background: var(--ink); opacity: 0.55; }
+.scorebar-chance { position: absolute; top: -3px; bottom: -3px; border-left: 1.5px dashed var(--ink-3); z-index: 1; }
+.diffbar { position: relative; height: 22px; margin: 8px 0 2px; background: var(--surface-2); border-radius: 6px; }
+.diffbar-zero { position: absolute; top: -3px; bottom: -3px; border-left: 2px solid var(--ink-3); }
+.diffbar-ci { position: absolute; top: 7px; height: 8px; border-radius: 4px; transform-origin: center; }
+.diffbar-pt { position: absolute; top: 3px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: var(--surface); border: 4px solid; }
+.enc { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 14px; align-items: start; margin-bottom: 12px; }
+@media (max-width: 1180px) {
+  .checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .verdict { grid-template-columns: 1fr; }
+  .verdict-side { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 14px; }
+}
+@media (max-width: 560px) {
+  .checks, .enc { grid-template-columns: 1fr; }
+  .scorebar { grid-template-columns: 1fr; gap: 4px; }
+  .scorebar-axis { padding: 0; }
+  .input { min-width: 0; width: 100%; }
+}

@@ -108,7 +108,7 @@ flowchart TB
 
     subgraph APP["④ Web application · React + TypeScript"]
         direction LR
-        SIM["In-browser 12-qubit<br/>statevector simulator"] --> VIEWS["Patient case · Constellation<br/>Evidence · When quantum wins"]
+        SIM["In-browser 12-qubit<br/>statevector simulator"] --> VIEWS["Patient case · Constellation<br/>Evidence · When quantum wins<br/>Quantum Readiness Check"]
         VIEWS --> FHIR["HL7 FHIR R4<br/>clinical report"]
     end
 
@@ -206,8 +206,9 @@ sanket/
 │   └── crosscheck.py             Export for browser-vs-Qiskit verification
 ├── web/                          Web application (React 18, TypeScript, Vite)
 │   └── src/
-│       ├── lib/                  quantum · analysis · survival · linalg · advantage
+│       ├── lib/                  quantum · analysis · survival · linalg · advantage · readiness
 │       ├── components/           Charts, Bloch spheres, circuit view, heatmaps
+│       ├── data/                 Sample CSV for the Readiness check (Golub, exported from out/golub_cohort.json)
 │       └── views/                One file per screen
 ├── docs/                         OSF registration texts
 ├── data/                         Downloaded datasets (created automatically, not committed)
@@ -325,6 +326,7 @@ Load any `out/*.json` file on the app's **Data** or **When quantum wins** pages 
 | **Circuit and noise** | Gate-by-gate circuit step-through, hardware cost table, depolarising-noise and finite-shot laboratories with kernel repair, expressivity-versus-noise comparison |
 | **Evidence** | Nested cross-validation forest plot, calibration, decision curves and a screening-first referral threshold, qubit-count curve, geometric difference, Kaplan–Meier risk groups with log-rank test, data-size curve, kernel heatmaps |
 | **When quantum wins** | Live engineered-advantage experiment, full engine benchmark, diagnosis-task tables |
+| **Readiness check** | Upload any CSV (or try a sample) and get a go / wait / classical verdict on whether quantum is worth the cost: label-free encoding search, quantum headroom (geometric difference), a learning test on labels with quantum structure, a held-out comparison on your real outcome against tuned RBF and linear models, hardware cost, and a downloadable report. Includes a positive control that must come out "go" |
 | **Hardware** | Circuit budget, recorded IBM job ledger, measured versus simulated Bloch vectors |
 | **Data** | Load cohorts, generate synthetic data, verify the browser simulator against Qiskit |
 
@@ -363,7 +365,7 @@ Light and dark themes, responsive down to phone width, with every number compute
 - [x] Engineered quantum-advantage benchmark and diagnosis tasks
 - [x] Hardware-aware circuit design and gate-count study
 - [ ] Full projected-kernel run on IBM Heron hardware
-- [ ] Quantum Readiness Check: upload any dataset, get a quantum-headroom verdict
+- [x] Quantum Readiness Check: upload any dataset, get a quantum-headroom verdict
 - [ ] Technical report on Zenodo, then a preprint
 - [ ] Indian oral precancer cohort through a clinical partner
 - [ ] Quantum-sensor data (biomagnetic signals), where theory predicts genuine advantage

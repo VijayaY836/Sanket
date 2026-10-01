@@ -8,7 +8,7 @@ import { eigSym, Mat, matmul, spectralMap, zeros } from "./linalg";
 import { mulberry32 } from "./rng";
 
 export const ADV_SCALE = 1.0;
-const RBF_MULTS = [0.25, 0.5, 1, 2, 4];
+export const RBF_MULTS = [0.25, 0.5, 1, 2, 4];
 const ALPHAS = [1e-3, 1e-2, 1e-1, 1];
 
 export function auc(score: number[], y: number[]) {
@@ -46,21 +46,26 @@ function krr(K: Mat, tr: number[], te: number[], target: number[], alpha: number
   return te.map((i) => tr.reduce((s, j, b) => s + K[i][j] * coef[b], 0));
 }
 
-function shuffle<T>(a: T[], rand: () => number) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+export function shuffle<T>(a: T[], rand: () => number) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
 
-function tuned(Ks: Mat[], tr: number[], te: number[], y: number[], target: number[], rand: () => number) {
+export function tuned(Ks: Mat[], tr: number[], te: number[], y: number[], target: number[], rand: () => number) {
+  return tunedFit(Ks, tr, te, y, target, rand).auc;
+}
+
+/** Kernel ridge with kernel and penalty chosen by inner 3-fold CV on the training rows; returns test AUC and the kernel picked. */
+export function tunedFit(Ks: Mat[], tr: number[], te: number[], y: number[], target: number[], rand: () => number) {
   const folds = 3, order = shuffle(tr, rand);
-  let best: [Mat, number] = [Ks[0], ALPHAS[0]], bestA = -1;
-  for (const K of Ks) for (const a of ALPHAS) {
+  let best: [number, number] = [0, ALPHAS[0]], bestA = -1;
+  Ks.forEach((K, k) => { for (const a of ALPHAS) {
     let s = 0, c = 0;
     for (let f = 0; f < folds; f++) {
-      const ite = order.filter((_, k) => k % folds === f), itr = order.filter((_, k) => k % folds !== f);
+      const ite = order.filter((_, j) => j % folds === f), itr = order.filter((_, j) => j % folds !== f);
       if (new Set(ite.map((i) => y[i])).size < 2) continue;
       s += auc(krr(K, itr, ite, target, a), ite.map((i) => y[i])); c++;
     }
-    if (c && s / c > bestA) { bestA = s / c; best = [K, a]; }
-  }
-  return auc(krr(best[0], tr, te, target, best[1]), te.map((i) => y[i]));
+    if (c && s / c > bestA) { bestA = s / c; best = [k, a]; }
+  } });
+  return { auc: auc(krr(Ks[best[0]], tr, te, target, best[1]), te.map((i) => y[i])), kernel: best[0] };
 }
 
 export interface AdvCurveRow { size: number; quantum: { mean: number; sd: number }; classical: { mean: number; sd: number } }
@@ -73,7 +78,7 @@ export interface AdvResult {
   realN: number;
 }
 
-function normalise(K: Mat) { const n = K.length, tr = K.reduce((s, r, i) => s + r[i], 0); return K.map((r) => r.map((x) => (x * n) / tr)); }
+export function normalise(K: Mat) { const n = K.length, tr = K.reduce((s, r, i) => s + r[i], 0); return K.map((r) => r.map((x) => (x * n) / tr)); }
 
 export async function runAdvantage(m: Model, maxN: number, onProgress: (p: number, msg: string) => void): Promise<AdvResult> {
   const rand0 = mulberry32(42);
@@ -102,6 +107,27 @@ export async function runAdvantage(m: Model, maxN: number, onProgress: (p: numbe
 
   onProgress(0.08, "Constructing quantum-structured labels");
   await tick();
+  const eng = await engineerLabels(Kq, Kcs, async (c) => { onProgress(0.08 + 0.12 * ((c + 1) / Kcs.length), "Scanning classical kernels"); await tick(); });
+
+  // real outcome: event before the horizon vs event-free beyond it
+  const H = m.cohort.horizon;
+  const known = pick.map((i, a) => ((m.events[i] && m.times[i] <= H) || m.times[i] > H ? a : -1)).filter((a) => a >= 0);
+  const yReal = pick.map((i) => (m.events[i] && m.times[i] <= H ? 1 : 0));
+
+  const curve = (idxPool: number[], y: number[], tgt: number[], label: string, p0: number, p1: number, qKernels: Mat[]) =>
+    learningCurve(idxPool, y, tgt, qKernels, Kcs, async (r, reps) => { onProgress(p0 + (p1 - p0) * ((r + 1) / reps), label); await tick(); });
+  const engineered = await curve(pick.map((_, a) => a), eng.yEng, eng.target, "Learning engineered labels", 0.2, 0.62, [Kq]);
+  const real = await curve(known, yReal, yReal, "Learning the real outcome", 0.62, 1, KqGrid);
+  onProgress(1, "Done");
+  return { n, g: eng.g, scan: eng.scan, engineered, real, realN: known.length };
+}
+
+/**
+ * Labels with quantum structure (Huang et al. 2021): the direction in which the quantum kernel differs most from the
+ * closest classical kernel. Returns the geometric difference g against that kernel and the labels (median split).
+ */
+export async function engineerLabels(Kq: Mat, Kcs: Mat[], onStep: (c: number) => Promise<void> = async () => {}) {
+  const n = Kq.length;
   const sqQ = spectralMap(eigSym(normalise(Kq)), (x) => Math.sqrt(Math.max(x, 0)));
   const lam = 0.01;
   const scan: { mult: number; g: number; v: number[] }[] = [];
@@ -112,46 +138,36 @@ export async function runAdvantage(m: Model, maxN: number, onProgress: (p: numbe
     const e = eigSym(M.map((r, i) => r.map((x, j) => (x + M[j][i]) / 2)));
     let top = 0; e.values.forEach((v, k) => { if (v > e.values[top]) top = k; });
     scan.push({ mult: RBF_MULTS[c], g: Math.sqrt(Math.max(e.values[top], 0)), v: e.vectors.map((row) => row[top]) });
-    onProgress(0.08 + 0.12 * ((c + 1) / Kcs.length), "Scanning classical kernels");
-    await tick();
+    await onStep(c);
   }
   const worst = scan.reduce((a, b) => (b.g < a.g ? b : a));
   const yc = sqQ.map((row) => row.reduce((s, x, k) => s + x * worst.v[k], 0));
   const mu = yc.reduce((a, b) => a + b, 0) / n, sd = Math.sqrt(yc.reduce((a, b) => a + (b - mu) ** 2, 0) / n) || 1;
   const target = yc.map((v) => (v - mu) / sd);
   const medY = [...target].sort((a, b) => a - b)[Math.floor(n / 2)];
-  const yEng = target.map((v) => (v > medY ? 1 : 0));
+  return { g: worst.g, scan: scan.map(({ mult, g }) => ({ mult, g })), target, yEng: target.map((v) => (v > medY ? 1 : 0)) };
+}
 
-  // real outcome: event before the horizon vs event-free beyond it
-  const H = m.cohort.horizon;
-  const known = pick.map((i, a) => ((m.events[i] && m.times[i] <= H) || m.times[i] > H ? a : -1)).filter((a) => a >= 0);
-  const yReal = pick.map((i) => (m.events[i] && m.times[i] <= H ? 1 : 0));
-
-  const curve = async (idxPool: number[], y: number[], tgt: number[], label: string, p0: number, p1: number, qKernels: Mat[]) => {
-    const sizes = [10, 20, 40, 80].filter((s) => s <= Math.floor(idxPool.length * 0.7));
-    const reps = 12, rows: AdvCurveRow[] = [];
-    const res: Record<number, { q: number[]; c: number[] }> = {};
-    sizes.forEach((s) => (res[s] = { q: [], c: [] }));
-    for (let r = 0; r < reps; r++) {
-      const rand = mulberry32(1000 + r);
-      const order = shuffle(idxPool, rand), nTest = Math.max(15, Math.floor(idxPool.length * 0.3));
-      const te = order.slice(0, nTest), pool = order.slice(nTest);
-      for (const s of sizes) {
-        const tr = pool.slice(0, s);
-        const pos = tr.filter((i) => y[i]).length;
-        if (pos < 3 || s - pos < 3 || new Set(te.map((i) => y[i])).size < 2) continue;
-        res[s].q.push(tuned(qKernels, tr, te, y, tgt, rand));
-        res[s].c.push(tuned(Kcs, tr, te, y, tgt, rand));
-      }
-      onProgress(p0 + (p1 - p0) * ((r + 1) / reps), label);
-      await tick();
+/** Test AUC against training-set size: 12 random splits, 30% held out, both kernels tuned by inner 3-fold CV. */
+export async function learningCurve(idxPool: number[], y: number[], tgt: number[], qKernels: Mat[], cKernels: Mat[], onRep: (r: number, reps: number) => Promise<void> = async () => {}) {
+  const sizes = [10, 20, 40, 80].filter((s) => s <= Math.floor(idxPool.length * 0.7));
+  const reps = 12, rows: AdvCurveRow[] = [];
+  const res: Record<number, { q: number[]; c: number[] }> = {};
+  sizes.forEach((s) => (res[s] = { q: [], c: [] }));
+  for (let r = 0; r < reps; r++) {
+    const rand = mulberry32(1000 + r);
+    const order = shuffle(idxPool, rand), nTest = Math.max(15, Math.floor(idxPool.length * 0.3));
+    const te = order.slice(0, nTest), pool = order.slice(nTest);
+    for (const s of sizes) {
+      const tr = pool.slice(0, s);
+      const pos = tr.filter((i) => y[i]).length;
+      if (pos < 3 || s - pos < 3 || new Set(te.map((i) => y[i])).size < 2) continue;
+      res[s].q.push(tuned(qKernels, tr, te, y, tgt, rand));
+      res[s].c.push(tuned(cKernels, tr, te, y, tgt, rand));
     }
-    const st = (v: number[]) => { const mu = v.reduce((a, b) => a + b, 0) / Math.max(v.length, 1); return { mean: mu, sd: Math.sqrt(v.reduce((a, b) => a + (b - mu) ** 2, 0) / Math.max(v.length - 1, 1)) }; };
-    sizes.forEach((s) => { if (res[s].q.length) rows.push({ size: s, quantum: st(res[s].q), classical: st(res[s].c) }); });
-    return rows;
-  };
-  const engineered = await curve(pick.map((_, a) => a), yEng, target, "Learning engineered labels", 0.2, 0.62, [Kq]);
-  const real = await curve(known, yReal, yReal, "Learning the real outcome", 0.62, 1, KqGrid);
-  onProgress(1, "Done");
-  return { n, g: worst.g, scan: scan.map(({ mult, g }) => ({ mult, g })), engineered, real, realN: known.length };
+    await onRep(r, reps);
+  }
+  const st = (v: number[]) => { const mu = v.reduce((a, b) => a + b, 0) / Math.max(v.length, 1); return { mean: mu, sd: Math.sqrt(v.reduce((a, b) => a + (b - mu) ** 2, 0) / Math.max(v.length - 1, 1)) }; };
+  sizes.forEach((s) => { if (res[s].q.length) rows.push({ size: s, quantum: st(res[s].q), classical: st(res[s].c) }); });
+  return rows;
 }
