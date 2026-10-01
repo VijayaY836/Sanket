@@ -1,0 +1,42 @@
+# SANKET engine configuration. Edit, then run: python -m engine.build
+geo_accession: GSE26549
+cohort_name: "GSE26549 oral premalignant lesions"
+disease: "Oral potentially malignant disorders"
+horizon_months: 36
+
+# Outcome fields in the GEO sample characteristics (confirmed with `python -m engine.inspect_geo` on GSE26549).
+time_field: "oral cancer-free survival time (years)"
+event_field: "outcome"
+event_positive_values: ["oral cancer development"]  # exact match, so "no oral cancer development" is not counted
+time_unit: years                                    # converted to months by the engine
+histology_field: "histology at baseline (breakdown)"
+
+# Hallmark gene sets: downloaded automatically by gseapy, or put the GMT file here manually.
+hallmark_gmt: data/h.all.v2023.1.Hs.symbols.gmt
+msigdb_version: "2023.1.Hs"
+
+# Pathways encoded on qubits. Chosen from prior biology, NOT from outcomes, so there is no leakage.
+pathways:
+  - [HALLMARK_MYC_TARGETS_V1, "MYC targets", MYC, Proliferation]
+  - [HALLMARK_E2F_TARGETS, "E2F targets", E2F, Proliferation]
+  - [HALLMARK_G2M_CHECKPOINT, "G2/M checkpoint", G2M, Proliferation]
+  - [HALLMARK_MTORC1_SIGNALING, "mTORC1 signalling", mTORC1, Proliferation]
+  - [HALLMARK_UNFOLDED_PROTEIN_RESPONSE, "Unfolded protein response", UPR, Stress]
+  - [HALLMARK_OXIDATIVE_PHOSPHORYLATION, "Oxidative phosphorylation", OXPHOS, Stress]
+  - [HALLMARK_P53_PATHWAY, "p53 pathway", p53, Genome]
+  - [HALLMARK_DNA_REPAIR, "DNA repair", DNA repair, Genome]
+  - [HALLMARK_HYPOXIA, "Hypoxia", Hypoxia, Stress]
+  - [HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION, "Epithelial–mesenchymal transition", EMT, Microenvironment]
+  - [HALLMARK_TNFA_SIGNALING_VIA_NFKB, "TNF-α signalling via NF-κB", TNF-α, Microenvironment]
+  - [HALLMARK_INFLAMMATORY_RESPONSE, "Inflammatory response", Inflammation, Microenvironment]
+
+# Crosstalk graph: connect pathways that share genes (Jaccard), keeping circuits shallow.
+crosstalk_max_degree: 3
+crosstalk_max_edges: 14
+
+# Feature map and model (must match web/src/lib/quantum.ts and analysis.ts)
+reps: 2
+beta: 0.5
+scale_grid: [0.25, 0.4, 0.55, 0.7, 1.0]
+rbf_grid: [0.25, 0.5, 1, 2, 4]
+neighbours: 15

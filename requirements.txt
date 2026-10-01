@@ -1,0 +1,14 @@
+# SANKET research engine (Python 3.10–3.12)
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+scikit-learn>=1.4
+scikit-survival>=0.23
+gseapy>=1.1
+lxml>=5.0
+GEOparse>=2.0.4
+pyyaml>=6.0
+matplotlib>=3.8
+qiskit>=2.0
+qiskit-aer>=0.15
+qiskit-ibm-runtime>=0.40

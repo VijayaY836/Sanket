@@ -1,0 +1,46 @@
+# SANKET configuration for the METABRIC breast cancer module (cBioPortal study brca_metabric).
+# Upload this file to OSF together with the registration, BEFORE running any outcome analysis.
+cohort_name: "METABRIC breast cancer (cBioPortal brca_metabric)"
+disease: "Primary breast cancer"
+data_dir: data/brca_metabric          # unpacked cBioPortal study folder
+expression_file: data_mrna_illumina_microarray.txt
+endpoint: RFS                         # relapse-free survival: RFS_MONTHS, RFS_STATUS ("1:Recurred")
+horizon_months: 60                    # headline risk = 5-year relapse risk
+app_sample: 300                       # random display sample for the web app (full cohort used in the engine)
+sample_seed: 2026
+
+# Clinical variables for the clinical baselines (used only if present in the files)
+clinical_numeric: [NPI, AGE_AT_DIAGNOSIS, TUMOR_SIZE, GRADE]
+clinical_binary: {ER_STATUS: Positive, HER2_STATUS: Positive}
+
+# Identical to the oral module: same Hallmark gene sets, same 12 pathways, same circuit and models.
+hallmark_gmt: data/h.all.v2023.1.Hs.symbols.gmt
+msigdb_version: "2023.1.Hs"
+pathways:
+  - [HALLMARK_MYC_TARGETS_V1, "MYC targets", MYC, Proliferation]
+  - [HALLMARK_E2F_TARGETS, "E2F targets", E2F, Proliferation]
+  - [HALLMARK_G2M_CHECKPOINT, "G2/M checkpoint", G2M, Proliferation]
+  - [HALLMARK_MTORC1_SIGNALING, "mTORC1 signalling", mTORC1, Proliferation]
+  - [HALLMARK_UNFOLDED_PROTEIN_RESPONSE, "Unfolded protein response", UPR, Stress]
+  - [HALLMARK_OXIDATIVE_PHOSPHORYLATION, "Oxidative phosphorylation", OXPHOS, Stress]
+  - [HALLMARK_P53_PATHWAY, "p53 pathway", p53, Genome]
+  - [HALLMARK_DNA_REPAIR, "DNA repair", DNA repair, Genome]
+  - [HALLMARK_HYPOXIA, "Hypoxia", Hypoxia, Stress]
+  - [HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION, "Epithelial–mesenchymal transition", EMT, Microenvironment]
+  - [HALLMARK_TNFA_SIGNALING_VIA_NFKB, "TNF-α signalling via NF-κB", TNF-α, Microenvironment]
+  - [HALLMARK_INFLAMMATORY_RESPONSE, "Inflammatory response", Inflammation, Microenvironment]
+crosstalk_max_degree: 3
+crosstalk_max_edges: 14
+reps: 2
+beta: 0.5
+scale_grid: [0.25, 0.4, 0.55, 0.7, 1.0]
+rbf_grid: [0.25, 0.5, 1, 2, 4]
+neighbours: 15
+
+# Evaluation at scale (registered in advance)
+cv_folds: 5
+cv_repeats: 5
+inner_folds: 3
+size_curve_sizes: [50, 100, 200, 400, 800, 1600]
+size_curve_repeats: 20
+size_curve_test: 300
