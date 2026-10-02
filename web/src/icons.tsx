@@ -11,13 +11,6 @@ export const ITheme = () => (<svg {...P}><circle cx="12" cy="12" r="4" /><path d
 export const IPlay = () => (<svg {...P} width={16} height={16}><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>);
 export const IDownload = () => (<svg {...P} width={16} height={16}><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>);
 export const IReplay = () => (<svg {...P} width={16} height={16}><path d="M4 4v6h6" /><path d="M4.6 15a8 8 0 1 0 1.9-8.3L4 10" /></svg>);
-export const Mark = ({ size = 30 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-    <rect width="32" height="32" rx="9" fill="var(--violet)" />
-    <path d="M5 18c3 0 3.5-7 6.5-7s3.5 10 6.5 10 3.5-7 6.5-7" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
-    <circle cx="24.5" cy="14" r="3" fill="var(--eosin)" stroke="#fff" strokeWidth="1.5" />
-  </svg>
-);
 export const ISpark = () => (<svg {...P}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" /></svg>);
 export const IGauge = () => (<svg {...P}><path d="M4 18a8 8 0 1 1 16 0" /><path d="M12 18l4-6" /><circle cx="12" cy="18" r="1.4" fill="currentColor" /></svg>);
 export const IUpload = () => (<svg {...P} width={16} height={16}><path d="M12 21V9M7 14l5-5 5 5M4 3h16" /></svg>);

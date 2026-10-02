@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp, View } from "./store";
-import { ICase, ICircuit, IChip, IData, IEvidence, IOverview, IGauge, ISpark, IStars, ITheme, Mark } from "./icons";
+import { ICase, ICircuit, IChip, IData, IEvidence, IOverview, IGauge, ISpark, IStars, ITheme } from "./icons";
+import sanketMark from "./assets/sanket-mark.png";
 import Overview from "./views/Overview";
 import PatientCase from "./views/PatientCase";
 import Constellation from "./views/Constellation";
@@ -38,10 +39,10 @@ export default function App() {
     <div className="shell">
       <nav className="rail" aria-label="Sections">
         <div className="brand">
-          <Mark />
+          <img className="brand-mark" src={sanketMark} alt="" width={46} height={46} />
           <div>
             <div className="brand-name">SANKET</div>
-            <div className="brand-sub">Cancer risk from gene activity, hybrid quantum ML</div>
+            <div className="brand-sub">Quantum Intelligence for Cancer Prevention</div>
           </div>
         </div>
         {NAV.map((g) => (
