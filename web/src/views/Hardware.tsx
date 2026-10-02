@@ -37,22 +37,26 @@ export default function Hardware() {
             <div className="slider-head"><span>Shots per circuit</span><b>{shots.toLocaleString()}</b></div>
             <input type="range" min={6} max={13} step={1} value={Math.log2(shots)} onChange={(e) => setShots(2 ** +e.target.value)} aria-label="Shots per circuit" />
           </div>
-          <table className="table table-numeric-after-first">
-            <thead><tr><th>Kernel</th><th>Circuits</th><th>Total shots</th><th>Two-qubit gates each</th></tr></thead>
-            <tbody>
-              <tr><td><b>Projected</b></td><td>{projCircuits.toLocaleString()}</td><td>{(projCircuits * shots).toLocaleString()}</td><td>{HW_TABLE[0].twoq}</td></tr>
-              <tr><td>Fidelity</td><td>{fidCircuits.toLocaleString()}</td><td>{(fidCircuits * shots).toLocaleString()}</td><td>{HW_TABLE[1].twoq}</td></tr>
-            </tbody>
-          </table>
+          <div className="scroll-x" role="region" aria-label="Circuit budget table" tabIndex={0}>
+            <table className="table table-numeric-after-first">
+              <thead><tr><th>Kernel</th><th>Circuits</th><th>Total shots</th><th>Two-qubit gates each</th></tr></thead>
+              <tbody>
+                <tr><td><b>Projected</b></td><td>{projCircuits.toLocaleString()}</td><td>{(projCircuits * shots).toLocaleString()}</td><td>{HW_TABLE[0].twoq}</td></tr>
+                <tr><td>Fidelity</td><td>{fidCircuits.toLocaleString()}</td><td>{(fidCircuits * shots).toLocaleString()}</td><td>{HW_TABLE[1].twoq}</td></tr>
+              </tbody>
+            </table>
+          </div>
           <p className="small" style={{ marginBottom: 0 }}>The projected kernel needs <b>{Math.round(fidCircuits / projCircuits)}× fewer circuits</b>, which is why the full cohort fits a free-tier IBM Quantum allowance instead of a test sample.</p>
         </div>
         <div className="panel">
           <div className="h2">Hardware job record</div>
           {jobs.length ? (
-            <table className="table">
-              <thead><tr><th>Backend</th><th>Job ID</th><th>Date</th><th>Patients</th><th>Shots</th></tr></thead>
-              <tbody>{jobs.map((j) => (<tr key={j.jobId}><td>{j.backend}{j.note && <div className="tiny muted">{j.note}</div>}</td><td style={{ wordBreak: "break-all" }}>{j.jobId}</td><td>{j.date}</td><td>{j.patients}</td><td>{j.shots}</td></tr>))}</tbody>
-            </table>
+            <div className="scroll-x" role="region" aria-label="Hardware job record table" tabIndex={0}>
+              <table className="table">
+                <thead><tr><th>Backend</th><th>Job ID</th><th>Date</th><th>Patients</th><th>Shots</th></tr></thead>
+                <tbody>{jobs.map((j) => (<tr key={j.jobId}><td>{j.backend}{j.note && <div className="tiny muted">{j.note}</div>}</td><td style={{ wordBreak: "break-all" }}>{j.jobId}</td><td>{j.date}</td><td>{j.patients}</td><td>{j.shots}</td></tr>))}</tbody>
+              </table>
+            </div>
           ) : (
             <div>
               <p className="small">No hardware run is recorded for this cohort yet.</p>
