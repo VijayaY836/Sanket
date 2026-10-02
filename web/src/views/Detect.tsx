@@ -6,17 +6,22 @@ import { Bars, BlochSphere } from "../components/viz";
 import { Chapter, PageHero, Reveal, TissueArt } from "../components/cinema";
 import { IUpload } from "../icons";
 import detect from "../data/oral_detect.json";
+import hallmark from "../data/hallmark12.json";
+import { parseExpression, ssgseaScores } from "../lib/ssgsea";
 
 /**
  * Detect: is this oral tissue normal, dysplasia or cancer? By default the GSE30784 samples bundled with the app; any
- * diagnosis cohort built by engine.oral_diagnosis can be loaded instead. The registered benchmark
+ * diagnosis cohort built by engine.oral_diagnosis can be loaded instead, or a gene-activity table (genes x samples)
+ * scored into the 12 pathways in the browser. Samples without a diagnosis in that table are treated as patients and
+ * compared only with the same file's labelled samples (never with another dataset's). The registered benchmark
  * (docs/osf_oral_diagnosis.md) is shown only for the bundled dataset; the map, pathway profile and sample estimates
  * are computed live and labelled illustrative.
  */
-type Dx = "n" | "d" | "c";
-const DXS: Dx[] = ["n", "d", "c"];
-const NAME: Record<Dx, string> = { n: "Normal", d: "Dysplasia", c: "Cancer" };
-const COLOR: Record<Dx, string> = { n: "var(--teal)", d: "var(--amber)", c: "var(--eosin)" };
+type Dx = "n" | "d" | "c" | "u"; // u: no diagnosis given (a patient to estimate, never a reference)
+type Known = Exclude<Dx, "u">;
+const DXS: Known[] = ["n", "d", "c"];
+const NAME: Record<Dx, string> = { n: "Normal", d: "Dysplasia", c: "Cancer", u: "Unlabelled" };
+const COLOR: Record<Dx, string> = { n: "var(--teal)", d: "var(--amber)", c: "var(--eosin)", u: "var(--ink-3)" };
 const MODEL_NAME: Record<string, string> = { proj: "Projected quantum", fid: "Fidelity quantum", rbf: "Classical RBF", logistic: "Logistic regression", random_forest: "Random forest", gradient_boosting: "Gradient boosting" };
 const CLASSICAL = ["rbf", "logistic", "random_forest", "gradient_boosting"];
 const K_NEAR = 15;
@@ -24,7 +29,10 @@ const MAX_SAMPLES = 1200;
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 interface Sample { id: string; d: Dx; z: number[] }
-interface DxData { name: string; source: string; bundled: boolean; samples: Sample[]; edges: [number, number][]; pathways: { key: string; label: string; short: string }[]; note?: string }
+interface DxData {
+  name: string; source: string; bundled: boolean; samples: Sample[]; edges: [number, number][]; pathways: { key: string; label: string; short: string }[]; note?: string;
+  genes?: { n: number; coverage: { key: string; found: number; size: number }[] }; // set when scored here from gene activity
+}
 
 const BUNDLED: DxData = {
   name: `${detect.source.accession} oral tissue`, source: `${detect.source.institute}, ${detect.source.country}`, bundled: true,
@@ -32,6 +40,48 @@ const BUNDLED: DxData = {
 };
 
 const CODE: Record<string, Dx> = { normal: "n", control: "n", dysplasia: "d", cancer: "c", tumor: "c", tumour: "c", n: "n", d: "d", c: "c" };
+/** Free-text label -> class, with the same patterns as engine.oral_diagnosis; anything else is unlabelled. */
+function classOf(text: string | null): Dx {
+  const t = (text ?? "").trim();
+  if (CODE[t.toLowerCase()]) return CODE[t.toLowerCase()];
+  const hit: Known[] = [];
+  if (/dysplas/i.test(t)) hit.push("d");
+  if (/carcinoma|cancer|\boscc\b|\bscc\b|tumou?r|malignan/i.test(t)) hit.push("c");
+  if (/\bnormal\b|\bcontrol\b|healthy/i.test(t)) hit.push("n");
+  return hit.length === 1 ? hit[0] : "u";
+}
+
+function subsample(samples: Sample[]): { samples: Sample[]; note?: string } {
+  if (samples.length <= MAX_SAMPLES) return { samples };
+  const r = mulberry32(7); const idx = samples.map((_, i) => [r(), i]).sort((a, b) => a[0] - b[0]).slice(0, MAX_SAMPLES).map((x) => x[1]).sort((a, b) => a - b);
+  return { samples: idx.map((i) => samples[i]), note: `Showing a random ${MAX_SAMPLES} of ${samples.length} samples to keep the browser responsive.` };
+}
+
+function checkLabelled(samples: Sample[], min: number) {
+  const known = samples.filter((s) => s.d !== "u");
+  if (known.length < min) throw new Error(`Need at least ${min} samples labelled normal, dysplasia or cancer as references; found ${known.length}.`);
+  if (new Set(known.map((s) => s.d)).size < 2) throw new Error("Need labelled samples from at least two of normal, dysplasia and cancer.");
+}
+
+const SETS = hallmark as { source: string; keys: string[]; sets: Record<string, string[]> };
+const SETS_READY = SETS.keys.length === BUNDLED.pathways.length && SETS.keys.every((k, i) => k === BUNDLED.pathways[i].key);
+
+/** Gene-activity table (genes x samples, optional `diagnosis` row) -> ssGSEA pathway scores, standardised within the file. */
+function parseGeneActivity(text: string, fileName: string): DxData {
+  if (!SETS_READY) throw new Error("The pathway gene lists are not bundled with this build yet. Run `python -m engine.export_detect --sets-only` and rebuild the app.");
+  const t = parseExpression(text);
+  if (!t.labels) throw new Error("Add a row named `diagnosis` with normal, dysplasia or cancer for the reference samples (leave it empty for the patients to estimate).");
+  const { z, coverage } = ssgseaScores(t, SETS.sets, SETS.keys);
+  const all: Sample[] = t.samples.map((id, j) => ({ id, d: classOf(t.labels![j]), z: z[j].map((v) => Math.round(v * 1000) / 1000) }));
+  checkLabelled(all, 5);
+  const { samples, note } = subsample(all);
+  const odd = t.labels.filter((l) => l && classOf(l) === "u").length;
+  return {
+    name: fileName.replace(/\.(csv|tsv|txt)$/i, ""), source: "your gene-activity file", bundled: false, samples, edges: BUNDLED.edges, pathways: BUNDLED.pathways,
+    genes: { n: t.genes.length, coverage },
+    note: [note, odd ? `${odd} sample${odd > 1 ? "s have labels" : " has a label"} other than normal, dysplasia or cancer, treated as unlabelled.` : "", t.dropped ? `${t.dropped} rows without numbers were skipped.` : ""].filter(Boolean).join(" ") || undefined,
+  };
+}
 
 /** Accepts a cohort from engine.oral_diagnosis (patients[].diagnosis) or the compact bundled format (samples[].d). */
 function parseDxCohort(x: unknown): DxData {
@@ -45,16 +95,12 @@ function parseDxCohort(x: unknown): DxData {
     const d = CODE[String(p.diagnosis ?? p.d ?? "").toLowerCase()];
     const z = p.pathways ?? p.z;
     if (!Array.isArray(z) || z.length !== q) fail(`Sample ${i + 1}: expected ${q} pathway scores.`);
-    return d ? { id: String(p.id ?? `S${i + 1}`), d, z: z.map(Number) } : null;
-  }).filter((s): s is Sample => s !== null);
-  if (samples.length < 10) fail("Need at least 10 samples labelled normal, dysplasia or cancer (field `diagnosis`).");
-  if (new Set(samples.map((s) => s.d)).size < 2) fail("Need at least two of the classes normal, dysplasia and cancer.");
-  let note: string | undefined;
-  if (samples.length > MAX_SAMPLES) {
-    const r = mulberry32(7); const idx = samples.map((_, i) => [r(), i]).sort((a, b) => a[0] - b[0]).slice(0, MAX_SAMPLES).map((x) => x[1]).sort((a, b) => a - b);
-    note = `Showing a random ${MAX_SAMPLES} of ${samples.length} samples to keep the browser responsive.`;
-    samples = idx.map((i) => samples[i]);
-  }
+    return { id: String(p.id ?? `S${i + 1}`), d: d ?? "u", z: z.map(Number) };
+  });
+  checkLabelled(samples, 10);
+  const sub = subsample(samples);
+  samples = sub.samples;
+  const note = sub.note;
   const edges = (Array.isArray(o.edges) ? o.edges : []) as [number, number][];
   if (edges.some(([a, b]) => a >= q || b >= q)) fail("An edge points to a pathway that does not exist.");
   return {
@@ -107,12 +153,12 @@ function useQuantumSpace(data: DxData) {
   return space && space.of === data ? space : null; // never hand back a space computed for another dataset
 }
 
-/** Weighted vote of the K_NEAR most similar samples, from one kernel row (index `self` excluded). */
+/** Weighted vote of the K_NEAR most similar labelled samples, from one kernel row (index `self` excluded). */
 function neighbourVote(row: number[], samples: Sample[], self = -1) {
-  const near = row.map((k, j) => [k, j] as [number, number]).filter(([, j]) => j !== self).sort((a, b) => b[0] - a[0]).slice(0, K_NEAR);
+  const near = row.map((k, j) => [k, j] as [number, number]).filter(([, j]) => j !== self && samples[j].d !== "u").sort((a, b) => b[0] - a[0]).slice(0, K_NEAR);
   const tot = near.reduce((s, [k]) => s + k, 0) || 1;
-  const share = { n: 0, d: 0, c: 0 } as Record<Dx, number>;
-  near.forEach(([k, j]) => (share[samples[j].d] += k / tot));
+  const share = { n: 0, d: 0, c: 0 } as Record<Known, number>;
+  near.forEach(([k, j]) => (share[samples[j].d as Known] += k / tot));
   const top = DXS.slice().sort((a, b) => share[b] - share[a])[0];
   return { share, top, near };
 }
@@ -128,13 +174,15 @@ export default function Detect() {
   const [reveal, setReveal] = useState(false);
   const [custom, setCustom] = useState<number[] | null>(null);
   const [paste, setPaste] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
   useEffect(() => setReveal(false), [sel, data]);
   useEffect(() => { setSel(Math.max(0, S.findIndex((s) => s.d === "d"))); setCustom(null); }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const present = useMemo(() => DXS.filter((d) => S.some((s) => s.d === d)), [S]);
-  const counts = useMemo(() => S.reduce((c, s) => ((c[s.d] += 1), c), { n: 0, d: 0, c: 0 } as Record<Dx, number>), [S]);
+  const counts = useMemo(() => S.reduce((c, s) => ((c[s.d] += 1), c), { n: 0, d: 0, c: 0, u: 0 } as Record<Dx, number>), [S]);
+  const shown: Dx[] = counts.u ? [...present, "u"] : present;
   const means = useMemo(() => {
-    const m = { n: new Array(q).fill(0), d: new Array(q).fill(0), c: new Array(q).fill(0) } as Record<Dx, number[]>;
+    const m = { n: new Array(q).fill(0), d: new Array(q).fill(0), c: new Array(q).fill(0), u: new Array(q).fill(0) } as Record<Dx, number[]>;
     S.forEach((s) => s.z.forEach((v, k) => (m[s.d][k] += v / counts[s.d])));
     return m;
   }, [S, q, counts]);
@@ -154,8 +202,20 @@ export default function Detect() {
   const pick = (d: Dx) => { const pool = S.map((x, i) => [x, i] as const).filter(([x]) => x.d === d); if (pool.length) setSel(pool[Math.floor(Math.random() * pool.length)][1]); };
   const load = async (f: File) => {
     setErr(null);
-    try { setData(parseDxCohort(JSON.parse(await f.text()))); }
-    catch (e) { setErr(e instanceof Error ? e.message : "Could not read that file."); }
+    try {
+      const text = await f.text();
+      if (text.trimStart().startsWith("{")) { setData(parseDxCohort(JSON.parse(text))); return; }
+      setBusy(`Scoring ${f.name} into ${q} pathways…`);
+      await new Promise((r) => setTimeout(r, 30)); // let the message paint before the scoring blocks
+      setData(parseGeneActivity(text, f.name));
+    } catch (e) { setErr(e instanceof Error ? e.message : "Could not read that file."); }
+    finally { setBusy(null); }
+  };
+  const downloadScores = () => {
+    const out = { name: data.name, pathways: P, edges: data.edges, samples: S.map((x) => ({ id: x.id, d: x.d === "u" ? null : x.d, z: x.z })) };
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(out)], { type: "application/json" }));
+    a.download = `${data.name}_pathway_scores.json`; a.click(); URL.revokeObjectURL(a.href);
   };
   const applyPaste = () => {
     const v = paste.split(/[\s,;]+/).filter(Boolean).map(Number);
@@ -175,7 +235,7 @@ export default function Detect() {
           { value: S.length, label: `tissue samples, ${detect.source.accession}` },
         ] : [
           { value: S.length, label: "samples in your dataset" },
-          ...present.map((d) => ({ value: counts[d], label: NAME[d].toLowerCase() })),
+          ...shown.map((d) => ({ value: counts[d], label: d === "u" ? "unlabelled, to estimate" : NAME[d].toLowerCase() })),
         ]}
         art={<TissueArt />} />
 
@@ -198,21 +258,30 @@ export default function Detect() {
         <div className="row">
           <div>
             <div className="h2">Dataset: {data.name}</div>
-            <div className="small muted">{S.length} samples · {present.map((d) => `${counts[d]} ${NAME[d].toLowerCase()}`).join(" · ")} · {data.source}{data.bundled ? " · bundled with the app" : " · loaded from your file"}</div>
+            <div className="small muted">{S.length} samples · {shown.map((d) => `${counts[d]} ${NAME[d].toLowerCase()}`).join(" · ")} · {data.source}{data.bundled ? " · bundled with the app" : " · loaded from your file"}</div>
           </div>
           <span className="spacer" />
-          <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) load(f); e.target.value = ""; }} />
-          <button className="btn" onClick={() => fileRef.current?.click()}><IUpload /> Load a diagnosis dataset</button>
+          <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.json,text/csv,text/tab-separated-values,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) load(f); e.target.value = ""; }} />
+          <button className="btn" disabled={!!busy} onClick={() => fileRef.current?.click()}><IUpload /> Upload gene activity or scores</button>
+          {data.genes && <button className="btn btn-ghost" onClick={downloadScores}>Download pathway scores</button>}
           {!data.bundled && <button className="btn btn-ghost" onClick={() => { setData(BUNDLED); setErr(null); }}>Back to {detect.source.accession}</button>}
         </div>
+        {busy && <div className="small" style={{ marginTop: 8 }}>{busy}</div>}
+        {data.genes && (
+          <div className="tiny muted" style={{ marginTop: 6 }}>
+            Scored here from {data.genes.n.toLocaleString()} genes: ssGSEA on the 12 Hallmark pathways, standardised within your file. Genes found per pathway: {data.genes.coverage.map((c, k) => `${P[k].short} ${c.found}/${c.size}`).join(" · ")}.
+          </div>
+        )}
         {data.note && <div className="tiny muted" style={{ marginTop: 6 }}>{data.note}</div>}
         {err && <div className="tier tier-high" style={{ marginTop: 10 }}><b>That did not work</b>{err}</div>}
         <details style={{ marginTop: 8 }}>
           <summary className="small" style={{ cursor: "pointer" }}>How to use your own tissue data</summary>
           <div className="small" style={{ marginTop: 6 }}>
-            Gene expression has to be turned into pathway scores first, which the research engine does (the browser cannot). For any GEO series with normal, dysplasia or cancer samples:
+            <b>Gene activity (CSV or TSV).</b> Genes as rows (gene symbols such as TP53 in the first column), samples as columns, one value per gene and sample (normalised microarray or log RNA-seq values). Add one row named <code>diagnosis</code>: write normal, dysplasia or cancer for the reference samples and leave it empty for the patients you want estimated. At least 5 labelled references from two classes; the more, the better.
+            <pre className="code" style={{ margin: "8px 0" }}>{"gene,      S1,     S2,        S3,     P1\ndiagnosis, normal, dysplasia, cancer,\nTP53,      7.21,   7.80,      8.93,   8.10\nMYC,       6.02,   6.55,      7.41,   7.02\n…          (500+ genes)"}</pre>
+            Your file is scored on this device and never uploaded. Patients are compared only with the labelled samples in the same file, because scores from different array platforms or labs do not line up (see the independent check below). Everything shown for your file is illustrative, not a diagnosis.
+            <div style={{ marginTop: 8 }}><b>A GEO series.</b> For probe-level data, let the engine map probes to genes and score it, then upload the JSON it writes:</div>
             <pre className="code" style={{ margin: "8px 0" }}>{"python -m engine.oral_diagnosis --accession GSE12345 --inspect   # check the labels first\npython -m engine.oral_diagnosis --accession GSE12345             # writes out/dx_GSE12345.json"}</pre>
-            Then load that file here. Everything on this page is recomputed within your dataset; scores are never mixed with another dataset's, because models do not carry over between array platforms (see the independent check below).
           </div>
         </details>
       </Reveal>
@@ -223,7 +292,7 @@ export default function Detect() {
           <div className="h2">Quantum similarity map</div>
           {space ? <TissueMap S={S} xy={space.xy} sel={si} onPick={(i) => { setSel(i); }} extra={customRes?.xy} />
             : <p className="small muted">Simulating {S.length} twelve-qubit states…</p>}
-          <div className="legend">{present.map((d) => <span key={d}><i style={{ background: COLOR[d] }} />{NAME[d]} ({counts[d]})</span>)}{customRes && <span>★ your sample (approximate position)</span>}</div>
+          <div className="legend">{shown.map((d) => <span key={d}><i style={{ background: COLOR[d] }} />{NAME[d]} ({counts[d]})</span>)}{customRes && <span>★ your sample (approximate position)</span>}</div>
           <p className="tiny muted" style={{ marginBottom: 0 }}>Projected quantum kernel at bandwidth {DEFAULT_SPEC.scale}, {DEFAULT_SPEC.reps} Trotter steps, drawn with classical multidimensional scaling. Click a dot to open that sample.</p>
         </div>
         <div className="panel">
@@ -248,7 +317,7 @@ export default function Detect() {
             </select>
           </label>
           <span className="small muted">or a random</span>
-          {present.map((d) => <button key={d} className="btn" onClick={() => pick(d)}>{NAME[d].toLowerCase()} sample</button>)}
+          {shown.map((d) => <button key={d} className="btn" onClick={() => pick(d)}>{NAME[d].toLowerCase()} sample</button>)}
         </div>
         <div className="two">
           <div className="constellation">
@@ -262,11 +331,15 @@ export default function Detect() {
               <>
                 <VoteBars share={vote.share} present={present} />
                 <p className="small" style={{ margin: "6px 0" }}>Most similar samples: {vote.near.slice(0, 5).map(([, j]) => <span key={j} className="chip chip-grey" style={{ marginRight: 4 }}><i style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: COLOR[S[j].d], marginRight: 5 }} />{S[j].id}</span>)}</p>
-                <div className="row" style={{ marginTop: 12 }}>
-                  <button className="btn btn-primary" onClick={() => setReveal((r) => !r)}>{reveal ? "Hide diagnosis" : "Reveal the pathologist's diagnosis"}</button>
-                  {reveal && <span className="chip" style={{ background: COLOR[s.d], color: "#fff", fontSize: 14, padding: "6px 12px" }}>{NAME[s.d]}{vote.top === s.d ? " · matches the estimate" : " · differs from the estimate"}</span>}
-                </div>
-                <p className="tiny muted" style={{ marginBottom: 0 }}>Illustrative: a weighted vote of the {K_NEAR} most similar other samples in quantum feature space (this sample left out).{data.bundled && " The registered results below come from tuned kernel SVMs and classical models under repeated cross-validation."}</p>
+                {s.d === "u" ? (
+                  <div className="tier tier-intermediate" style={{ marginTop: 12 }}><b>No diagnosis in your file for this sample</b>Closest to {NAME[vote.top].toLowerCase()} among your labelled samples. A similarity estimate for discussion with a pathologist, not a diagnosis.</div>
+                ) : (
+                  <div className="row" style={{ marginTop: 12 }}>
+                    <button className="btn btn-primary" onClick={() => setReveal((r) => !r)}>{reveal ? "Hide diagnosis" : "Reveal the pathologist's diagnosis"}</button>
+                    {reveal && <span className="chip" style={{ background: COLOR[s.d], color: "#fff", fontSize: 14, padding: "6px 12px" }}>{NAME[s.d]}{vote.top === s.d ? " · matches the estimate" : " · differs from the estimate"}</span>}
+                  </div>
+                )}
+                <p className="tiny muted" style={{ marginBottom: 0 }}>Illustrative: a weighted vote of the {K_NEAR} most similar labelled samples in quantum feature space (this sample left out).{data.bundled && " The registered results below come from tuned kernel SVMs and classical models under repeated cross-validation."}</p>
               </>
             ) : <p className="small muted">Simulating…</p>}
           </div>
@@ -377,7 +450,7 @@ export default function Detect() {
   );
 }
 
-function VoteBars({ share, present }: { share: Record<Dx, number>; present: Dx[] }) {
+function VoteBars({ share, present }: { share: Record<Known, number>; present: Known[] }) {
   return (
     <div className="grid" style={{ gap: 8, margin: "10px 0" }}>
       {present.map((d) => (
@@ -397,11 +470,12 @@ function TissueMap({ S, xy, sel, onPick, extra }: { S: Sample[]; xy: [number, nu
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
   const X = (v: number) => pad + ((v - x0) / (x1 - x0 || 1)) * (W - 2 * pad), Y = (v: number) => pad + ((v - y0) / (y1 - y0 || 1)) * (H - 2 * pad);
   const r = S.length > 500 ? 2.6 : 4.2;
-  const order = S.map((_, i) => i).sort((a, b) => (S[a].d === "d" ? 1 : 0) - (S[b].d === "d" ? 1 : 0));
+  const front = (d: Dx) => (d === "u" ? 2 : d === "d" ? 1 : 0); // rare classes and patients drawn on top
+  const order = S.map((_, i) => i).sort((a, b) => front(S[a].d) - front(S[b].d));
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Tissue samples placed by quantum similarity, coloured by diagnosis" style={{ display: "block" }}>
       {order.map((i) => (
-        <circle key={i} cx={X(xy[i][0])} cy={Y(xy[i][1])} r={S[i].d === "d" ? r + 1.3 : r} fill={COLOR[S[i].d]} opacity={0.82}
+        <circle key={i} cx={X(xy[i][0])} cy={Y(xy[i][1])} r={S[i].d === "d" || S[i].d === "u" ? r + 1.3 : r} fill={COLOR[S[i].d]} opacity={0.82}
           stroke={i === sel ? "var(--ink)" : "var(--surface)"} strokeWidth={i === sel ? 2.5 : 1} style={{ cursor: "pointer" }} onClick={() => onPick(i)}>
           <title>{S[i].id}: {NAME[S[i].d]}</title>
         </circle>
