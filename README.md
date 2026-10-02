@@ -16,6 +16,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)](https://www.typescriptlang.org)
 [![Pre-registered](https://img.shields.io/badge/analyses-pre--registered%20on%20OSF-13807e)](https://osf.io)
 [![Status](https://img.shields.io/badge/status-research%20prototype-a86e0a)](#limitations-and-intended-use)
+[![License: MIT](https://img.shields.io/badge/license-MIT-2b7a3d)](LICENSE)
 
 **Team Yukthi6G** (Team ID 165798) · BVRIT Hyderabad College of Engineering for Women
 
@@ -97,8 +98,8 @@ Oral cohort, nested leave-one-out (bandwidth re-chosen inside every fold): proje
 | **Decisive accuracy win on quantum-structured data** | On labels engineered to carry quantum structure over real METABRIC features (Huang et al., 2021; geometric difference *g* = 6.75), the quantum kernel reaches **AUC 0.902 with 25 training patients and 0.967 with 50**, versus 0.614 and 0.731 for the best of four tuned classical models, and stays ahead at 400 patients (0.999 vs 0.906). Labels are synthetic by construction: this is the positive control that proves the pipeline can detect an advantage when one exists. |
 | **Run on real quantum hardware** | 86 patients on IBM `ibm_fez`; the kernel built from hardware measurements agrees with exact simulation at 0.98 ([details](#run-on-ibm-quantum-hardware)). |
 | **~5× cheaper circuits** | Like-for-like on IBM Heron, SANKET's fidelity-kernel circuit needs **188 two-qubit gates** versus **906** for the standard full ZZ feature map (estimated fidelity 0.48 vs 0.04). The projected kernel needs 94 with two Trotter steps, and 49 with the one-step circuit that ran on hardware. |
+| **Better than the standard quantum approach** | The projected kernel beats the standard fidelity kernel on the oral cohort (p ≈ 0.002, Holm-corrected) and matches or beats it on every task, while needing half the gates. |
 | **Linear, not quadratic, circuit cost** | The projected kernel needs three measurement settings per patient (258 circuits for 86 patients) instead of one circuit per patient pair (3,655): 14× fewer at 86 patients, ~329× fewer at 1,975. On IBM Runtime the Estimator runs this as one job entry per patient. |
-| **Better than the standard quantum approach** | The projected kernel matched or beat the standard fidelity kernel on every task (p ≈ 0.002 after Holm correction on the oral cohort). |
 | **Robust to noise** | In noisy simulation at 3% two-qubit gate error, the gentle encodings lose at most 0.011 C-index on METABRIC. |
 
 <p align="center">
@@ -552,6 +553,12 @@ Load any `out/*.json` file on the app's **Data**, **When quantum wins** or **Rea
 - [ ] Clinician dashboard and API service (FastAPI, Docker)
 - [ ] Indian oral precancer cohort through a clinical partner
 - [ ] Quantum-sensor data (biomagnetic signals), where theory predicts genuine advantage
+
+---
+
+## License
+
+Code is released under the [MIT License](LICENSE). The datasets keep their own terms: GEO GSE26549 and the Golub data are public, METABRIC is used under cBioPortal's terms, and MSigDB Hallmark gene sets are licensed by the Broad Institute.
 
 ---
 
