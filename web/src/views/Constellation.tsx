@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useApp } from "../store";
 import { predictPatient, sqDist3 } from "../lib/analysis";
 import { Bars, BlochSphere } from "../components/viz";
+import { outcomeTerms } from "../lib/cohort";
 
 type Mode = "progressor" | "stable" | "pick";
 
@@ -55,7 +56,7 @@ export default function Constellation() {
         </div>
         <div className="legend" style={{ marginBottom: 10 }}>
           <span><i style={{ background: "var(--violet)" }} />{P.id}, {Math.round(pred.risk * 100)}% predicted risk</span>
-          <span><i style={{ background: "var(--ink-3)" }} />{O.id}, {O.event ? `progressed at ${(O.time / 12).toFixed(1)}y` : `cancer-free ${(O.time / 12).toFixed(1)}y`}</span>
+          <span><i style={{ background: "var(--ink-3)" }} />{O.id}, {O.event ? `${outcomeTerms(cohort).eventPast} at ${(O.time / 12).toFixed(1)}y` : `${outcomeTerms(cohort).freePast} ${(O.time / 12).toFixed(1)}y`}</span>
         </div>
         <div className="constellation">
           {cohort.pathways.map((pw, k) => (

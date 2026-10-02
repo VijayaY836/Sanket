@@ -3,9 +3,11 @@ import { useApp } from "../store";
 import { predictPatient, verdict } from "../lib/analysis";
 import { CountUp } from "../components/tissue";
 import { Story } from "../components/story";
+import { outcomeTerms } from "../lib/cohort";
 
 export default function Overview() {
   const { model, go, setSel, nested, nestedProgress, cohort, large } = useApp();
+  const terms = outcomeTerms(cohort);
   const pair = useMemo(() => {
     const r = model.loo.proj;
     let a = -1;
@@ -38,20 +40,20 @@ export default function Overview() {
       <section className="panel-flat" style={{ padding: "16px 20px" }}>
         <div className="row" style={{ gap: 10 }}>
           <b className="small">Where SANKET fits</b>
-          {["Oral screening by a dentist", "Biopsy of the suspicious patch", "SANKET risk from the biopsy's gene activity", "Referral or routine surveillance"].map((x, i, arr) => (
+          {terms.carePath.map((x, i, arr) => (
             <span key={x} className="row" style={{ gap: 10 }}>
               <span className={`chip ${i === 2 ? "chip-violet" : "chip-grey"}`}>{x}</span>
               {i < arr.length - 1 && <span className="muted">→</span>}
             </span>
           ))}
         </div>
-        <div className="tiny muted" style={{ marginTop: 6 }}>Decision support after biopsy, not a replacement for it. Research prototype, not for clinical use.</div>
+        <div className="tiny muted" style={{ marginTop: 6 }}>{terms.carePathNote}</div>
       </section>
 
       <section className="panel-flat" style={{ padding: 0 }}>
         <div className="facts-strip">
-          <div className="fact"><div className="num"><CountUp value={model.n} /></div><div className="small muted">patients with precancer</div></div>
-          <div className="fact"><div className="num"><CountUp value={model.events.reduce((a, b) => a + b, 0)} /></div><div className="small muted">progressed to cancer</div></div>
+          <div className="fact"><div className="num"><CountUp value={model.n} /></div><div className="small muted">{terms.population}</div></div>
+          <div className="fact"><div className="num"><CountUp value={model.events.reduce((a, b) => a + b, 0)} /></div><div className="small muted">{terms.eventFact}</div></div>
           <div className="fact"><div className="num"><CountUp value={followUp / 12} decimals={1} suffix="y" /></div><div className="small muted">median follow-up</div></div>
           <div className="fact"><div className="num">{model.q}</div><div className="small muted">qubits, one per pathway</div></div>
           <div className="fact"><div className="num">~5×</div><div className="small muted">fewer two-qubit gates than a standard map on IBM Heron (188 vs 906)</div></div>

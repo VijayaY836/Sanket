@@ -49,7 +49,7 @@ export function CaseHero({ p, cohort, risk, stage, color, verdict, onReplay, onF
   return (
     <section className="case-hero">
       <div className="case-hero-copy">
-        <div className="case-kicker">Biopsy case file</div>
+        <div className="case-kicker">{terms.sample[0].toUpperCase() + terms.sample.slice(1)} case file</div>
         <motion.div key={p.id} className="case-hero-id" initial={reduced() ? false : { opacity: 0, y: 14, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.5 }}>{p.id}</motion.div>
         <div className="case-facts">{facts.map((f) => <span key={f}>{f}</span>)}</div>
         <div className="case-progress" aria-label="Analysis progress">

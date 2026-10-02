@@ -7,7 +7,7 @@ import { screeningPoint } from "../lib/clinical";
 import { CaseHero } from "../components/caseHero";
 import { survivalAt } from "../lib/survival";
 import { IDownload } from "../icons";
-import { outcomeTerms } from "../lib/cohort";
+import { horizonLabel, outcomeTerms } from "../lib/cohort";
 
 const TIER: Record<Prediction["tier"], { title: string; action: string; color: string }> = {
   high: { title: "High risk of outcome", action: "", color: "var(--eosin)" },
@@ -50,7 +50,7 @@ export default function PatientCase() {
   useEffect(() => setWz(p.pathways), [p]);
   const wi = useMemo(() => whatIf(model, sel, wz), [model, sel, wz]);
   const changed = wz.some((v, k) => v !== p.pathways[k]);
-  const tier = { ...TIER[pred.tier], action: pred.tier === "high" ? `Consider referral to ${terms.specialist} and close surveillance.` : pred.tier === "intermediate" ? "Consider shorter review intervals and repeat assessment if the disease changes." : pred.tier === "low" ? "Routine surveillance." : "Prediction withheld. Refer for specialist review." };
+  const tier = { ...TIER[pred.tier], action: pred.tier === "high" ? `Consider referral to ${terms.specialist} and close surveillance.` : pred.tier === "intermediate" ? terms.watchful : pred.tier === "low" ? "Routine surveillance." : "Prediction withheld. Refer for specialist review." };
   const screen = useMemo(() => screeningPoint(model.loo.proj, model.times, model.events, cohort.horizon, 0.9), [model, cohort]);
 
   return (
@@ -126,7 +126,7 @@ export default function PatientCase() {
                   <div className="row"><div className="h2">{terms.free} over time</div><span className="spacer" />
                     <div className="legend"><span><i style={{ background: tier.color }} />{p.id}</span><span><i style={{ background: "var(--ink-3)" }} />Whole cohort</span>{changed && <span><i style={{ background: "var(--violet)" }} />What-if</span>}</div>
                   </div>
-                  <SurvivalChart horizon={cohort.horizon} series={[
+                  <SurvivalChart horizon={cohort.horizon} timeFrom={terms.timeFrom} label={`Predicted ${terms.freePast} curves`} series={[
                     { curve: model.km, color: "var(--ink-3)", label: "cohort", dash: "4 4", width: 1.5 },
                     { curve: pred.curve, color: tier.color, label: p.id, fill: true },
                     ...(changed ? [{ curve: wi.pred.curve, color: "var(--violet)", label: "whatif", dash: "6 3" }] : []),
@@ -140,7 +140,7 @@ export default function PatientCase() {
                   <p className="small muted" style={{ marginTop: 0 }}>Change in risk if each pathway were at the cohort average. Positive pushes risk up.</p>
                   <Bars domain={Math.max(0.05, ...attr.map(Math.abs))} items={cohort.pathways.map((pw, k) => ({ label: pw.short, value: attr[k] })).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 8)}
                     format={(v) => `${v > 0 ? "+" : ""}${Math.round(v * 100)}`} posColor="var(--eosin)" negColor="var(--teal)" />
-                  <div className="tiny muted" style={{ marginTop: 8 }}>Percentage points of 3-year risk.</div>
+                  <div className="tiny muted" style={{ marginTop: 8 }}>Percentage points of {horizonLabel(cohort.horizon)} risk.</div>
                 </div>
                 <div className="panel">
                   <div className="h2">Most similar patients</div>
@@ -166,7 +166,7 @@ export default function PatientCase() {
                         <input type="range" min={-3} max={3} step={0.1} value={wz[k]} onChange={(e) => setWz((z) => z.map((v, i) => (i === k ? +e.target.value : v)))} aria-label={`${cohort.pathways[k].label} score`} />
                       </div>
                     ))}
-                    <div className="row"><div><div className="num" style={{ color: "var(--violet)" }}>{pct(wi.pred.risk)}</div><div className="tiny muted">what-if 3-year risk</div></div>
+                    <div className="row"><div><div className="num" style={{ color: "var(--violet)" }}>{pct(wi.pred.risk)}</div><div className="tiny muted">what-if {horizonLabel(cohort.horizon)} risk</div></div>
                       <span className="spacer" /><button className="btn" disabled={!changed} onClick={() => setWz(p.pathways)}>Reset</button></div>
                   </div>
                 </div>

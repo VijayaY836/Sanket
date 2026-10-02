@@ -4,8 +4,8 @@ export interface PathwayDef { key: string; label: string; short: string; group: 
 export interface Patient {
   id: string;
   pathways: number[]; // z-scored ssGSEA pathway scores, same order as cohort.pathways
-  time: number;       // months to oral cancer, or to last follow-up if censored
-  event: 0 | 1;       // 1 = progressed to oral cancer
+  time: number;       // months to the outcome, or to last follow-up if censored
+  event: 0 | 1;       // 1 = the outcome happened (e.g. progressed to oral cancer, breast cancer relapse)
   meta?: { age?: number; sex?: string; site?: string; histology?: string };
 }
 export interface HardwareRecord {
@@ -31,28 +31,74 @@ export interface Cohort {
   measuredJob?: Record<string, string>;
   /** Encoding used for the recorded hardware run (written by engine/hardware_run.py). */
   featureMap?: { reps: number; beta: number; scale: number };
+  /** Optional wording overrides; see outcomeTerms. */
+  terms?: Partial<Omit<CohortTerms, "hook">> & { hook?: Partial<CohortTerms["hook"]> };
 }
 
-export function outcomeTerms(cohort: Pick<Cohort, "name" | "disease">) {
-  const breast = /breast|metabric/i.test(`${cohort.name} ${cohort.disease}`);
-  return breast ? {
-    risk: "breast cancer relapse",
-    event: "Relapsed",
-    eventPast: "relapsed",
-    free: "Relapse-free",
-    freePast: "relapse-free",
-    progression: "relapses",
-    specialist: "breast oncology",
-  } : {
-    risk: "oral cancer",
-    event: "Developed cancer",
-    eventPast: "progressed",
-    free: "Cancer-free",
-    freePast: "cancer-free",
-    progression: "progressions",
-    specialist: "oral oncology",
+/** Disease-specific wording. Picked from the cohort's name and disease; a cohort file can override any of it with `terms`. */
+export interface CohortTerms {
+  risk: string;          // "oral cancer": "chance of {risk} within N years"
+  event: string;         // "Developed cancer": status of a patient with the event
+  eventPast: string;     // "progressed": "{eventPast} at 2.1y"
+  free: string;          // "Cancer-free": curve and status label
+  freePast: string;      // "cancer-free": "{freePast} 4.3y"
+  progression: string;   // "progressions": "catches 90% of {progression}"
+  specialist: string;    // "oral oncology": "Consider referral to {specialist}"
+  population: string;    // "patients with precancer"
+  eventFact: string;     // "progressed to cancer"
+  sample: string;        // "biopsy": what the gene activity is measured on
+  timeFrom: string;      // "biopsy": "Years since {timeFrom}"
+  hook: { title: string; body: string };  // opening chapter of the Overview story
+  carePath: string[];    // four steps; the third is where SANKET sits
+  carePathNote: string;
+  missCost: string;      // why the screening threshold favours sensitivity
+  watchful: string;      // action for an intermediate-risk patient
+}
+
+const ORAL: CohortTerms = {
+  risk: "oral cancer", event: "Developed cancer", eventPast: "progressed", free: "Cancer-free", freePast: "cancer-free",
+  progression: "progressions", specialist: "oral oncology", population: "patients with precancer", eventFact: "progressed to cancer",
+  sample: "biopsy", timeFrom: "biopsy",
+  hook: { title: "Same white patch. Two different futures.", body: "About one in five oral precancers becomes cancer. Under the microscope, the ones that will and the ones that won't look the same." },
+  carePath: ["Oral screening by a dentist", "Biopsy of the suspicious patch", "SANKET risk from the biopsy's gene activity", "Referral or routine surveillance"],
+  carePathNote: "Decision support after biopsy, not a replacement for it. Research prototype, not for clinical use.",
+  missCost: "Missing a lesion that becomes cancer costs far more than an extra review",
+  watchful: "Consider shorter review intervals and repeat biopsy if the lesion changes.",
+};
+
+const BREAST: CohortTerms = {
+  risk: "breast cancer relapse", event: "Relapsed", eventPast: "relapsed", free: "Relapse-free", freePast: "relapse-free",
+  progression: "relapses", specialist: "breast oncology", population: "patients with primary breast cancer", eventFact: "relapsed",
+  sample: "tumour sample", timeFrom: "diagnosis",
+  hook: { title: "Same diagnosis. Two different futures.", body: "Some patients with primary breast cancer relapse years after treatment; many never do. At diagnosis, the two can look alike." },
+  carePath: ["Diagnosis and surgery", "Gene expression of the tumour sample", "SANKET relapse risk from the tumour's gene activity", "Follow-up planning"],
+  carePathNote: "Decision support alongside standard prognostic tools, not a replacement for them. Research prototype, not for clinical use.",
+  missCost: "Missing a patient who will relapse costs far more than closer follow-up",
+  watchful: "Consider closer follow-up.",
+};
+
+function genericTerms(disease: string): CohortTerms {
+  const d = disease || "the disease";
+  return {
+    risk: `progression of ${d.toLowerCase()}`, event: "Progressed", eventPast: "progressed", free: "Progression-free", freePast: "progression-free",
+    progression: "progressions", specialist: "a specialist", population: "patients", eventFact: "progressed",
+    sample: "sample", timeFrom: "sampling",
+    hook: { title: "Same disease. Two different futures.", body: `Patients with ${d.toLowerCase()} can look alike at the start and still follow very different courses.` },
+    carePath: ["Clinical assessment", "Gene expression of the patient's sample", "SANKET risk from the sample's gene activity", "Referral or routine follow-up"],
+    carePathNote: "Decision support, not a replacement for clinical judgement. Research prototype, not for clinical use.",
+    missCost: "Missing a patient who will progress costs far more than an extra review",
+    watchful: "Consider shorter review intervals.",
   };
 }
+
+export function outcomeTerms(cohort: Pick<Cohort, "name" | "disease" | "terms">): CohortTerms {
+  const text = `${cohort.name} ${cohort.disease}`;
+  const base = /breast|metabric/i.test(text) ? BREAST : /oral|gse26549|premalignant|precancer/i.test(text) ? ORAL : genericTerms(cohort.disease);
+  return { ...base, ...cohort.terms, hook: { ...base.hook, ...cohort.terms?.hook } };
+}
+
+/** "3-year", "5-year", "2.5-year" */
+export const horizonLabel = (months: number) => `${+(months / 12).toFixed(1)}-year`;
 
 export const HALLMARK_12: PathwayDef[] = [
   { key: "HALLMARK_MYC_TARGETS_V1", label: "MYC targets", short: "MYC", group: "Proliferation" },
@@ -139,6 +185,8 @@ export function validateCohort(x: unknown): Cohort {
   if (!c || typeof c !== "object") fail("File is not a JSON object.");
   if (!Array.isArray(c.pathways) || c.pathways.length < 2 || c.pathways.length > 14) fail("`pathways` must list 2–14 pathways (one per qubit).");
   if (!Array.isArray(c.patients) || c.patients.length < 10) fail("`patients` must contain at least 10 patients.");
+  if (c.patients.every((p) => p.time === undefined && p.event === undefined))
+    fail("This is a diagnosis cohort (labels, no follow-up), such as Golub. The app needs time-to-event data: each patient's `time` and `event`. Diagnosis results load on the When quantum wins page.");
   c.patients.forEach((p, i) => {
     if (!Array.isArray(p.pathways) || p.pathways.length !== c.pathways.length) fail(`Patient ${i + 1}: expected ${c.pathways.length} pathway scores.`);
     if (typeof p.time !== "number" || (p.event !== 0 && p.event !== 1)) fail(`Patient ${i + 1}: needs numeric \`time\` and \`event\` 0 or 1.`);

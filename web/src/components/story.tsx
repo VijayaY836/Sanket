@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Cohort } from "../lib/cohort";
+import { Cohort, CohortTerms, horizonLabel, outcomeTerms } from "../lib/cohort";
 import { Model } from "../lib/analysis";
 import { Curve } from "../lib/survival";
 import { eigSym } from "../lib/linalg";
@@ -19,14 +19,14 @@ export interface StoryProps {
   onEvidence: () => void;
 }
 
-const CHAPTERS = [
-  { title: "Same white patch. Two different futures.", body: "About one in five oral precancers becomes cancer. Under the microscope, the ones that will and the ones that won't look the same." },
-  { title: "Inside every biopsy, 20,000 genes", body: "Each sample carries the activity of about twenty thousand genes: far too many numbers for 86 patients." },
+const chapters = (cohort: Cohort, t: CohortTerms) => [
+  t.hook,
+  { title: `Inside every ${t.sample}, 20,000 genes`, body: `Each sample carries the activity of about twenty thousand genes: far too many numbers for ${cohort.patients.length.toLocaleString()} patients.` },
   { title: "Compressed into 12 pathways a biologist can read", body: "Genes are scored as Hallmark pathways: cell growth, DNA repair, hypoxia, inflammation. This patient's profile, chosen from biology, not from outcomes." },
   { title: "One pathway per qubit, wired like the biology", body: "Qubits are linked only where their pathways share genes. The circuit's shape is the biology's shape." },
   { title: "Each patient runs through the circuit", body: "Pathway scores become rotation angles. The patient's state evolves under a Hamiltonian built from their own biology." },
-  { title: "Similar quantum states, similar futures", body: "Every dot is a patient, placed by quantum similarity. Pink dots developed cancer; teal stayed cancer-free." },
-  { title: "Two patients, separated", body: "From the most similar past patients, SANKET draws each patient's cancer-free curve and a three-year risk." },
+  { title: "Similar quantum states, similar futures", body: `Every dot is a patient, placed by quantum similarity. Pink dots ${t.event.toLowerCase()}; teal stayed ${t.freePast}.` },
+  { title: "Two patients, separated", body: `From the most similar past patients, SANKET draws each patient's ${t.freePast} curve and a ${horizonLabel(cohort.horizon)} risk.` },
   { title: "Tested honestly. Run on real quantum hardware.", body: "" },
 ];
 const N = 1300;
@@ -54,6 +54,8 @@ function embed(K: number[][]) {
 
 export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: StoryProps) {
   const section = useRef<HTMLElement>(null);
+  const terms = outcomeTerms(cohort);
+  const CHAPTERS = useMemo(() => chapters(cohort, terms), [cohort]); // eslint-disable-line react-hooks/exhaustive-deps
   const cvs = useRef<HTMLCanvasElement>(null);
   const [prog, setProg] = useState(0);
   const target = useRef(0), shown = useRef(0);
@@ -232,10 +234,10 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
       if (fCurve > 0) {
         ctx.strokeStyle = `rgba(${col.ink3.join(",")},${0.35 * fCurve})`; ctx.lineWidth = 1;
         [0, 0.25, 0.5, 0.75, 1].forEach((s) => { const y = geo.top + (1 - s) * geo.tall; ctx.beginPath(); ctx.moveTo(geo.left, y); ctx.lineTo(geo.left + geo.span, y); ctx.stroke(); });
-        const hx = geo.left + (36 / 120) * geo.span;
+        const hx = geo.left + (Math.min(cohort.horizon, 120) / 120) * geo.span;
         ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(hx, geo.top); ctx.lineTo(hx, geo.top + geo.tall); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle = `rgba(${col.ink3.join(",")},${0.9 * fCurve})`; ctx.font = "12px Figtree, system-ui"; ctx.textAlign = "left";
-        ctx.fillText("3 years", hx + 6, geo.top + 14); ctx.fillText("100% cancer-free", geo.left, geo.top - 8); ctx.fillText("10 years", geo.left + geo.span - 52, geo.top + geo.tall + 18);
+        ctx.fillText(`${+(cohort.horizon / 12).toFixed(1)} years`, hx + 6, geo.top + 14); ctx.fillText(`100% ${terms.freePast}`, geo.left, geo.top - 8); ctx.fillText("10 years", geo.left + geo.span - 52, geo.top + geo.tall + 18);
       }
 
       // particles
@@ -314,7 +316,7 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
               <div key={k} className="story-chapter" style={{ opacity: o, transform: `translateY(${(1 - o) * 18}px)`, pointerEvents: o > 0.6 ? "auto" : "none" }} aria-hidden={o < 0.5}>
                 {k === 0 ? <h1 className="story-title story-title-xl">{ch.title}</h1> : <h2 className="story-title">{ch.title}</h2>}
                 {ch.body && <p className="story-body">{ch.body}</p>}
-                {k === 2 && <p className="story-note">Patient {pair[0].id}, {pair[0].histology ?? "oral lesion"}</p>}
+                {k === 2 && <p className="story-note">Patient {pair[0].id}, {pair[0].histology ?? terms.sample}</p>}
                 {k === CHAPTERS.length - 1 && (
                   <div className="proof">
                     <div className="proof-grid">
@@ -343,7 +345,7 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
             </li>
           ))}
         </ol>
-        <div className="story-hint" style={{ opacity: prog < 0.03 ? 1 : 0 }}>Scroll to follow one biopsy through SANKET</div>
+        <div className="story-hint" style={{ opacity: prog < 0.03 ? 1 : 0 }}>Scroll to follow one {terms.sample} through SANKET</div>
         <div className="story-bar"><span style={{ transform: `scaleX(${prog})` }} /></div>
       </div>
     </section>

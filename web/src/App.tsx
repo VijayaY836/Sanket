@@ -41,7 +41,7 @@ export default function App() {
           <Mark />
           <div>
             <div className="brand-name">SANKET</div>
-            <div className="brand-sub">Precancer progression, hybrid quantum ML</div>
+            <div className="brand-sub">Cancer risk from gene activity, hybrid quantum ML</div>
           </div>
         </div>
         {NAV.map((g) => (

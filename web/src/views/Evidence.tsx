@@ -5,6 +5,7 @@ import { kaplanMeier, logRank } from "../lib/survival";
 import { Forest, Heatmap, LineBand, SurvivalChart, XYChart } from "../components/viz";
 import { brier, calibration, decisionCurve, screeningPoint } from "../lib/clinical";
 import { qubitCurve } from "../lib/experiments";
+import { horizonLabel, outcomeTerms } from "../lib/cohort";
 
 export default function Evidence() {
   const { model, nested, nestedProgress, geo, theme, cohort, large } = useApp();
@@ -87,7 +88,7 @@ export default function Evidence() {
         <div className="panel">
           <div className="row"><div className="h2">Risk groups separate</div><span className="spacer" /><span className="chip chip-violet">log-rank {groups.lr.p < 0.001 ? "p < 0.001" : `p = ${groups.lr.p.toFixed(3)}`}</span></div>
           <p className="small muted" style={{ marginTop: 0 }}>Patients split at the median leave-one-out quantum risk. Actual outcomes, Kaplan–Meier.</p>
-          <SurvivalChart height={230} series={[
+          <SurvivalChart height={230} timeFrom={outcomeTerms(cohort).timeFrom} label="Kaplan–Meier curves by predicted risk group" series={[
             { curve: groups.hi, color: "var(--eosin)", label: "Higher predicted risk" },
             { curve: groups.lo, color: "var(--teal)", label: "Lower predicted risk" },
           ]} />
@@ -149,6 +150,7 @@ function ClinicalUse() {
   const { model, cohort } = useApp();
   const [kind, setKind] = useState<"proj" | "rbf">("proj");
   const H = cohort.horizon;
+  const terms = outcomeTerms(cohort);
   const r = model.loo[kind];
   const cal = useMemo(() => calibration(r, model.times, model.events, H), [r, model, H]);
   const ths = useMemo(() => Array.from({ length: 30 }, (_, i) => 0.02 + i * 0.02), []);
@@ -163,7 +165,7 @@ function ClinicalUse() {
       <div className="row">
         <div>
           <div className="h2">Would it help a clinician?</div>
-          <p className="small muted" style={{ margin: 0 }}>Calibration, decision-curve analysis and a screening-first referral threshold for the {H / 12}-year risk. Missing a lesion that becomes cancer costs far more than an extra review, so the threshold is set to catch 90% of progressions.</p>
+          <p className="small muted" style={{ margin: 0 }}>Calibration, decision-curve analysis and a screening-first referral threshold for the {horizonLabel(H)} risk. {terms.missCost}, so the threshold is set to catch 90% of {terms.progression}.</p>
         </div>
         <span className="spacer" />
         <div className="seg" role="group" aria-label="Model">
@@ -174,7 +176,7 @@ function ClinicalUse() {
       <div className="two" style={{ marginTop: 14 }}>
         <div>
           <b className="small">Calibration</b>
-          <XYChart diagonal xMax={calMax} yMax={calMax} xLabel={`Predicted ${H / 12}-year risk`} yLabel="Observed" height={230}
+          <XYChart diagonal xMax={calMax} yMax={calMax} xLabel={`Predicted ${horizonLabel(H)} risk`} yLabel="Observed" height={230}
             series={[{ label: "model", color: kind === "proj" ? "var(--violet)" : "var(--ink-2)", pts: cal.map((c) => ({ x: c.predicted, y: c.observed })), dots: true }]} />
           <div className="tiny muted">Risk quintiles; observed = Kaplan–Meier. Points on the dashed line mean predicted risks can be taken at face value. Brier score {br.brier.toFixed(3)} (skill {br.skill >= 0 ? "+" : ""}{br.skill.toFixed(3)} vs no model).</div>
         </div>
@@ -193,7 +195,7 @@ function ClinicalUse() {
           <b className="small">Screening threshold (catches ≥90%)</b>
           {sp ? (
             <div className="scroll-x"><table className="table" style={{ marginTop: 6 }}>
-              <thead><tr><th>Refer if risk ≥</th><th>Progressions caught</th><th>Patients referred</th><th>Specificity</th><th>Cancer-free if not referred</th><th>Progress if referred</th></tr></thead>
+              <thead><tr><th>Refer if risk ≥</th><th>{terms.progression[0].toUpperCase() + terms.progression.slice(1)} caught</th><th>Patients referred</th><th>Specificity</th><th>{terms.free} if not referred</th><th>{terms.event} if referred</th></tr></thead>
               <tbody><tr><td><b>{pct(sp.threshold)}</b></td><td><b>{pct(sp.sensitivity)}</b></td><td>{pct(sp.referral)}</td><td>{pct(sp.specificity)}</td><td>{pct(sp.npv)}</td><td>{pct(sp.ppv)}</td></tr></tbody>
             </table></div>
           ) : <p className="small muted">Not enough events to set a threshold.</p>}
