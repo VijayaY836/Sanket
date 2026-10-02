@@ -311,7 +311,7 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
             const on = k === active;
             return (
               <div key={k} className="story-chapter" data-on={on} aria-hidden={!on}>
-                {k === 0 && <p className="story-kicker">SANKET · predicting {terms.risk} from gene activity with a quantum kernel{stats.hwBackend ? ", run on real IBM hardware" : ""}</p>}
+                {k === 0 && <p className="story-kicker">SANKET · predicting cancer from gene activity with a quantum kernel{stats.hwBackend ? ", run on real IBM hardware" : ""}</p>}
                 {k === 0 ? <h1 className="story-title story-title-xl">{ch.title}</h1> : <h2 className="story-title">{ch.title}</h2>}
                 {ch.body && <p className="story-body">{ch.body}</p>}
                 {k === 2 && <p className="story-note">Patient {pair[0].id}, {pair[0].histology ?? terms.sample}</p>}
