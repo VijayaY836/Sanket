@@ -298,11 +298,14 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
   }, [cohort, model, pair, sub, q]);
 
   const chap = Math.min(CHAPTERS.length - 1, Math.floor(prog * CHAPTERS.length));
+  // Each caption is readable for most of its chapter and hands over to the next one at the boundary.
+  // The first is fully visible on arrival, so the opening screen always has its headline.
   const opacityOf = (k: number) => {
     const local = prog * CHAPTERS.length - k;
-    if (local < -0.05 || local > 1.05) return 0;
-    if (k === CHAPTERS.length - 1) return clamp01((local - 0.05) / 0.25);
-    return clamp01(Math.min((local - 0.08) / 0.22, (0.98 - local) / 0.18));
+    if (local < 0 || local > 1) return 0;
+    const fadeIn = k === 0 ? 1 : local / 0.08;
+    const fadeOut = k === CHAPTERS.length - 1 ? 1 : (1 - local) / 0.08;
+    return clamp01(Math.min(fadeIn, fadeOut));
   };
 
   return (
@@ -314,6 +317,7 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
             const o = opacityOf(k);
             return (
               <div key={k} className="story-chapter" style={{ opacity: o, transform: `translateY(${(1 - o) * 18}px)`, pointerEvents: o > 0.6 ? "auto" : "none" }} aria-hidden={o < 0.5}>
+                {k === 0 && <p className="story-kicker">SANKET · predicting {terms.risk} from gene activity with a quantum kernel{stats.hwBackend ? ", run on real IBM hardware" : ""}</p>}
                 {k === 0 ? <h1 className="story-title story-title-xl">{ch.title}</h1> : <h2 className="story-title">{ch.title}</h2>}
                 {ch.body && <p className="story-body">{ch.body}</p>}
                 {k === 2 && <p className="story-note">Patient {pair[0].id}, {pair[0].histology ?? terms.sample}</p>}

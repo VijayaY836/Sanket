@@ -13,7 +13,14 @@ export interface HardwareRecord {
   // hardware versus exact simulation, written by engine/hardware_run.py
   mean_error_per_qubit?: number; correlation_with_exact?: number; length_ratio_measured_vs_exact?: number;
   c_index_hardware_kernel?: number; c_index_exact_kernel?: number; kernel_agreement?: number;
+  twoQubitGates?: number; twoQubitDepth?: number; // mean per circuit after transpiling for the backend
 }
+
+/** The most recent real (not simulated) hardware run that recorded its transpiled gate counts. */
+export const hardwareCircuit = (c: Pick<Cohort, "hardware" | "featureMap">) => {
+  const r = (c.hardware ?? []).filter((h) => h.twoQubitGates != null && !/not hardware/i.test(h.note ?? "")).pop();
+  return r ? { ...r, reps: c.featureMap?.reps } : undefined;
+};
 export interface Cohort {
   name: string;
   disease: string;

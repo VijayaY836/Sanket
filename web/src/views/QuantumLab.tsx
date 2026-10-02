@@ -6,6 +6,7 @@ import { eigSym, psdProject } from "../lib/linalg";
 import { BlochSphere, Heatmap, XYChart } from "../components/viz";
 import { noiseCurve, NOISE_P2 } from "../lib/experiments";
 import { IPlay } from "../icons";
+import { hardwareCircuit } from "../lib/cohort";
 
 /** Transpiled on IBM Heron (FakeFez calibration), Qiskit 2.5, optimization level 3, 12 qubits, 2 Trotter steps. Computed by the team. */
 export const HW_TABLE = [
@@ -17,6 +18,7 @@ export const HW_TABLE = [
 
 export default function QuantumLab() {
   const { model, cohort, sel, setSel } = useApp();
+  const hw = hardwareCircuit(cohort);
   const trace = useMemo(() => layerTrace(model.angles[sel], cohort.edges, model.spec), [model, sel, cohort]);
   const [col, setCol] = useState(trace.length - 1);
   const [playing, setPlaying] = useState(false);
@@ -67,19 +69,28 @@ export default function QuantumLab() {
         <p className="lead small">Shaping the entanglement like the biology keeps circuits short enough to survive real hardware. Like-for-like, our fidelity kernel needs about 5× fewer two-qubit gates than the standard ZZ feature map (188 vs 906).</p>
         <div className="scroll-x">
           <table className="table">
-            <thead><tr><th>Encoding, 12 qubits, 2 Trotter steps</th><th>Kernel</th><th>Two-qubit gates</th><th>Two-qubit depth</th><th>Estimated fidelity</th><th>Verdict</th></tr></thead>
+            <thead><tr><th>Encoding, 12 qubits</th><th>Kernel</th><th>Two-qubit gates</th><th>Two-qubit depth</th><th>Estimated fidelity</th><th>Verdict</th></tr></thead>
             <tbody>
               {HW_TABLE.map((r) => (
                 <tr key={r.enc + r.kernel}>
-                  <td style={{ fontWeight: r.ok ? 700 : 400 }}>{r.enc}</td><td>{r.kernel}</td>
+                  <td style={{ fontWeight: r.ok ? 700 : 400 }}>{r.enc}<div className="tiny muted">2 Trotter steps</div></td><td>{r.kernel}</td>
                   <td><b>{r.twoq}</b></td><td>{r.depth}</td>
                   <td><FidBar v={r.fid} /></td>
                   <td><span className={`chip ${r.ok ? "chip-teal" : r.fid > 0.1 ? "chip-amber" : "chip-eosin"}`}>{r.ok ? "Ready for hardware" : r.fid > 0.1 ? "Noise-limited" : "Noise-dominated"}</span></td>
                 </tr>
               ))}
+              {hw && (
+                <tr>
+                  <td style={{ fontWeight: 700 }}>SANKET pathway topology<div className="tiny muted">{hw.reps ?? 1} Trotter step{(hw.reps ?? 1) > 1 ? "s" : ""}, the circuit run on {hw.backend}</div></td><td>Projected</td>
+                  <td><b>{Math.round(hw.twoQubitGates!)}</b></td><td>{Math.round(hw.twoQubitDepth ?? 0) || "–"}</td>
+                  <td className="small">{hw.correlation_with_exact != null ? <>measured: <b>{hw.correlation_with_exact.toFixed(2)}</b> correlation with exact</> : "measured on hardware"}</td>
+                  <td><span className="chip chip-violet">Run on hardware</span></td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
+        {hw && <p className="small" style={{ margin: "8px 0 0" }}>The model in this app uses {model.spec.reps} Trotter steps. The IBM run used {hw.reps ?? 1}, as the noise study below recommends: about half the two-qubit gates, with similar accuracy and better noise robustness.</p>}
         <p className="tiny muted" style={{ marginBottom: 0 }}>Computed by the team with Qiskit 2.5 transpilation (optimisation level 3, best of 8 seeds) onto IBM Heron using the FakeFez calibration snapshot, on the real 14-edge crosstalk graph from GSE26549. Estimated fidelity is the product of calibrated gate and readout success rates.</p>
       </section>
 

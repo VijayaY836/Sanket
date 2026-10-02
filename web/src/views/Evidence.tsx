@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../store";
-import { sizeCurve, verdict, KERNEL_LABEL } from "../lib/analysis";
+import { meanBlochLength, sizeCurve, verdict, KERNEL_LABEL } from "../lib/analysis";
 import { kaplanMeier, logRank } from "../lib/survival";
 import { Forest, Heatmap, LineBand, SurvivalChart, XYChart } from "../components/viz";
 import { brier, calibration, decisionCurve, screeningPoint } from "../lib/clinical";
@@ -62,7 +62,7 @@ export default function Evidence() {
               { label: KERNEL_LABEL.rbf, c: nested.rbf.c, ci: nested.rbf.ci, color: "var(--ink-2)", note: nested.rbf.picks.length ? `Bandwidth ×${pickSummary(nested.rbf.picks)}` : undefined },
             ]} />
             {large && <div className="tier tier-intermediate" style={{ margin: "8px 0" }}><b>Large cohort: browser preview</b>These are leave-one-out results with the bandwidth chosen on all patients, so they are slightly optimistic. The registered full-cohort analysis (repeated cross-validation, significance tests, data-size curve) is computed by <code>python -m engine.scale</code>.</div>}
-            <p className="tiny muted" style={{ marginBottom: 0, display: large ? "none" : undefined }}>Information-matched: every model sees exactly the same {model.q} pathway scores, so differences come from the model, not the data. Harrell's concordance index with 95% bootstrap intervals. Nested leave-one-out: for each held-out patient, the kernel bandwidth is chosen using only the other {model.n - 1} patients. Survival model: kernel-weighted Kaplan–Meier (Beran) over the 15 most similar patients.</p>
+            <p className="tiny muted" style={{ marginBottom: 0, display: large ? "none" : undefined }}>{meanBlochLength(model.bloch) > 0.98 && <>At the bandwidth chosen here the quantum states are nearly unentangled (mean qubit arrow length {meanBlochLength(model.bloch).toFixed(3)}; see Constellation), which is consistent with parity. </>}Information-matched: every model sees exactly the same {model.q} pathway scores, so differences come from the model, not the data. Harrell's concordance index with 95% bootstrap intervals. Nested leave-one-out: for each held-out patient, the kernel bandwidth is chosen using only the other {model.n - 1} patients. Survival model: kernel-weighted Kaplan–Meier (Beran) over the 15 most similar patients.</p>
           </>
         )}
       </section>
