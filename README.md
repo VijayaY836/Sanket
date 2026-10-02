@@ -1,6 +1,9 @@
 <div align="center">
 
-# SANKET
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.png"/>
+  <img src="docs/logo.png" alt="SANKET: Quantum Intelligence for Cancer Prevention" width="380"/>
+</picture>
 
 ### Hybrid quantum machine learning for early cancer detection, run on real IBM quantum hardware, with an honest test of when quantum actually helps
 
