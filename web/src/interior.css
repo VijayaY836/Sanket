@@ -132,7 +132,9 @@
 .shell--interior .evidence-primary .h2 { font-size: clamp(20px, 2.1vw, 28px); font-weight: 600; margin-bottom: 18px; }
 .shell--interior .evidence-primary .tiny { max-width: 95ch; line-height: 1.55; }
 .shell--interior .evidence-comparison { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
-.shell--interior .evidence-exploration { grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); }
+.shell--interior .evidence-exploration { grid-template-columns: 1fr; }
+.shell--interior .kernel-heatmaps { gap: 18px 34px; }
+.shell--interior .kernel-heatmaps > * { flex: 0 1 280px; }
 .shell--interior .evidence-page .two > .panel,
 .shell--interior .advantage-page .two > .panel { min-width: 0; }
 .shell--interior .advantage-experiment { border-top: 3px solid var(--violet); }

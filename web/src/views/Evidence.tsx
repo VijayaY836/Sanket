@@ -113,9 +113,9 @@ export default function Evidence() {
           <div className="h2">What each kernel sees</div>
           <p className="small muted" style={{ marginTop: 0 }}>Patient-by-patient similarity, sorted by predicted risk. Block structure means risk-similar patients look alike to the model.</p>
           {large ? <p className="small muted">Kernel heatmaps are omitted in the browser for 1,975 patients because rendering the full matrices would block the page. The full heatmaps are available from the engine results.</p> : (
-            <div className="row" style={{ alignItems: "flex-start" }}>
-              <Heatmap K={model.K.proj} order={order} size={210} label="Projected quantum kernel" themeKey={theme} />
-              <Heatmap K={model.K.rbf} order={order} size={210} label="Classical RBF kernel" themeKey={theme} />
+            <div className="row kernel-heatmaps" style={{ alignItems: "flex-start" }}>
+              <Heatmap K={model.K.proj} order={order} size={280} label="Projected quantum kernel" themeKey={theme} />
+              <Heatmap K={model.K.rbf} order={order} size={280} label="Classical RBF kernel" themeKey={theme} />
             </div>
           )}
         </div>
