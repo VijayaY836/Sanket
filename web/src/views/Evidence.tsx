@@ -11,6 +11,7 @@ export default function Evidence() {
   const [curve, setCurve] = useState<ReturnType<typeof sizeCurve> | null>(null);
   useEffect(() => {
     setCurve(null);
+    if (large) return;
     const t = setTimeout(() => {
       const sizes = [20, 30, 45, 60, model.n].filter((s, i, a) => s <= model.n && a.indexOf(s) === i);
       setCurve(sizeCurve(model, sizes, 25));
@@ -65,7 +66,7 @@ export default function Evidence() {
         )}
       </section>
 
-      <ClinicalUse />
+      {large ? <LargeCohortNotice /> : <ClinicalUse />}
       <QubitCurve />
 
       <section className="two">
@@ -98,7 +99,7 @@ export default function Evidence() {
         <div className="panel">
           <div className="h2">Where would quantum help? Fewer patients</div>
           <p className="small muted" style={{ marginTop: 0 }}>Random subsets of the cohort, 25 repeats each, leave-one-out C-index. Quantum kernels are expected to matter most when data is scarce. On real data the breast cohort extends this to 2,000 patients.</p>
-          {curve ? (
+          {large ? <p className="small muted">The full data-size experiment is computed by <code>python -m engine.scale</code> for this large cohort; the browser skips it so the evidence page remains interactive.</p> : curve ? (
             <>
               <LineBand xLabel="Patients in training set" series={[
                 { label: "Projected quantum", color: "var(--violet)", pts: curve.map((c) => ({ x: c.size, ...c.proj })) },
@@ -111,13 +112,24 @@ export default function Evidence() {
         <div className="panel">
           <div className="h2">What each kernel sees</div>
           <p className="small muted" style={{ marginTop: 0 }}>Patient-by-patient similarity, sorted by predicted risk. Block structure means risk-similar patients look alike to the model.</p>
-          <div className="row" style={{ alignItems: "flex-start" }}>
-            <Heatmap K={model.K.proj} order={order} size={210} label="Projected quantum kernel" themeKey={theme} />
-            <Heatmap K={model.K.rbf} order={order} size={210} label="Classical RBF kernel" themeKey={theme} />
-          </div>
+          {large ? <p className="small muted">Kernel heatmaps are omitted in the browser for 1,975 patients because rendering the full matrices would block the page. The full heatmaps are available from the engine results.</p> : (
+            <div className="row" style={{ alignItems: "flex-start" }}>
+              <Heatmap K={model.K.proj} order={order} size={210} label="Projected quantum kernel" themeKey={theme} />
+              <Heatmap K={model.K.rbf} order={order} size={210} label="Classical RBF kernel" themeKey={theme} />
+            </div>
+          )}
         </div>
       </section>
     </div>
+  );
+}
+
+function LargeCohortNotice() {
+  return (
+    <section className="panel">
+      <div className="h2">Clinical usefulness</div>
+      <p className="small muted" style={{ marginBottom: 0 }}>Calibration, Brier scores and decision curves for this 1,975-patient cohort are computed by the registered Python analysis so the browser stays responsive. Run <code>python -m engine.clinical --cohort out/metabric_cohort.json --repeats 1</code> and load the resulting report from the engine output.</p>
+    </section>
   );
 }
 

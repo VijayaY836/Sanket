@@ -1,6 +1,6 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Cohort, syntheticCohort } from "./lib/cohort";
-import { buildModel, KernelKind, Model, nestedCV } from "./lib/analysis";
+import { KernelKind, Model, nestedCV } from "./lib/analysis";
 import { geometricDifference } from "./lib/linalg";
 
 export type View = "overview" | "case" | "constellation" | "lab" | "evidence" | "advantage" | "readiness" | "hardware" | "workbench";
@@ -35,21 +35,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [nested, setNested] = useState<Nested | null>(null);
   const [nestedProgress, setNP] = useState(0);
   const [geo, setGeo] = useState<Ctx["geo"]>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const requestRef = useRef(0);
 
   const setCohort = useCallback((c: Cohort) => {
+    const request = ++requestRef.current;
+    workerRef.current?.terminate();
     setModel(null); setNested(null); setGeo(null); setNP(0);
     setCohortRaw(c);
-    setTimeout(() => {
-      const m = buildModel(c);
+    const worker = new Worker(new URL("./model.worker.ts", import.meta.url), { type: "module" });
+    workerRef.current = worker;
+    worker.onmessage = (event: MessageEvent<Model>) => {
+      if (request !== requestRef.current) return;
+      worker.terminate();
+      workerRef.current = null;
+      const m = event.data;
       setModel(m);
       // start on the most instructive patient: a progressor with high predicted risk
       let best = 0;
       m.loo.proj.forEach((r, i) => { if (m.events[i] && r > m.loo.proj[best]) best = i; });
       setSel(best);
-    }, 60);
+    };
+    worker.postMessage(c);
   }, []);
 
-  useEffect(() => { setCohort(syntheticCohort()); }, [setCohort]);
+  useEffect(() => {
+    setCohort(syntheticCohort());
+    return () => workerRef.current?.terminate();
+  }, [setCohort]);
 
   // background analyses: geometric difference, then nested cross-validation
   useEffect(() => {
@@ -80,16 +93,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const cycleTheme = () => setTheme((t) => (t === "system" ? "dark" : t === "dark" ? "light" : "system"));
 
   const value = useMemo(() => (cohort && model ? { cohort, model, setCohort, sel, setSel, view, go, theme, cycleTheme, nested, nestedProgress, geo, large: model.n > LARGE } : null), [cohort, model, setCohort, sel, view, go, theme, nested, nestedProgress, geo]);
-  if (!value) return <Loading />;
+  if (!value) return <Loading patients={cohort?.patients.length ?? 86} />;
   return <C.Provider value={value}>{children}</C.Provider>;
 }
 
-function Loading() {
+function Loading({ patients }: { patients: number }) {
   return (
     <div className="loading">
       <div>
         <div className="brand-name" style={{ fontSize: 34 }}>SANKET</div>
-        <p className="muted" style={{ marginTop: 10 }}>Simulating 86 patients on 12 qubits and building quantum kernels…</p>
+        <p className="muted" style={{ marginTop: 10 }}>Building quantum kernels for {patients.toLocaleString()} patients…</p>
       </div>
     </div>
   );

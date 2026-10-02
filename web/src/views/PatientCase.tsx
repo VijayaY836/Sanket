@@ -7,9 +7,10 @@ import { screeningPoint } from "../lib/clinical";
 import { CaseHero } from "../components/caseHero";
 import { survivalAt } from "../lib/survival";
 import { IDownload } from "../icons";
+import { outcomeTerms } from "../lib/cohort";
 
 const TIER: Record<Prediction["tier"], { title: string; action: string; color: string }> = {
-  high: { title: "High risk of progression", action: "Consider referral to oral oncology and close surveillance.", color: "var(--eosin)" },
+  high: { title: "High risk of outcome", action: "", color: "var(--eosin)" },
   intermediate: { title: "Intermediate risk", action: "Consider shorter review intervals and repeat biopsy if the lesion changes.", color: "var(--amber)" },
   low: { title: "Low risk", action: "Routine surveillance.", color: "var(--teal)" },
   uncertain: { title: "Not enough similar patients", action: "Prediction withheld. Refer for specialist review.", color: "var(--ink-3)" },
@@ -23,6 +24,7 @@ export default function PatientCase() {
   const [run, setRun] = useState(0);
   const [fhir, setFhir] = useState(false);
   const p = cohort.patients[sel];
+  const terms = outcomeTerms(cohort);
   const pred = useMemo(() => predictPatient(model, sel), [model, sel]);
   const attr = useMemo(() => attribution(model, sel), [model, sel]);
   const timers = useRef<number[]>([]);
@@ -48,7 +50,7 @@ export default function PatientCase() {
   useEffect(() => setWz(p.pathways), [p]);
   const wi = useMemo(() => whatIf(model, sel, wz), [model, sel, wz]);
   const changed = wz.some((v, k) => v !== p.pathways[k]);
-  const tier = TIER[pred.tier];
+  const tier = { ...TIER[pred.tier], action: pred.tier === "high" ? `Consider referral to ${terms.specialist} and close surveillance.` : pred.tier === "intermediate" ? "Consider shorter review intervals and repeat assessment if the disease changes." : pred.tier === "low" ? "Routine surveillance." : "Prediction withheld. Refer for specialist review." };
   const screen = useMemo(() => screeningPoint(model.loo.proj, model.times, model.events, cohort.horizon, 0.9), [model, cohort]);
 
   return (
@@ -95,7 +97,7 @@ export default function PatientCase() {
           <Stage n={4} title="Prediction" active={stage >= 3}>
             <Faded on={stage >= 3}>
               <div className="num-l" style={{ color: tier.color }}>{pct(pred.risk)}</div>
-              <div className="small muted" style={{ marginTop: 6 }}>chance of oral cancer within {cohort.horizon / 12} years</div>
+              <div className="small muted" style={{ marginTop: 6 }}>chance of {terms.risk} within {cohort.horizon / 12} years</div>
               <div className="tiny muted" style={{ marginTop: 10 }}>From the {pred.neighbours.length} most similar patients in quantum feature space</div>
             </Faded>
           </Stage>
@@ -115,13 +117,13 @@ export default function PatientCase() {
                   <div className={`tier tier-${pred.tier}`}><b>{tier.title}</b>{tier.action}</div>
                   {screen && pred.tier !== "uncertain" && (
                     <div className="small" style={{ borderLeft: "3px solid var(--violet)", paddingLeft: 10 }}>
-                      <b>Screening rule:</b> refer if risk ≥ {pct(screen.threshold)}, which catches {pct(screen.sensitivity)} of progressions in this cohort while referring {pct(screen.referral)} of patients. This patient: <b>{pred.risk >= screen.threshold ? "refer" : "routine surveillance"}</b>.
+                      <b>Screening rule:</b> refer if risk ≥ {pct(screen.threshold)}, which catches {pct(screen.sensitivity)} of {terms.progression} in this cohort while referring {pct(screen.referral)} of patients. This patient: <b>{pred.risk >= screen.threshold ? "refer" : "routine surveillance"}</b>.
                     </div>
                   )}
                   <div className="tiny muted">Tier labels are illustrative; the screening rule is derived from this cohort's out-of-sample predictions. Based on {pred.effN.toFixed(1)} effective neighbours.</div>
                 </div>
                 <div className="panel">
-                  <div className="row"><div className="h2">Cancer-free over time</div><span className="spacer" />
+                  <div className="row"><div className="h2">{terms.free} over time</div><span className="spacer" />
                     <div className="legend"><span><i style={{ background: tier.color }} />{p.id}</span><span><i style={{ background: "var(--ink-3)" }} />Whole cohort</span>{changed && <span><i style={{ background: "var(--violet)" }} />What-if</span>}</div>
                   </div>
                   <SurvivalChart horizon={cohort.horizon} series={[
@@ -148,7 +150,7 @@ export default function PatientCase() {
                     return (
                       <button key={q.id} className="neighbour" onClick={() => setSel(j)} style={{ width: "100%", background: "none", border: 0, borderBottom: "1px solid var(--line)", cursor: "pointer", textAlign: "left" }}>
                         <span className="dot" style={{ background: q.event ? "var(--eosin)" : "var(--teal)" }} />
-                        <span><b>{q.id}</b> <span className="muted">{q.event ? `progressed at ${(q.time / 12).toFixed(1)}y` : `cancer-free ${(q.time / 12).toFixed(1)}y`}</span></span>
+                        <span><b>{q.id}</b> <span className="muted">{q.event ? `${terms.eventPast} at ${(q.time / 12).toFixed(1)}y` : `${terms.freePast} ${(q.time / 12).toFixed(1)}y`}</span></span>
                         <span className="small" style={{ fontWeight: 600 }}>{w.toFixed(2)}</span>
                       </button>
                     );
@@ -197,13 +199,13 @@ function FhirModal({ onClose, id, risk, tier, attr }: { onClose: () => void; id:
     resourceType: "DiagnosticReport",
     status: "preliminary",
     category: [{ text: "Clinical decision support (research use only)" }],
-    code: { text: "Oral precancer progression risk, SANKET hybrid quantum model" },
+    code: { text: `${cohort.name} risk, SANKET hybrid quantum model` },
     subject: { reference: `Patient/${id}` },
     effectiveDateTime: new Date().toISOString(),
-    conclusion: `${tier}. Estimated ${Math.round(risk * 100)}% risk of oral cancer within ${cohort.horizon / 12} years.`,
+    conclusion: `${tier}. Estimated ${Math.round(risk * 100)}% risk of ${outcomeTerms(cohort).risk} within ${cohort.horizon / 12} years.`,
     contained: [{
       resourceType: "Observation", id: "risk", status: "preliminary",
-      code: { text: `${cohort.horizon / 12}-year progression risk` },
+      code: { text: `${cohort.horizon / 12}-year ${outcomeTerms(cohort).progression} risk` },
       valueQuantity: { value: +(risk * 100).toFixed(1), unit: "%" },
       component: cohort.pathways.map((pw, k) => ({ code: { text: `Contribution: ${pw.label}` }, valueQuantity: { value: +(attr[k] * 100).toFixed(1), unit: "percentage points" } })),
     }],
