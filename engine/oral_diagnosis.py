@@ -7,6 +7,8 @@ same 12 Hallmark pathways on its own; expression values are never pooled across 
     python -m engine.oral_diagnosis --dataset gse23558 --inspect #   repeated individuals, submitter (no model output)
     python -m engine.oral_diagnosis                              # GSE30784 -> out/oral_dx_cohort.json
     python -m engine.oral_diagnosis --dataset gse23558           # GSE23558 -> out/oral_dx_external_cohort.json
+    python -m engine.oral_diagnosis --accession GSE12345         # any GEO tissue dataset -> out/dx_GSE12345.json,
+                                                                 #   loadable on the app's Detect page
 
 Then the benchmark (engine.classify):
     python -m engine.classify --task oral_cancer_normal
@@ -98,10 +100,13 @@ def geo_origin(gse) -> dict:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", choices=list(DATASETS), default="gse30784")
+    ap.add_argument("--accession", help="any other GEO series with normal / dysplasia / cancer samples (overrides --dataset)")
     ap.add_argument("--inspect", action="store_true", help="print labels, counts, platform and submitter, then stop")
     ap.add_argument("--allow-mismatch", action="store_true", help="continue if class counts differ from the registered ones")
     a = ap.parse_args()
-    spec = DATASETS[a.dataset]
+    spec = DATASETS[a.dataset] if not a.accession else {
+        "accession": a.accession.upper(), "out": f"dx_{a.accession.upper()}.json", "expected": None,
+        "name": f"{a.accession.upper()} tissue diagnosis", "role": "user"}
     cfg = load_config()
     gse = load_gse(spec["accession"])
     origin = geo_origin(gse)
