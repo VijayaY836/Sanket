@@ -24,7 +24,7 @@ export function useTicker(fn: (t: number) => void) {
 const reduceMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- survival curves ---------- */
-export interface Series { curve: Curve; color: string; label: string; dash?: string; width?: number }
+export interface Series { curve: Curve; color: string; label: string; dash?: string; width?: number; fill?: boolean }
 export function SurvivalChart({ series, horizon, maxT = 120, height = 260 }: { series: Series[]; horizon?: number; maxT?: number; height?: number }) {
   const W = 620, H = height, L = 40, R = 14, T = 14, B = 34;
   const x = (t: number) => L + (Math.min(t, maxT) / maxT) * (W - L - R);
@@ -52,6 +52,10 @@ export function SurvivalChart({ series, horizon, maxT = 120, height = 260 }: { s
           <text x={x(horizon) + 5} y={T + 10} fontSize={11} fill="var(--ink-2)">{horizon / 12}-year risk</text>
         </g>
       )}
+      {series.filter((s) => s.fill).map((s) => (
+        <motion.path key={"fill" + s.label + path(s.curve)} d={`${path(s.curve)}V${y(0)}H${x(0)}Z`} fill={s.color} stroke="none"
+          initial={{ opacity: 0 }} animate={{ opacity: 0.12 }} transition={{ duration: 1.2, delay: 0.5 }} />
+      ))}
       {series.map((s, i) => (
         <motion.path key={s.label + path(s.curve)} d={path(s.curve)} fill="none" stroke={s.color} strokeWidth={s.width ?? 2.6} strokeDasharray={s.dash}
           initial={{ pathLength: reduceMotion() ? 1 : 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, delay: i * 0.12, ease: "easeInOut" }} />
@@ -338,9 +342,9 @@ export function XYChart({ series, xMax, yMin = 0, yMax, xLabel, yLabel, diagonal
   );
 }
 
-/* ---------- geometric-difference scale (g from 1 to sqrt(N), log axis) ---------- */
+/* ---------- geometric-difference scale (shared by Evidence and Readiness) ---------- */
 export function GScale({ g, n }: { g: number; n: number }) {
-  const max = Math.sqrt(n), pos = Math.min(Math.log(g) / Math.log(max), 1);
+  const max = Math.sqrt(Math.max(n, 2)), pos = Math.min(Math.log(Math.max(g, 1)) / Math.log(max), 1);
   return (
     <div>
       <div style={{ position: "relative", height: 10, borderRadius: 6, background: "linear-gradient(90deg, var(--surface-2), var(--violet-soft), var(--violet))", margin: "8px 0 4px" }}>

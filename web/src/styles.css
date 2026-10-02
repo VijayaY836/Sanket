@@ -353,3 +353,47 @@ body {
   .story-copy { background: none; backdrop-filter: none; padding: 0; }
   .story-chapter { align-self: end; padding: 14px 16px; border-radius: 16px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 }
+
+/* =====================  Case file hero (darkfield)  ===================== */
+.case-hero { position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(240px, 0.75fr); gap: clamp(18px, 3vw, 40px); align-items: center;
+  padding: clamp(22px, 3vw, 38px); border-radius: var(--r-hero); color: #eeebfa;
+  background:
+    radial-gradient(520px 320px at 82% 40%, rgba(156, 140, 255, .28), transparent 70%),
+    radial-gradient(420px 260px at 10% 110%, rgba(255, 122, 159, .18), transparent 70%),
+    linear-gradient(160deg, #1b1736, #120f26);
+  box-shadow: 0 30px 60px -36px rgba(18, 15, 38, .8); }
+.case-hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.4px); background-size: 22px 22px; mask-image: linear-gradient(90deg, transparent, #000 60%); -webkit-mask-image: linear-gradient(90deg, transparent, #000 60%); }
+.case-hero > * { position: relative; z-index: 1; }
+.case-kicker { font-size: 13px; color: rgba(238, 235, 250, .65); font-weight: 600; }
+.case-hero-id { font: 800 clamp(48px, 6vw, 88px)/0.95 var(--display); letter-spacing: -0.045em; margin: 6px 0 14px; font-variation-settings: "opsz" 96; }
+.case-facts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+.case-facts span { padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); }
+.case-progress { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; max-width: 640px; }
+.case-step { display: grid; gap: 7px; font-size: 12.5px; color: rgba(238, 235, 250, .45); transition: color .4s; }
+.case-step.on { color: #eeebfa; }
+.case-step-bar { height: 3px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
+.case-step-bar span { display: block; height: 100%; background: linear-gradient(90deg, #9c8cff, #ff7a9f); transform-origin: left; transition: transform .8s var(--ease); }
+.case-verdict { display: inline-block; margin-top: 18px; padding: 8px 14px; border-radius: 12px; font-weight: 700; font-size: 14px; background: rgba(156, 140, 255, .16); border: 1px solid rgba(156, 140, 255, .35); }
+.btn-hero { background: #eeebfa; color: #1b1736; border-color: #eeebfa; }
+.btn-hero:hover { border-color: #fff; background: #fff; }
+.btn-hero-ghost { background: transparent; color: #eeebfa; border-color: rgba(255,255,255,.2); }
+.btn-hero-ghost:hover { border-color: rgba(255,255,255,.5); }
+.case-hero-ring { position: relative; display: grid; justify-items: center; gap: 8px; }
+.case-ring-note { font-size: 12px; color: rgba(238, 235, 250, .55); text-align: center; max-width: 30ch; }
+.ring-spin { animation: ringspin 1.1s linear infinite; }
+@keyframes ringspin { to { transform: rotate(360deg); } }
+.case-stamp { position: absolute; top: 52%; left: 50%; translate: -50% 0; padding: 10px 18px; border: 3px solid; border-radius: 12px; text-align: center; display: grid; gap: 2px;
+  background: rgba(18, 15, 38, .82); backdrop-filter: blur(4px); box-shadow: 0 12px 30px rgba(0,0,0,.4); }
+.case-stamp b { font: 800 22px/1.1 var(--display); letter-spacing: -0.02em; }
+.case-stamp span { font-size: 12.5px; opacity: .85; }
+.case-stamp.bad { border-color: #ff7a9f; color: #ff9fbb; }
+.case-stamp.good { border-color: #4fd1c5; color: #7fe3d9; }
+.milestones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.milestone { padding: 12px; border-radius: 14px; background: var(--surface-2); }
+.milestone-num { font: 800 28px/1 var(--display); letter-spacing: -0.03em; margin-bottom: 4px; font-variation-settings: "opsz" 72; }
+/* pipeline: a flowing line across the active stage */
+.stage[data-active="true"]::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--violet), var(--eosin), transparent); background-size: 200% 100%; animation: flow 2.4s linear infinite; }
+@keyframes flow { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .stage[data-active="true"]::before, .ring-spin { animation: none; } }
+@media (max-width: 980px) { .case-hero { grid-template-columns: 1fr; } .case-progress { grid-template-columns: repeat(2, 1fr); } }

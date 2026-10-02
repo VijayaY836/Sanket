@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "../store";
 import { attribution, predictPatient, Prediction, whatIf } from "../lib/analysis";
-import { Bars, GeneStrip, PathwayGraph, pct, RiskDial, SurvivalChart } from "../components/viz";
+import { Bars, GeneStrip, PathwayGraph, pct, SurvivalChart } from "../components/viz";
 import { screeningPoint } from "../lib/clinical";
-import { IDownload, IReplay } from "../icons";
+import { CaseHero } from "../components/caseHero";
+import { survivalAt } from "../lib/survival";
+import { IDownload } from "../icons";
 
 const TIER: Record<Prediction["tier"], { title: string; action: string; color: string }> = {
   high: { title: "High risk of progression", action: "Consider referral to oral oncology and close surveillance.", color: "var(--eosin)" },
@@ -19,7 +21,6 @@ export default function PatientCase() {
   const [sort, setSort] = useState<"risk" | "id">("risk");
   const [stage, setStage] = useState(0);
   const [run, setRun] = useState(0);
-  const [reveal, setReveal] = useState(false);
   const [fhir, setFhir] = useState(false);
   const p = cohort.patients[sel];
   const pred = useMemo(() => predictPatient(model, sel), [model, sel]);
@@ -29,7 +30,7 @@ export default function PatientCase() {
   // one orchestrated reveal per patient: genes -> pathways -> qubits -> prediction
   useEffect(() => {
     timers.current.forEach(clearTimeout);
-    setStage(0); setReveal(false);
+    setStage(0);
     const steps = [1900, 2800, 3700];
     timers.current = steps.map((ms, k) => window.setTimeout(() => setStage(k + 1), ms));
     return () => timers.current.forEach(clearTimeout);
@@ -74,24 +75,9 @@ export default function PatientCase() {
       </aside>
 
       <div className="grid">
-        <section className="panel">
-          <div className="case-head">
-            <div>
-              <div className="case-id">{p.id}</div>
-              <div className="facts" style={{ marginTop: 8 }}>
-                {p.meta?.age && <span>Age <b>{p.meta.age}</b></span>}
-                {p.meta?.sex && <span>Sex <b>{p.meta.sex}</b></span>}
-                {p.meta?.site && <span>Site <b>{p.meta.site}</b></span>}
-                {p.meta?.histology && <span>Histology <b>{p.meta.histology}</b></span>}
-              </div>
-            </div>
-            <span className="spacer" />
-            <div className="row">
-              <button className="btn" onClick={() => setRun((r) => r + 1)}><IReplay /> Replay analysis</button>
-              <button className="btn" onClick={() => setFhir(true)}><IDownload /> FHIR report</button>
-            </div>
-          </div>
-        </section>
+        <CaseHero p={p} cohort={cohort} risk={pred.risk} stage={stage} color={tier.color}
+          verdict={screen && pred.tier !== "uncertain" ? (pred.risk >= screen.threshold ? `Screening rule: refer (risk at or above ${pct(screen.threshold)})` : `Screening rule: routine surveillance (risk below ${pct(screen.threshold)})`) : pred.tier === "uncertain" ? "Too few similar patients: refer for specialist review" : null}
+          onReplay={() => setRun((r) => r + 1)} onFhir={() => setFhir(true)} />
 
         <section className="pipeline" aria-label="Analysis pipeline">
           <Stage n={1} title="Genes measured" active={stage >= 0} progress={stage >= 1 ? 1 : undefined}>
@@ -120,8 +106,12 @@ export default function PatientCase() {
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="grid">
               <section className="result">
                 <div className="panel" style={{ display: "grid", gap: 12, alignContent: "start" }}>
-                  <div className="h2">Risk of progression</div>
-                  <div style={{ display: "grid", placeItems: "center" }}><RiskDial risk={pred.risk} /></div>
+                  <div className="h2">Predicted future</div>
+                  <div className="milestones">
+                    {[12, 36, 60].map((m) => (
+                      <div key={m} className="milestone"><div className="milestone-num" style={{ color: tier.color }}>{pct(1 - survivalAt(pred.curve, m))}</div><div className="tiny muted">risk by {m / 12} year{m > 12 ? "s" : ""}</div></div>
+                    ))}
+                  </div>
                   <div className={`tier tier-${pred.tier}`}><b>{tier.title}</b>{tier.action}</div>
                   {screen && pred.tier !== "uncertain" && (
                     <div className="small" style={{ borderLeft: "3px solid var(--violet)", paddingLeft: 10 }}>
@@ -129,15 +119,6 @@ export default function PatientCase() {
                     </div>
                   )}
                   <div className="tiny muted">Tier labels are illustrative; the screening rule is derived from this cohort's out-of-sample predictions. Based on {pred.effN.toFixed(1)} effective neighbours.</div>
-                  <label className="row small" style={{ cursor: "pointer" }}>
-                    <input type="checkbox" checked={reveal} onChange={(e) => setReveal(e.target.checked)} /> Reveal what actually happened
-                  </label>
-                  {reveal && (
-                    <div className={`tier ${p.event ? "tier-high" : "tier-low"}`}>
-                      <b>{p.event ? `Developed oral cancer at ${(p.time / 12).toFixed(1)} years` : `Cancer-free at last follow-up (${(p.time / 12).toFixed(1)} years)`}</b>
-                      The model never saw this patient's outcome when making the prediction.
-                    </div>
-                  )}
                 </div>
                 <div className="panel">
                   <div className="row"><div className="h2">Cancer-free over time</div><span className="spacer" />
@@ -145,10 +126,9 @@ export default function PatientCase() {
                   </div>
                   <SurvivalChart horizon={cohort.horizon} series={[
                     { curve: model.km, color: "var(--ink-3)", label: "cohort", dash: "4 4", width: 1.5 },
-                    { curve: pred.curve, color: tier.color, label: p.id },
+                    { curve: pred.curve, color: tier.color, label: p.id, fill: true },
                     ...(changed ? [{ curve: wi.pred.curve, color: "var(--violet)", label: "whatif", dash: "6 3" }] : []),
                   ]} />
-                  {reveal && <p className="small muted" style={{ margin: 0 }}>Actual: {p.event ? "progressed" : "censored"} at {p.time} months.</p>}
                 </div>
               </section>
 
