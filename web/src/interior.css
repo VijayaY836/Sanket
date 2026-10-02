@@ -1,0 +1,111 @@
+/* Interior workspace. The Overview view never receives shell--interior. */
+.shell--interior {
+  --bg: #f6f6f4;
+  --surface: #fff;
+  --surface-2: #f1f1ef;
+  --line: #dcdcd8;
+  --ink: #18191b;
+  --ink-2: #45484b;
+  --ink-3: #696e70;
+  --violet: #5748aa;
+  --violet-soft: #efedf9;
+  --eosin: #ba4967;
+  --eosin-soft: #f8ecef;
+  --teal: #187774;
+  --teal-soft: #e8f4f2;
+  --amber: #95631c;
+  --amber-soft: #f7f0e4;
+  --display: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --r-panel: 10px;
+  --r-ctl: 7px;
+  background: var(--bg);
+  color: var(--ink);
+  grid-template-columns: 224px minmax(0, 1fr);
+}
+
+.shell--interior .rail {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-right-color: var(--line);
+  padding: 28px 12px 18px;
+}
+.shell--interior .brand { padding-bottom: 26px; }
+.shell--interior .brand-name { font-size: 21px; letter-spacing: -.025em; }
+.shell--interior .nav-group-label { text-transform: uppercase; letter-spacing: .09em; font-size: 10px; }
+.shell--interior .nav-btn { border-radius: 6px; font-size: 13px; padding: 9px 11px; }
+.shell--interior .nav-active { border-radius: 6px; box-shadow: inset 2px 0 0 var(--violet); }
+.shell--interior .main { padding: 42px clamp(24px, 4vw, 64px) 90px; }
+.shell--interior .main > .grid,
+.shell--interior .main > .case { max-width: 1500px; margin-inline: auto; }
+.shell--interior .grid { gap: 22px; }
+.shell--interior .topbar {
+  align-items: start;
+  margin-bottom: 4px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.shell--interior .page-title { font: 600 clamp(27px, 2.6vw, 36px)/1.1 var(--body); letter-spacing: -.04em; }
+.shell--interior .page-sub { color: var(--ink-2); max-width: 76ch; margin-top: 10px; font-size: 14px; }
+.shell--interior .h2 { font: 650 18px/1.28 var(--body); letter-spacing: -.02em; margin-bottom: 9px; }
+.shell--interior .h3 { font-weight: 650; }
+.shell--interior .num, .shell--interior .num-l { font-family: var(--body); font-weight: 600; letter-spacing: -.045em; }
+.shell--interior .num-l { font-size: 42px; }
+.shell--interior .panel,
+.shell--interior .panel-flat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  box-shadow: none;
+  padding: clamp(19px, 2vw, 28px);
+}
+.shell--interior .panel > .row:first-child { align-items: baseline; }
+.shell--interior .btn {
+  border-radius: 6px;
+  box-shadow: none;
+  transform: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+.shell--interior .btn-primary:hover { box-shadow: none; }
+.shell--interior .chip { border-radius: 5px; padding: 3px 7px; font-size: 11.5px; }
+.shell--interior .seg { background: var(--surface-2); border-radius: 6px; }
+.shell--interior .seg button { border-radius: 4px; }
+.shell--interior .seg button[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--line); }
+.shell--interior .table { font-size: 13px; font-variant-numeric: tabular-nums; }
+.shell--interior .table th { color: var(--ink-2); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; background: var(--surface-2); }
+.shell--interior .table td, .shell--interior .table th { padding: 11px 12px; }
+.shell--interior .table tr:last-child td { border-bottom: 1px solid var(--line); }
+.shell--interior .table td:not(:first-child), .shell--interior .table th:not(:first-child) { text-align: right; }
+.shell--interior .legend { gap: 10px 20px; color: var(--ink-2); }
+.shell--interior .legend i { border-radius: 0; }
+.shell--interior .tier { border-radius: 5px; }
+.shell--interior .banner { border-radius: 6px; border: 1px solid color-mix(in srgb, var(--amber) 25%, var(--line)); }
+.shell--interior .drop { border-radius: 8px; }
+
+@media (max-width: 980px) {
+  .shell--interior { grid-template-columns: 1fr; }
+  .shell--interior .rail { padding: 6px 8px; border-right: 0; }
+  .shell--interior .main { padding: 28px 20px 110px; }
+  .shell--interior .nav-btn { font-size: 11px; }
+}
+@media (max-width: 560px) {
+  .shell--interior .main { padding-inline: 16px; }
+  .shell--interior .panel, .shell--interior .panel-flat { padding: 18px; }
+  .shell--interior .topbar { padding-bottom: 18px; }
+}
+
+:root[data-theme="dark"] .shell--interior {
+  --bg: #17191b; --surface: #202326; --surface-2: #292d30; --line: #3d4245;
+  --ink: #f1f2f1; --ink-2: #c2c6c7; --ink-3: #a1a7aa;
+  --violet: #a99cf4; --violet-soft: #342f4b; --eosin: #ee91a8; --eosin-soft: #432b34;
+  --teal: #77d0c8; --teal-soft: #25413f; --amber: #efbf70; --amber-soft: #423625;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .shell--interior {
+    --bg: #17191b; --surface: #202326; --surface-2: #292d30; --line: #3d4245;
+    --ink: #f1f2f1; --ink-2: #c2c6c7; --ink-3: #a1a7aa;
+    --violet: #a99cf4; --violet-soft: #342f4b; --eosin: #ee91a8; --eosin-soft: #432b34;
+    --teal: #77d0c8; --teal-soft: #25413f; --amber: #efbf70; --amber-soft: #423625;
+  }
+}

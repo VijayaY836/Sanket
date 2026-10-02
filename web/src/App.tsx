@@ -35,7 +35,7 @@ export default function App() {
   const { view, go, cohort, theme, cycleTheme } = useApp();
   const Page = { overview: Overview, case: PatientCase, constellation: Constellation, lab: QuantumLab, evidence: Evidence, advantage: Advantage, readiness: Readiness, hardware: Hardware, workbench: Workbench }[view];
   return (
-    <div className="shell">
+    <div className={view === "overview" ? "shell" : "shell shell--interior"}>
       <nav className="rail" aria-label="Sections">
         <div className="brand">
           <Mark />
