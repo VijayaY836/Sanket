@@ -83,4 +83,23 @@ The module is decision support alongside the pathologist. It is never presented 
 
 ## Amendments
 
-*(none yet)*
+### A1 · 3 October 2026 · External check: the stored "raw" scores are dataset-relative (correction)
+
+**Found after the registered external check (section 7) had been run and reported.** The engine stored gseapy's ssGSEA *normalised* enrichment score (NES) as the raw pathway score. gseapy rescales NES by the range of enrichment scores across the whole dataset, so the same sample receives a different NES depending on which other samples are scored with it. Checked directly: adding one sample to a small test matrix changed every other sample's NES by a factor of about 4.4, while the unnormalised ES stayed identical. Mean raw scores are about 0.4 to 1.2 in GSE30784 and about 0.04 to 0.4 in GSE23558, so section 7 mapped GSE23558 with GSE30784 means and standard deviations on numbers that were not on the same scale.
+
+- **The registered result stands** and stays in the record unchanged (`results_classify_oral_cancer_normal_external.json`).
+- **Corrected re-analysis, declared here before it is run:** each dataset is standardised on its own (z-score of each pathway's raw score over that dataset's cancer and normal samples, the samples used in T1). This is label-free, and the class mix is similar (GSE30784 T1: 79% cancer; GSE23558: 84% cancer). Everything else follows section 7: models trained on all GSE30784 cancer and normal samples, hyperparameters by inner CV on GSE30784 only, kernel bandwidths from training samples only, applied once, no tuning or threshold change on external data. Reported the same way (sensitivity and specificity at the default threshold, AUC with a bootstrap 95% interval, descriptive because there are 5 normals) and **labelled a post-hoc correction, not a registered result.**
+- **Label-free biology check, reported alongside:** for each pathway, the direction of the cancer minus normal mean score in GSE30784 and in GSE23558.
+- **Engine fix for future transfers:** `engine/oral_diagnosis.py` also stores the dataset-independent ES as `pathwaysES` (requires re-running the loader).
+
+### A2 · 3 October 2026 · Screening threshold (declared before running)
+
+The default threshold caught 51% of dysplasias in T2. For screening, missing a precancer is worse than a false alarm, so a sensitivity-first threshold is added, using the same rule as SANKET's progression referral rule.
+
+- Within each outer training fold, out-of-fold decision values are produced on the training samples by inner 3-fold CV (same tuned model). The threshold is the highest value that reaches **at least 90% sensitivity on those training samples**. It is applied unchanged to the held-out fold.
+- Same rule for every model, all three tasks, same outer folds as the registered analysis (5-fold, 10 repeats, `random_state = 11`).
+- Reported on held-out folds: sensitivity, specificity, PPV and NPV (mean over folds). AUC is unchanged by a threshold and is not re-tested. Descriptive; no new significance claims.
+
+### A3 · 3 October 2026 · Class weighting for T3, cancer vs dysplasia (exploratory, declared before running)
+
+With 167 cancers against 17 dysplasias, every model labelled almost all dysplasias as cancer. A3 re-runs T3 with `class_weight = "balanced"` for every model that supports it (SVMs, logistic regression, random forest, gradient boosting), default threshold, same folds. Reported: AUC, sensitivity, specificity. Exploratory: with 17 dysplasias no conclusion is drawn beyond description.

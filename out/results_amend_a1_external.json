@@ -1,0 +1,165 @@
+{
+ "amendment": "A1",
+ "task": "oral_cancer_normal_external_corrected",
+ "label": "cancer vs normal, trained on GSE30784, applied once to GSE23558, each dataset standardised on its own",
+ "cohort": "GSE23558 oral cancer (external check)",
+ "n": 32,
+ "positives": 27,
+ "train_n": 212,
+ "external": true,
+ "geo": {
+  "accession": "GSE23558",
+  "title": "Gene Expression Profiling of Oral Squamous Cell Carcinoma",
+  "contact_institute": "Cancer Research Institute, Advanced Centre for Treatment Research and Education in Cancer, Tata Memorial Centre",
+  "contact_city": "Navi Mumbai",
+  "contact_country": "India",
+  "pubmed_id": "22072328",
+  "platform": [
+   "GPL6480"
+  ]
+ },
+ "summary": {
+  "proj": {
+   "auc": 0.9037037037037037,
+   "auc_ci": [
+    0.7777777777777778,
+    0.9925925925925927
+   ],
+   "sensitivity": 0.9259259259259259,
+   "specificity": 0.4,
+   "ppv": 0.8928571428571429,
+   "npv": 0.5
+  },
+  "fid": {
+   "auc": 0.9481481481481482,
+   "auc_ci": [
+    0.8518518518518519,
+    1.0
+   ],
+   "sensitivity": 1.0,
+   "specificity": 0.0,
+   "ppv": 0.84375,
+   "npv": null
+  },
+  "rbf": {
+   "auc": 0.9333333333333335,
+   "auc_ci": [
+    0.8222222222222222,
+    1.0
+   ],
+   "sensitivity": 0.9259259259259259,
+   "specificity": 0.4,
+   "ppv": 0.8928571428571429,
+   "npv": 0.5
+  },
+  "logistic": {
+   "auc": 0.8592592592592594,
+   "auc_ci": [
+    0.6592592592592592,
+    1.0
+   ],
+   "sensitivity": 0.9259259259259259,
+   "specificity": 0.2,
+   "ppv": 0.8620689655172413,
+   "npv": 0.3333333333333333
+  },
+  "random_forest": {
+   "auc": 0.925925925925926,
+   "auc_ci": [
+    0.8148148148148148,
+    1.0
+   ],
+   "sensitivity": 0.9259259259259259,
+   "specificity": 0.4,
+   "ppv": 0.8928571428571429,
+   "npv": 0.5
+  },
+  "gradient_boosting": {
+   "auc": 0.888888888888889,
+   "auc_ci": [
+    0.7407407407407407,
+    0.9851851851851852
+   ],
+   "sensitivity": 0.9259259259259259,
+   "specificity": 0.4,
+   "ppv": 0.8928571428571429,
+   "npv": 0.5
+  }
+ },
+ "biology": [
+  {
+   "pathway": "MYC",
+   "diff_train": 0.02308597072521623,
+   "diff_external": 0.2401193333333333,
+   "same_direction": true
+  },
+  {
+   "pathway": "E2F",
+   "diff_train": 0.08616759414504338,
+   "diff_external": 0.3558778518518518,
+   "same_direction": true
+  },
+  {
+   "pathway": "G2M",
+   "diff_train": 0.07204943845642031,
+   "diff_external": 0.31280814814814806,
+   "same_direction": true
+  },
+  {
+   "pathway": "mTORC1",
+   "diff_train": 0.04302649367930833,
+   "diff_external": 0.17007985185185184,
+   "same_direction": true
+  },
+  {
+   "pathway": "UPR",
+   "diff_train": 0.04195667465069908,
+   "diff_external": 0.11551185185185185,
+   "same_direction": true
+  },
+  {
+   "pathway": "OXPHOS",
+   "diff_train": -0.040967032601463726,
+   "diff_external": 0.06506288888888889,
+   "same_direction": false
+  },
+  {
+   "pathway": "p53",
+   "diff_train": 0.02388470259481057,
+   "diff_external": 0.08226577777777777,
+   "same_direction": true
+  },
+  {
+   "pathway": "DNA repair",
+   "diff_train": 0.027055849634065265,
+   "diff_external": 0.13199222222222218,
+   "same_direction": true
+  },
+  {
+   "pathway": "Hypoxia",
+   "diff_train": 0.04912654956753115,
+   "diff_external": 0.09064548148148155,
+   "same_direction": true
+  },
+  {
+   "pathway": "EMT",
+   "diff_train": 0.25892101530272793,
+   "diff_external": 0.08592688888888894,
+   "same_direction": true
+  },
+  {
+   "pathway": "TNF-α",
+   "diff_train": 0.18454421157684575,
+   "diff_external": 0.2320436296296297,
+   "same_direction": true
+  },
+  {
+   "pathway": "Inflammation",
+   "diff_train": 0.17811799866932815,
+   "diff_external": 0.1300971851851852,
+   "same_direction": true
+  }
+ ],
+ "biology_agree": 11,
+ "note": "Post-hoc correction (Amendment A1): the registered check compared dataset-relative NES across datasets. Descriptive: 5 external normals."
+}

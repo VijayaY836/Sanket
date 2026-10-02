@@ -23,7 +23,7 @@ from collections import Counter
 import pandas as pd
 from .common import OUT, load_config, save_json
 from .data import load_gse, expression_by_gene
-from .pathways import hallmark_sets, ssgsea_scores
+from .pathways import hallmark_sets, ssgsea_nes_es
 from .crosstalk import crosstalk_edges
 
 DATASETS = {
@@ -136,7 +136,7 @@ def main():
     print(f"{expr.shape[1]} samples, {expr.shape[0]} genes after mapping")
     keys = [p[0] for p in cfg["pathways"]]
     sets = hallmark_sets(cfg)
-    rawscores = ssgsea_scores(expr, sets, keys, standardize=False)
+    rawscores, esscores = ssgsea_nes_es(expr, sets, keys)   # NES is dataset-relative; ES is kept for cross-dataset use
     z = (rawscores - rawscores.mean()) / rawscores.std(ddof=1)
     edges = crosstalk_edges(sets, keys, cfg["crosstalk_max_degree"], cfg["crosstalk_max_edges"])
     patients = []
@@ -146,6 +146,7 @@ def main():
             meta["individual"] = groups[sid]
         patients.append({"id": sid, "pathways": [round(float(v), 4) for v in z.loc[sid, keys]],
                          "pathwaysRaw": [round(float(v), 5) for v in rawscores.loc[sid, keys]],
+                         "pathwaysES": [round(float(v), 5) for v in esscores.loc[sid, keys]],
                          "diagnosis": lab[sid], "meta": meta})
     cohort = {
         "name": spec["name"], "disease": "Oral cavity: normal mucosa, dysplasia, squamous cell carcinoma", "source": "real",
