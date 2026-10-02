@@ -21,7 +21,7 @@ export default function Hardware() {
   const measured = cohort.measuredBloch?.[cohort.patients[sel].id];
 
   return (
-    <div className="grid">
+    <div className="grid hardware-page">
       <div className="topbar">
         <div>
           <h2 className="page-title">Hardware</h2>
@@ -29,7 +29,7 @@ export default function Hardware() {
         </div>
       </div>
 
-      <section className="two">
+      <section className="two hardware-summary">
         <div className="panel">
           <div className="h2">Circuit budget for the whole cohort</div>
           <p className="small muted" style={{ marginTop: 0 }}>The projected kernel needs 3 circuits per patient (measure every qubit in X, Y and Z). A fidelity kernel needs one circuit per pair of patients.</p>

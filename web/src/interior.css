@@ -83,6 +83,36 @@
 .shell--interior .banner { border-radius: 6px; border: 1px solid color-mix(in srgb, var(--amber) 25%, var(--line)); }
 .shell--interior .drop { border-radius: 8px; }
 
+/* Quantum views place the visualization ahead of the controls and metrics. */
+.shell--interior .lab-workspace,
+.shell--interior .constellation-workspace { padding: 0; overflow: hidden; }
+.shell--interior .lab-workspace > .row,
+.shell--interior .constellation-workspace > .row:first-child {
+  margin: 0 !important;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--line);
+  align-items: center;
+}
+.shell--interior .lab-workspace > .row .h2 { margin: 0; }
+.shell--interior .lab-workspace .circuit-wrap {
+  margin: 22px 22px 0;
+  background: var(--surface-2);
+  border-radius: 6px;
+}
+.shell--interior .lab-workspace > .slider { margin: 20px 22px !important; }
+.shell--interior .lab-workspace > .constellation { border-top: 1px solid var(--line); margin: 0 !important; padding: 14px 22px; }
+.shell--interior .lab-workspace > p:last-child { padding: 0 22px 20px; }
+.shell--interior .constellation-workspace > .legend { margin: 0 !important; padding: 16px 22px 0; }
+.shell--interior .constellation-workspace > .constellation { padding: 14px 22px 18px; }
+.shell--interior .constellation-workspace > p:last-child { border-top: 1px solid var(--line); padding: 16px 22px; margin: 0 !important; }
+.shell--interior .sphere-cell { border-radius: 5px; }
+.shell--interior .hardware-summary { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+.shell--interior .hardware-page .scroll-x { border: 1px solid var(--line); border-radius: 6px; }
+.shell--interior .hardware-page .scroll-x .table { margin: 0; }
+@media (max-width: 1180px) {
+  .shell--interior .hardware-summary { grid-template-columns: 1fr; }
+}
+
 /* Evidence reads like a research report: result, clinical context, then exploration. */
 .shell--interior .evidence-page,
 .shell--interior .advantage-page { gap: 26px; }

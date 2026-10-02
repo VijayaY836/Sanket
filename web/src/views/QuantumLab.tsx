@@ -30,7 +30,7 @@ export default function QuantumLab() {
   const g = gateCounts(cohort.pathways.length, cohort.edges.length, model.spec);
 
   return (
-    <div className="grid">
+    <div className="grid quantum-page">
       <div className="topbar">
         <div>
           <h2 className="page-title">Circuit and noise</h2>
@@ -38,7 +38,7 @@ export default function QuantumLab() {
         </div>
       </div>
 
-      <section className="panel">
+      <section className="panel lab-workspace">
         <div className="row" style={{ marginBottom: 12 }}>
           <div className="h2">Feature map, {cohort.patients[sel].id}</div>
           <span className="chip chip-violet">{g.h} H, {g.rz} Rz, {g.rzz} ZZ, {g.rx} Rx</span>

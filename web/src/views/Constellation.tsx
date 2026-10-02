@@ -26,7 +26,7 @@ export default function Constellation() {
   const len = (v: number[]) => Math.hypot(v[0], v[1], v[2]);
 
   return (
-    <div className="grid">
+    <div className="grid constellation-page">
       <div className="topbar">
         <div>
           <h2 className="page-title">Bloch constellation</h2>
@@ -34,7 +34,7 @@ export default function Constellation() {
         </div>
       </div>
 
-      <section className="panel">
+      <section className="panel constellation-workspace">
         <div className="row" style={{ marginBottom: 14 }}>
           <label className="small">Patient&nbsp;
             <select value={sel} onChange={(e) => setSel(+e.target.value)} style={{ padding: "6px 8px", borderRadius: 8, border: "1px solid var(--line)", background: "var(--surface)" }}>
