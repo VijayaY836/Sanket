@@ -2,6 +2,7 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, 
 import { Cohort, syntheticCohort } from "./lib/cohort";
 import { KernelKind, Model, nestedCV } from "./lib/analysis";
 import { geometricDifference } from "./lib/linalg";
+import ModelWorker from "./model.worker?worker&inline";
 
 export type View = "overview" | "case" | "constellation" | "lab" | "evidence" | "advantage" | "readiness" | "hardware" | "workbench";
 type Nested = Record<KernelKind, { c: number; ci: [number, number]; picks: number[] }>;
@@ -43,7 +44,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     workerRef.current?.terminate();
     setModel(null); setNested(null); setGeo(null); setNP(0);
     setCohortRaw(c);
-    const worker = new Worker(new URL("./model.worker.ts", import.meta.url), { type: "module" });
+    const worker = new ModelWorker();
     workerRef.current = worker;
     worker.onmessage = (event: MessageEvent<Model>) => {
       if (request !== requestRef.current) return;
