@@ -152,6 +152,11 @@ Judges in quantum and medicine will check claims. Every number in this script is
 - "100 % accurate" or any accuracy you cannot point to on screen
 - "first in the world" (cannot be verified)
 
+**If you get asked "how much would this cost a patient?" (one line):**
+*"SANKET reads only 12 biological pathways, under 2,400 genes instead of 20,000, so it can move from whole-transcriptome profiling to a small targeted gene panel that costs a fraction as much, and the quantum step itself takes seconds per patient."*
+
+(If pushed: the 12 Hallmark gene sets have at most 200 genes each; trimming them to a minimal clinical panel is planned work, not done yet.)
+
 **If you get asked "so why use quantum at all?":**
 *"Three reasons. It matches the best classical kernel on real outcomes while running on hardware five times smaller than standard quantum circuits. It wins clearly where data has quantum structure, which is where future quantum-sensor medical data is heading. And our Readiness Check tells any hospital in advance whether quantum is worth the cost for their data, which no one else offers."*
 
