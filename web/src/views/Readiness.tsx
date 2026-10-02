@@ -65,7 +65,7 @@ export default function Readiness() {
   };
 
   return (
-    <div className="grid">
+    <div className="grid readiness-page">
       <div className="topbar">
         <div>
           <h2 className="page-title">Quantum readiness check</h2>
@@ -73,7 +73,7 @@ export default function Readiness() {
         </div>
       </div>
 
-      <section className="two">
+      <section className="two readiness-setup">
         <div className="panel">
           <div className="h2">1 · Choose data</div>
           <div className="drop" data-over={over} style={{ marginTop: 10 }} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
@@ -176,12 +176,12 @@ function Report({ rep }: { rep: ReadinessReport }) {
   const pos = Math.min(Math.log(Math.max(rep.gBest, 1)) / Math.log(Math.sqrt(Math.min(rep.n, 120))), 1);
   return (
     <>
-      <section className="panel">
+      <section className="panel readiness-verdict">
         <div className="row"><span className="chip chip-violet">Verdict</span><span className="tiny muted">{rep.name} · {rep.n} rows · {rep.qubits} qubits</span></div>
         <div className={`tier ${tone}`} style={{ marginTop: 10 }}><b style={{ fontSize: 18 }}>{rep.verdict.title}</b>{rep.verdict.text}</div>
       </section>
 
-      <section className="two">
+      <section className="two readiness-results">
         <div className="panel">
           <div className="h2">Quantum headroom</div>
           <div className="num-l" style={{ margin: "8px 0 4px" }}>g = {rep.gBest.toFixed(2)}</div>

@@ -38,7 +38,7 @@ export default function Workbench() {
   const download = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(cohort, null, 1)], { type: "application/json" })); a.download = "cohort.json"; a.click(); };
 
   return (
-    <div className="grid">
+    <div className="grid workbench-page">
       <div className="topbar">
         <div>
           <h2 className="page-title">Data</h2>
@@ -61,7 +61,7 @@ export default function Workbench() {
         </div>
       </section>
 
-      <section className="two">
+      <section className="two workbench-import">
         <div className="panel">
           <div className="h2">Load a cohort</div>
           <div className="drop" data-over={over} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}

@@ -76,7 +76,7 @@
 .shell--interior .table th { color: var(--ink-2); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; background: var(--surface-2); }
 .shell--interior .table td, .shell--interior .table th { padding: 11px 12px; }
 .shell--interior .table tr:last-child td { border-bottom: 1px solid var(--line); }
-.shell--interior .table td:not(:first-child), .shell--interior .table th:not(:first-child) { text-align: right; }
+.shell--interior .table .numeric { text-align: right; }
 .shell--interior .legend { gap: 10px 20px; color: var(--ink-2); }
 .shell--interior .legend i { border-radius: 0; }
 .shell--interior .tier { border-radius: 5px; }
@@ -109,8 +109,20 @@
 .shell--interior .hardware-summary { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
 .shell--interior .hardware-page .scroll-x { border: 1px solid var(--line); border-radius: 6px; }
 .shell--interior .hardware-page .scroll-x .table { margin: 0; }
+/* Data tools use a narrow setup column and a wider working area. */
+.shell--interior .readiness-setup { grid-template-columns: minmax(270px, .8fr) minmax(0, 1.2fr); }
+.shell--interior .readiness-results { grid-template-columns: minmax(290px, .8fr) minmax(0, 1.2fr); }
+.shell--interior .readiness-verdict { border-top: 3px solid var(--violet); }
+.shell--interior .readiness-verdict .tier { margin-top: 16px; padding: 18px 20px; }
+.shell--interior .workbench-import { grid-template-columns: minmax(0, 1.25fr) minmax(260px, .75fr); }
+.shell--interior .workbench-page .drop,
+.shell--interior .readiness-page .drop { background: var(--surface-2); border: 1px dashed var(--ink-3); text-align: left; }
+.shell--interior .workbench-page pre.code { border: 1px solid var(--line); background: var(--surface-2); }
 @media (max-width: 1180px) {
-  .shell--interior .hardware-summary { grid-template-columns: 1fr; }
+  .shell--interior .hardware-summary,
+  .shell--interior .readiness-setup,
+  .shell--interior .readiness-results,
+  .shell--interior .workbench-import { grid-template-columns: 1fr; }
 }
 
 /* Evidence reads like a research report: result, clinical context, then exploration. */
