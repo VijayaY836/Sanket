@@ -23,17 +23,17 @@ function RiskRing({ risk, ready, stage, z, color, outcome }: { risk: number; rea
       <defs>
         <linearGradient id="ringgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#9c8cff" /><stop offset="1" stopColor={color} /></linearGradient>
       </defs>
-      <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(255,255,255,.10)" strokeWidth={14} />
-      {!ready && <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(255,255,255,.55)" strokeWidth={14} strokeLinecap="round" strokeDasharray={`${C * 0.18} ${C}`} className="ring-spin" style={{ transformOrigin: "50% 50%" }} />}
+      <circle cx={c} cy={c} r={r} fill="none" stroke="var(--line)" strokeWidth={14} />
+      {!ready && <circle cx={c} cy={c} r={r} fill="none" stroke="var(--ink-3)" strokeWidth={14} strokeLinecap="round" strokeDasharray={`${C * 0.18} ${C}`} className="ring-spin" style={{ transformOrigin: "50% 50%" }} />}
       {ready && <circle cx={c} cy={c} r={r} fill="none" stroke="url(#ringgrad)" strokeWidth={14} strokeLinecap="round" strokeDasharray={`${C * v} ${C}`} transform={`rotate(-90 ${c} ${c})`} />}
       {z.map((zk, k) => {
         const t = -Math.PI / 2 + (2 * Math.PI * k) / z.length, x = c + (r + 30) * Math.cos(t), y = c + (r + 30) * Math.sin(t);
         const on = stage >= 2, mag = Math.min(1, Math.abs(zk) / 2.5);
         return <circle key={k} cx={x} cy={y} r={on ? 4 + 4 * mag : 3} fill={zk >= 0 ? "#9c8cff" : "#4fd1c5"} opacity={on ? 0.35 + 0.65 * mag : 0.25} style={{ transition: `all .5s ${k * 40}ms` }} />;
       })}
-      <text x={c} y={c - 4} textAnchor="middle" fontSize={ready ? 54 : 15} fontWeight={800} fill="#fff" style={{ fontFamily: "var(--display)" }}>{ready ? `${Math.round(v * 100)}%` : STAGES[Math.min(stage, 3)]}</text>
-      {ready && <text x={c} y={c + 24} textAnchor="middle" fontSize={12} fill="rgba(255,255,255,.7)">risk of {outcome}</text>}
-      {ready && <text x={c} y={c + 40} textAnchor="middle" fontSize={12} fill="rgba(255,255,255,.7)">within 3 years</text>}
+      <text x={c} y={c - 4} textAnchor="middle" fontSize={ready ? 54 : 15} fontWeight={700} fill="var(--ink)" style={{ fontFamily: "var(--display)" }}>{ready ? `${Math.round(v * 100)}%` : STAGES[Math.min(stage, 3)]}</text>
+      {ready && <text x={c} y={c + 24} textAnchor="middle" fontSize={12} fill="var(--ink-2)">risk of {outcome}</text>}
+      {ready && <text x={c} y={c + 40} textAnchor="middle" fontSize={12} fill="var(--ink-2)">within 3 years</text>}
     </svg>
   );
 }

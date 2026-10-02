@@ -83,6 +83,68 @@
 .shell--interior .banner { border-radius: 6px; border: 1px solid color-mix(in srgb, var(--amber) 25%, var(--line)); }
 .shell--interior .drop { border-radius: 8px; }
 
+/* Patient case: case file, then the outcome and evidence. */
+.shell--interior .case { grid-template-columns: 236px minmax(0, 1fr); gap: 28px; }
+.shell--interior .cohort-list { padding: 0; top: 22px; max-height: calc(100vh - 44px); }
+.shell--interior .cohort-list .head { padding: 18px; }
+.shell--interior .cohort-list input[type="search"] { background: var(--surface); border-radius: 5px; }
+.shell--interior .pt-row { padding: 12px 17px; }
+.shell--interior .pt-row[aria-selected="true"] { background: var(--violet-soft); box-shadow: inset 2px 0 var(--violet); }
+.shell--interior .pt-id { font-size: 13px; }
+.shell--interior .case-hero {
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 24px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  box-shadow: none;
+  padding: clamp(22px, 2.5vw, 36px);
+}
+.shell--interior .case-hero::after { display: none; }
+.shell--interior .case-kicker { color: var(--ink-3); text-transform: uppercase; letter-spacing: .1em; font-size: 11px; }
+.shell--interior .case-hero-id { font: 600 clamp(38px, 4vw, 56px)/1 var(--body); letter-spacing: -.045em; margin: 10px 0 18px; }
+.shell--interior .case-facts { gap: 8px 16px; margin-bottom: 24px; }
+.shell--interior .case-facts span { padding: 0; color: var(--ink-2); background: none; border: 0; border-radius: 0; font-weight: 500; }
+.shell--interior .case-progress { max-width: 660px; border-top: 1px solid var(--line); padding-top: 17px; }
+.shell--interior .case-step { color: var(--ink-3); }
+.shell--interior .case-step.on { color: var(--ink); }
+.shell--interior .case-step-bar { background: var(--surface-2); border-radius: 0; }
+.shell--interior .case-step-bar span { background: var(--violet); }
+.shell--interior .case-verdict { background: var(--violet-soft); color: var(--ink); border: 0; border-radius: 5px; font-size: 12px; }
+.shell--interior .case-hero-ring { border-left: 1px solid var(--line); padding-left: 24px; }
+.shell--interior .case-ring-note { color: var(--ink-3); }
+.shell--interior .case-stamp { background: var(--surface); box-shadow: 0 6px 18px #0002; border-width: 2px; border-radius: 5px; }
+.shell--interior .case-stamp.bad { color: var(--eosin); border-color: var(--eosin); }
+.shell--interior .case-stamp.good { color: var(--teal); border-color: var(--teal); }
+.shell--interior .btn-hero { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.shell--interior .btn-hero-ghost { color: var(--ink); border-color: var(--line); }
+.shell--interior .btn-hero-ghost:hover { border-color: var(--ink-3); }
+.shell--interior .pipeline { border-radius: var(--r-panel); }
+.shell--interior .stage { padding: 18px; }
+.shell--interior .stage-step { border-radius: 4px; }
+.shell--interior .stage[data-active="true"]::before { display: none; }
+.shell--interior .case-result { grid-template-columns: minmax(280px, .9fr) minmax(0, 1.5fr); gap: 22px; }
+.shell--interior .milestone { border-radius: 5px; }
+.shell--interior .milestone-num { font: 650 26px/1 var(--body); }
+.shell--interior .case-support { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+@media (max-width: 1180px) {
+  .shell--interior .case-result { grid-template-columns: 1fr; }
+  .shell--interior .case-support { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .shell--interior .case-support > :last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 980px) {
+  .shell--interior .case { grid-template-columns: 1fr; }
+  .shell--interior .cohort-list { position: static; max-height: 260px; }
+}
+@media (max-width: 680px) {
+  .shell--interior .case-hero { grid-template-columns: 1fr; }
+  .shell--interior .case-hero-ring { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0 0; }
+  .shell--interior .case-support { grid-template-columns: 1fr; }
+  .shell--interior .case-support > :last-child { grid-column: auto; }
+}
+
 @media (max-width: 980px) {
   .shell--interior { grid-template-columns: 1fr; }
   .shell--interior .rail { padding: 6px 8px; border-right: 0; }

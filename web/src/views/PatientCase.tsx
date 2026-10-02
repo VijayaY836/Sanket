@@ -106,7 +106,7 @@ export default function PatientCase() {
         <AnimatePresence>
           {stage >= 3 && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="grid">
-              <section className="result">
+              <section className="result case-result">
                 <div className="panel" style={{ display: "grid", gap: 12, alignContent: "start" }}>
                   <div className="h2">Predicted future</div>
                   <div className="milestones">
@@ -134,7 +134,7 @@ export default function PatientCase() {
                 </div>
               </section>
 
-              <section className="three">
+              <section className="three case-support">
                 <div className="panel">
                   <div className="h2">Why this risk</div>
                   <p className="small muted" style={{ marginTop: 0 }}>Change in risk if each pathway were at the cohort average. Positive pushes risk up.</p>
