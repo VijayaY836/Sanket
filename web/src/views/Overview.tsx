@@ -42,7 +42,7 @@ export default function Overview() {
           <b className="small">Where SANKET fits</b>
           {terms.carePath.map((x, i, arr) => (
             <span key={x} className="row" style={{ gap: 10 }}>
-              <span className={`chip ${i === 2 ? "chip-violet" : "chip-grey"}`}>{x}</span>
+              <span className={`chip ${i === 2 ? "chip-violet" : "chip-grey"}`} style={{ whiteSpace: "normal" }}>{x}</span>
               {i < arr.length - 1 && <span className="muted">→</span>}
             </span>
           ))}

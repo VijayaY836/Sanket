@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../store";
+import { Chapter, ChipArt, PageHero, Reveal } from "../components/cinema";
 import { shotEstimate } from "../lib/analysis";
 import { blochVectors, simulate } from "../lib/quantum";
 import { mulberry32 } from "../lib/rng";
@@ -28,14 +29,22 @@ export default function Hardware() {
 
   return (
     <div className="grid">
-      <div className="topbar">
-        <div>
-          <h2 className="page-title">Hardware</h2>
-          <p className="page-sub">How SANKET runs on a real IBM quantum processor, what it costs in circuits, and the record of every hardware job.</p>
-        </div>
-      </div>
+      <PageHero kicker="Proof · Hardware" title={<>From browser to <em>IBM hardware</em>.</>}
+        lede="How SANKET runs on real quantum hardware, what it costs in circuits, and the record of every job."
+        stats={hw ? [
+          { value: hw.patients.toLocaleString(), label: `patients run on ${hw.backend}` },
+          ...(hw.kernel_agreement != null ? [{ value: hw.kernel_agreement.toFixed(2), label: "hardware vs simulated kernel agreement" }] : []),
+          { value: Math.round(hw.twoQubitGates!), label: "two-qubit gates per circuit" },
+          { value: jobs.filter((j) => !/not hardware/i.test(j.note ?? "")).length, label: "hardware jobs recorded" },
+        ] : [
+          { value: projCircuits.toLocaleString(), label: "circuits for the whole cohort" },
+          { value: HW_TABLE[0].twoq, label: "two-qubit gates per circuit" },
+        ]}
+        art={<ChipArt n={cohort.pathways.length} edges={cohort.edges} />} />
 
-      <section className="two">
+      <Chapter n={1} title="Budget and record" />
+
+      <Reveal className="two">
         <div className="panel">
           <div className="h2">Circuit budget for the whole cohort</div>
           <p className="small muted" style={{ marginTop: 0 }}>The projected kernel needs 3 circuits per patient (measure every qubit in X, Y and Z). A fidelity kernel needs one circuit per pair of patients.</p>
@@ -43,6 +52,7 @@ export default function Hardware() {
             <div className="slider-head"><span>Shots per circuit</span><b>{shots.toLocaleString()}</b></div>
             <input type="range" min={6} max={13} step={1} value={Math.log2(shots)} onChange={(e) => setShots(2 ** +e.target.value)} aria-label="Shots per circuit" />
           </div>
+          <div className="scroll-x">
           <table className="table">
             <thead><tr><th>Kernel</th><th>Circuits</th><th>Total shots</th><th>Two-qubit gates each (2 steps)</th></tr></thead>
             <tbody>
@@ -50,6 +60,7 @@ export default function Hardware() {
               <tr><td>Fidelity</td><td>{fidCircuits.toLocaleString()}</td><td>{(fidCircuits * shots).toLocaleString()}</td><td>{HW_TABLE[1].twoq}</td></tr>
             </tbody>
           </table>
+          </div>
           <p className="small" style={{ marginBottom: 0 }}>The projected kernel needs <b>{Math.round(fidCircuits / projCircuits)}× fewer circuits</b>, which is why the full cohort fits a free-tier IBM Quantum allowance instead of a test sample.</p>
         </div>
         <div className="panel">
@@ -81,9 +92,10 @@ export default function Hardware() {
             </div>
           )}
         </div>
-      </section>
+      </Reveal>
 
-      <section className="panel">
+      <Chapter n={2} title="What each model needs" />
+      <Reveal className="panel">
         <div className="h2">Resource efficiency</div>
         <p className="small muted" style={{ marginTop: 0 }}>What each model needs. The quantum kernels tune a single bandwidth; their cost is in circuits and shots, which the pathway wiring keeps small.</p>
         <div className="scroll-x">
@@ -99,9 +111,10 @@ export default function Hardware() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Reveal>
 
-      <section className="panel">
+      <Chapter n={3} title="Measured, one patient at a time" />
+      <Reveal className="panel">
         <div className="row">
           <div className="h2">What finite shots look like</div>
           <span className="spacer" />
@@ -120,7 +133,7 @@ export default function Hardware() {
           <div><div className="num">{err.toFixed(3)}</div><div className="tiny muted">mean {measured ? "hardware" : "estimation"} error per qubit</div></div>
           <div className="tiny muted" style={{ maxWidth: 420 }}>Error falls roughly as 1/√shots. Quadrupling shots halves it.</div>
         </div>
-      </section>
+      </Reveal>
     </div>
   );
 }

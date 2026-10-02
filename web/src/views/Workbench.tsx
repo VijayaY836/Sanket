@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useApp } from "../store";
+import { PageHero, Reveal, StreamArt } from "../components/cinema";
 import { syntheticCohort, validateCohort } from "../lib/cohort";
 import { angleOf, blochVectors, simulate } from "../lib/quantum";
 import { IDownload } from "../icons";
@@ -39,14 +40,16 @@ export default function Workbench() {
 
   return (
     <div className="grid">
-      <div className="topbar">
-        <div>
-          <h2 className="page-title">Data</h2>
-          <p className="page-sub">One pipeline for any gene-expression cohort. The research engine turns raw GEO data into a cohort file; this app re-simulates every patient from it.</p>
-        </div>
-      </div>
+      <PageHero kicker="Tools · Data" title={<>One pipeline, <em>any cohort</em>.</>}
+        lede="The research engine turns raw gene-expression data into a cohort file; this app re-simulates every patient from it."
+        stats={[
+          { value: cohort.patients.length.toLocaleString(), label: cohort.source === "real" ? "real patients loaded" : "synthetic patients loaded" },
+          { value: cohort.pathways.length, label: "pathways, one qubit each" },
+          { value: cohort.edges.length, label: "pathway couplings" },
+        ]}
+        art={<StreamArt n={cohort.pathways.length} />} />
 
-      <section className="panel">
+      <Reveal className="panel">
         <div className="h2">Disease modules</div>
         <div className="scroll-x">
           <table className="table">
@@ -60,9 +63,9 @@ export default function Workbench() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Reveal>
 
-      <section className="two">
+      <Reveal className="two">
         <div className="panel">
           <div className="h2">Load a cohort</div>
           <div className="drop" data-over={over} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
@@ -86,17 +89,17 @@ export default function Workbench() {
             <button className="btn" onClick={() => setCohort(syntheticCohort(seed))}>Generate</button>
           </div>
         </div>
-      </section>
+      </Reveal>
 
-      <section className="panel">
+      <Reveal className="panel">
         <div className="row"><div className="h2">Verify against Qiskit</div><span className="spacer" />
           <button className="btn" onClick={() => xin.current?.click()}>Choose crosscheck.json</button>
           <input ref={xin} type="file" accept=".json" hidden onChange={(e) => e.target.files?.[0] && verify(e.target.files[0])} /></div>
         <p className="small muted" style={{ marginBottom: 0 }}>Run <code>python -m engine.crosscheck</code>, then load its output. The browser re-simulates the same patients and compares every Bloch vector with Qiskit's Statevector.</p>
         {xc && <div className="tier tier-low" style={{ marginTop: 12 }}><b>Cross-check result</b>{xc}</div>}
-      </section>
+      </Reveal>
 
-      <section className="panel">
+      <Reveal className="panel">
         <div className="h2">Cohort file format</div>
         <pre className="code">{`{
   "name": "GSE26549 oral premalignant lesions",
@@ -111,7 +114,7 @@ export default function Workbench() {
   "hardware": [{ "backend": "ibm_fez", "jobId": "...", "date": "2026-10-20", "shots": 1024, "patients": 86 }],
   "terms": { "risk": "relapse", "free": "Relapse-free", ... }   // optional wording; oral and breast cohorts are recognised by name
 }`}</pre>
-      </section>
+      </Reveal>
     </div>
   );
 }

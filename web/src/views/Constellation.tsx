@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../store";
+import { OrbitArt, PageHero, Reveal } from "../components/cinema";
 import { blochAt, meanBlochLength, meanBlochLengthAt, predictPatient, sqDist3 } from "../lib/analysis";
 import { Bars, BlochSphere } from "../components/viz";
 import { outcomeTerms } from "../lib/cohort";
@@ -34,14 +35,17 @@ export default function Constellation() {
 
   return (
     <div className="grid">
-      <div className="topbar">
-        <div>
-          <h2 className="page-title">Bloch constellation</h2>
-          <p className="page-sub">Each patient becomes 12 qubit states, one per pathway. The projected quantum kernel compares exactly these arrows, so what you see is the model's own notion of similarity.</p>
-        </div>
-      </div>
+      <PageHero kicker="Quantum · Constellation" title={<>Every patient, as <em>{cohort.pathways.length} qubits</em>.</>}
+        lede="Each patient becomes one qubit state per pathway. The projected quantum kernel compares exactly these arrows, so what you see is the model's own notion of similarity."
+        stats={[
+          { value: model.n.toLocaleString(), label: "patients encoded" },
+          { value: model.spec.scale, label: "bandwidth chosen by cross-validation" },
+          { value: lenChosen.toFixed(3), label: "mean arrow length (1 = no entanglement)" },
+          { value: cohort.edges.length, label: "pathway couplings wired in" },
+        ]}
+        art={<OrbitArt n={cohort.pathways.length} edges={cohort.edges} />} />
 
-      <section className="panel">
+      <Reveal className="panel">
         <div className="row" style={{ marginBottom: 14 }}>
           <label className="small">Patient&nbsp;
             <select value={sel} onChange={(e) => setSel(+e.target.value)} style={{ padding: "6px 8px", borderRadius: 8, border: "1px solid var(--line)", background: "var(--surface)" }}>
@@ -79,9 +83,9 @@ export default function Constellation() {
           ))}
         </div>
         <p className="tiny muted" style={{ marginBottom: 0 }}>Arrows shorter than 1 mean that qubit is entangled with its neighbours: its pathway's information is shared across the circuit. Highlighted cells are where the two patients differ most.{wide && " Showing the comparison bandwidth; the model and the similarity below use the chosen one."}</p>
-      </section>
+      </Reveal>
 
-      <section className="panel">
+      <Reveal className="panel">
         <div className="h2">How entangled are these states?</div>
         <div className="row" style={{ gap: 28, margin: "10px 0" }}>
           <div><div className="num">{lenChosen.toFixed(3)}</div><div className="tiny muted">mean arrow length at bandwidth {model.spec.scale}, chosen by cross-validation</div></div>
@@ -92,9 +96,9 @@ export default function Constellation() {
             ? <>At the bandwidth cross-validation picks, the qubits are barely entangled: each arrow keeps almost its full length, so the quantum kernel behaves much like a classical kernel on the same pathway scores. That is consistent with quantum and classical performing at parity on this cohort. At bandwidth {WIDE} the same circuit entangles strongly, but on this outcome cross-validation does not reward it. Quantum structure is available; this data does not use it.</>
             : <>At the chosen bandwidth the arrows are noticeably shorter than 1, so the kernel uses entanglement between pathways. At bandwidth {WIDE} they shorten further.</>}
         </p>
-      </section>
+      </Reveal>
 
-      <section className="two">
+      <Reveal className="two">
         <div className="panel">
           <div className="h2">Quantum similarity</div>
           <div className="num-l" style={{ margin: "10px 0 6px" }}>{sim.toFixed(3)}</div>
@@ -105,7 +109,7 @@ export default function Constellation() {
           <p className="small muted" style={{ marginTop: 0 }}>Squared distance between the two arrows on each qubit.</p>
           <Bars oneSided domain={Math.max(...perQubit, 0.1)} items={cohort.pathways.map((pw, k) => ({ label: pw.short, value: perQubit[k] })).sort((x, y) => y.value - x.value).slice(0, 6)} format={(v) => v.toFixed(2)} />
         </div>
-      </section>
+      </Reveal>
     </div>
   );
 }

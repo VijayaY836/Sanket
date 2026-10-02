@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useApp } from "../store";
+import { PageHero, Reveal, SplitArt } from "../components/cinema";
 import { AdvResult, runAdvantage } from "../lib/advantage";
 import { LineBand } from "../components/viz";
 import { IPlay } from "../icons";
@@ -21,7 +22,7 @@ const QUANTUM_KEYS = new Set(["proj", "fid", "proj_up", "proj_noent", "proj_kta"
 interface EngineResult { cohort: string; patients: number; construction: { g: number; quantum_scale: number; classical_kernel: string }; engineered: EngineRow[]; real: EngineRow[]; real_label: string }
 
 export default function Advantage() {
-  const { model, cohort, go } = useApp();
+  const { model, cohort, go, geo } = useApp();
   const [res, setRes] = useState<AdvResult | null>(null);
   const [prog, setProg] = useState<{ p: number; msg: string } | null>(null);
   const [eng, setEng] = useState<EngineResult | null>(null);
@@ -55,14 +56,16 @@ export default function Advantage() {
 
   return (
     <div className="grid">
-      <div className="topbar">
-        <div>
-          <h2 className="page-title">When quantum wins</h2>
-          <p className="page-sub">A quantum advantage needs data with structure that quantum circuits capture and classical models cannot. SANKET can build such data from real patients, measure the advantage, and check whether the real outcome has it.</p>
-        </div>
-      </div>
+      <PageHero kicker="Quantum · When quantum wins" title={<>Where quantum <em>actually wins</em>.</>}
+        lede="A quantum advantage needs data with structure that quantum circuits capture and classical models cannot. SANKET builds such data from real patients, measures the advantage, and checks whether the real outcome has it."
+        stats={[
+          { value: "~5×", label: `fewer two-qubit gates than the standard ZZ map (${HW_TABLE[1].twoq} vs ${HW_TABLE[3].twoq})` },
+          { value: `${Math.round((model.n - 1) / 6).toLocaleString()}×`, label: `fewer circuits with the projected kernel for ${model.n.toLocaleString()} patients` },
+          ...(geo ? [{ value: `g ${geo.proj.toFixed(1)}`, label: "quantum headroom on the loaded cohort" }] : []),
+        ]}
+        art={<SplitArt />} />
 
-      <section className="panel">
+      <Reveal className="panel">
         <div className="row">
           <div>
             <div className="h2">Live experiment on {cohort.name.split("(")[0].trim()}</div>
@@ -96,9 +99,9 @@ export default function Advantage() {
             <div className="legend"><span><i style={{ background: "var(--violet)" }} />Quantum kernel</span><span><i style={{ background: "var(--ink-2)" }} />Classical RBF kernel, bandwidth tuned</span><span>Test AUC, 12 repeats, ±1 SD</span></div>
           </>
         )}
-      </section>
+      </Reveal>
 
-      <section className="panel">
+      <Reveal className="panel">
         <div className="row">
           <div className="h2">Full benchmark from the engine</div><span className="spacer" />
           <button className="btn" onClick={() => input.current?.click()}>Load results_advantage.json</button>
@@ -116,9 +119,9 @@ export default function Advantage() {
             <div className="legend">{Object.keys(MODEL_NAMES).map((m) => <span key={m}><i style={{ background: MODEL_COLORS[m] }} />{MODEL_NAMES[m]}</span>)}</div>
           </>
         )}
-      </section>
+      </Reveal>
 
-      <section className="panel">
+      <Reveal className="panel">
         <div className="row">
           <div className="h2">Diagnosis tasks on real patients</div><span className="spacer" />
           <button className="btn" onClick={() => cin.current?.click()}>Load results_classify files</button>
@@ -145,9 +148,9 @@ export default function Advantage() {
             );
           })}
         </div>
-      </section>
+      </Reveal>
 
-      <section className="two">
+      <Reveal className="two">
         <div className="panel">
           <div className="h2">What this shows</div>
           <p className="small" style={{ marginTop: 0 }}>On data with quantum structure, the quantum kernel learns from far fewer patients than classical models. On real cancer outcomes it does not: across two registered cohorts (86 oral and 1,975 breast cancer patients) it matched the classical kernel exactly. SANKET's advantage test tells the two situations apart before any claim is made.</p>
@@ -158,11 +161,11 @@ export default function Advantage() {
           <div className="h2">Where quantum already wins: cost</div>
           <div className="row" style={{ gap: 28, marginTop: 8 }}>
             <div><div className="num">~5×</div><div className="tiny muted">fewer two-qubit gates than the standard ZZ map ({HW_TABLE[1].twoq} vs {HW_TABLE[3].twoq})</div></div>
-            <div><div className="num">14×</div><div className="tiny muted">fewer circuits with the projected kernel than a fidelity kernel</div></div>
+            <div><div className="num">{Math.round((model.n - 1) / 6).toLocaleString()}×</div><div className="tiny muted">fewer circuits with the projected kernel than a fidelity kernel, for {model.n.toLocaleString()} patients</div></div>
           </div>
           <p className="tiny muted" style={{ marginBottom: 0 }}>Same accuracy, far cheaper on real quantum hardware.</p>
         </div>
-      </section>
+      </Reveal>
     </div>
   );
 }
