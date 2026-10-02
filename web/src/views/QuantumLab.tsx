@@ -1,5 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { LARGE, useApp } from "../store";
+import { Chapter, PageHero, Reveal, WiresArt } from "../components/cinema";
 import { layerTrace, gateCounts, Layer } from "../lib/quantum";
 import { depolarisedBloch, looCIndex, projKernelFrom, shotNoisyFidelity } from "../lib/analysis";
 import { eigSym, psdProject } from "../lib/linalg";
@@ -33,14 +34,19 @@ export default function QuantumLab() {
 
   return (
     <div className="grid">
-      <div className="topbar">
-        <div>
-          <h2 className="page-title">Circuit and noise</h2>
-          <p className="page-sub">Step through the exact circuit run for this patient, then see what hardware noise does to the kernel and how it is repaired.</p>
-        </div>
-      </div>
+      <PageHero kicker="Quantum · Circuit and noise" title={<>The circuit, <em>gate by gate</em>.</>}
+        lede="Step through the exact circuit run for this patient, see what it costs on IBM hardware, then what noise does to the kernel and how it is repaired."
+        stats={[
+          { value: HW_TABLE[0].twoq, label: `two-qubit gates per circuit (${model.spec.reps} steps)` },
+          ...(hw ? [{ value: Math.round(hw.twoQubitGates!), label: `in the ${hw.backend} run (${hw.reps ?? 1} step)` }] : []),
+          { value: cohort.edges.length, label: "entangling pairs per step" },
+          { value: "~5×", label: "fewer two-qubit gates than a standard quantum map" },
+        ]}
+        art={<WiresArt n={cohort.pathways.length} edges={cohort.edges} />} />
 
-      <section className="panel">
+      <Chapter n={1} title="Run it for one patient" />
+
+      <Reveal className="panel">
         <div className="row" style={{ marginBottom: 12 }}>
           <div className="h2">Feature map, {cohort.patients[sel].id}</div>
           <span className="chip chip-violet">{g.h} H, {g.rz} Rz, {g.rzz} ZZ, {g.rx} Rx</span>
@@ -62,9 +68,10 @@ export default function QuantumLab() {
           ))}
         </div>
         <p className="tiny muted" style={{ marginBottom: 0 }}>Simulated exactly in your browser (4,096 complex amplitudes). The engine checks these Bloch vectors against Qiskit's Statevector to 10⁻¹⁴.</p>
-      </section>
+      </Reveal>
 
-      <section className="panel">
+      <Chapter n={2} title="What it costs on hardware" />
+      <Reveal className="panel">
         <div className="h2">Hardware cost on IBM Heron</div>
         <p className="lead small">Shaping the entanglement like the biology keeps circuits short enough to survive real hardware. Like-for-like, our fidelity kernel needs about 5× fewer two-qubit gates than the standard ZZ feature map (188 vs 906).</p>
         <div className="scroll-x">
@@ -92,8 +99,9 @@ export default function QuantumLab() {
         </div>
         {hw && <p className="small" style={{ margin: "8px 0 0" }}>The model in this app uses {model.spec.reps} Trotter steps. The IBM run used {hw.reps ?? 1}, as the noise study below recommends: about half the two-qubit gates, with similar accuracy and better noise robustness.</p>}
         <p className="tiny muted" style={{ marginBottom: 0 }}>Computed by the team with Qiskit 2.5 transpilation (optimisation level 3, best of 8 seeds) onto IBM Heron using the FakeFez calibration snapshot, on the real 14-edge crosstalk graph from GSE26549. Estimated fidelity is the product of calibrated gate and readout success rates.</p>
-      </section>
+      </Reveal>
 
+      <Chapter n={3} title="What noise does, and how it is repaired" />
       {model.n > LARGE ? <LargeCohortNoiseNotice /> : <><NoiseLab /><ExpressivityNoise /></>}
     </div>
   );
@@ -175,7 +183,7 @@ function NoiseLab() {
   const order = useMemo(() => model.loo.proj.map((r, i) => [r, i]).sort((a, b) => b[0] - a[0]).map((x) => x[1]), [model]);
 
   return (
-    <section className="two">
+    <Reveal className="two">
       <div className="panel">
         <div className="h2">Depolarising noise</div>
         <p className="small muted" style={{ marginTop: 0 }}>Each two-qubit gate error shrinks the Bloch arrows. The projected kernel is rebuilt and re-evaluated live.</p>
@@ -205,16 +213,16 @@ function NoiseLab() {
           <div><div className="num">{fid.cRep.toFixed(3)}</div><div className="tiny muted">C-index, repaired</div></div>
         </div>
       </div>
-    </section>
+    </Reveal>
   );
 }
 
 function LargeCohortNoiseNotice() {
   return (
-    <section className="panel">
+    <Reveal className="panel">
       <div className="h2">Noise laboratory</div>
       <p className="small muted" style={{ marginBottom: 0 }}>The browser skips noisy full-kernel simulations for this 1,975-patient cohort because they require large matrix calculations and would block the page. The circuit walkthrough and hardware cost remain live above; run <code>python -m engine.noise --task survival --cohort out/metabric_cohort.json</code> for the registered noise analysis.</p>
-    </section>
+    </Reveal>
   );
 }
 
@@ -243,7 +251,7 @@ function ExpressivityNoise() {
   const all = res ? res.flatMap((r) => r.pts.map((x) => x.score)) : [0.5, 0.8];
   const lo = Math.max(0.3, Math.floor((Math.min(...all) - 0.03) * 20) / 20), hi = Math.min(1, Math.ceil((Math.max(...all) + 0.03) * 20) / 20);
   return (
-    <section className="panel">
+    <Reveal className="panel">
       <div className="row">
         <div>
           <div className="h2">Expressivity versus noise</div>
@@ -270,6 +278,6 @@ function ExpressivityNoise() {
           </div>
         </div>
       )}
-    </section>
+    </Reveal>
   );
 }

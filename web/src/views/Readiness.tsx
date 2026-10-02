@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useApp } from "../store";
+import { DialArt, PageHero, Reveal } from "../components/cinema";
 import { distinctValues, numericColumns, Outcome, parseCSV, ReadinessReport, runReadiness, Table } from "../lib/readiness";
 import { LineBand, PathwayGraph } from "../components/viz";
 import { Cohort } from "../lib/cohort";
@@ -66,14 +67,15 @@ export default function Readiness() {
 
   return (
     <div className="grid">
-      <div className="topbar">
-        <div>
-          <h2 className="page-title">Quantum readiness check</h2>
-          <p className="page-sub">Is it worth running quantum models on your data? Upload a table and SANKET measures how much room quantum has, shows what an advantage would look like, and tests your real outcome against classical models.</p>
-        </div>
-      </div>
+      <PageHero kicker="Tools · Readiness check" title={<>Should your data <em>go quantum</em>?</>}
+        lede="Upload a table and SANKET measures how much room quantum has, shows what an advantage would look like, and tests your real outcome against tuned classical models. Everything runs in your browser."
+        stats={[
+          { value: "3", label: "verdicts: go, wait or choose classical" },
+          { value: "0", label: "bytes uploaded: the file never leaves this device" },
+        ]}
+        art={<DialArt />} />
 
-      <section className="two">
+      <Reveal className="two">
         <div className="panel">
           <div className="h2">1 · Choose data</div>
           <div className="drop" data-over={over} style={{ marginTop: 10 }} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
@@ -156,14 +158,14 @@ export default function Readiness() {
             </div>
           )}
         </div>
-      </section>
+      </Reveal>
 
       {err && <div className="tier tier-high"><b>Could not run the check</b>{err}</div>}
       {prog && (
-        <section className="panel">
+        <Reveal className="panel">
           <div className="small muted">{prog.msg}</div>
           <div style={{ height: 6, background: "var(--surface-2)", borderRadius: 4, marginTop: 8, overflow: "hidden" }}><div style={{ width: `${prog.p * 100}%`, height: "100%", background: "var(--violet)", transition: "width .2s" }} /></div>
-        </section>
+        </Reveal>
       )}
       {rep && <Report rep={rep} />}
     </div>
@@ -176,12 +178,12 @@ function Report({ rep }: { rep: ReadinessReport }) {
   const pos = Math.min(Math.log(Math.max(rep.gBest, 1)) / Math.log(Math.sqrt(Math.min(rep.n, 120))), 1);
   return (
     <>
-      <section className="panel">
+      <Reveal className="panel">
         <div className="row"><span className="chip chip-violet">Verdict</span><span className="tiny muted">{rep.name} · {rep.n} rows · {rep.qubits} qubits</span></div>
         <div className={`tier ${tone}`} style={{ marginTop: 10 }}><b style={{ fontSize: 18 }}>{rep.verdict.title}</b>{rep.verdict.text}</div>
-      </section>
+      </Reveal>
 
-      <section className="two">
+      <Reveal className="two">
         <div className="panel">
           <div className="h2">Quantum headroom</div>
           <div className="num-l" style={{ margin: "8px 0 4px" }}>g = {rep.gBest.toFixed(2)}</div>
@@ -211,9 +213,9 @@ function Report({ rep }: { rep: ReadinessReport }) {
           ) : <p className="small muted">Not enough rows for the demonstration.</p>}
           <p className="tiny muted" style={{ marginBottom: 0 }}>Labels built from the quantum kernel on your own features. They show the size of the room, not a result about your outcome.</p>
         </div>
-      </section>
+      </Reveal>
 
-      <section className="two">
+      <Reveal className="two">
         <div className="panel">
           <div className="h2">Your real outcome</div>
           {rep.real ? (
@@ -241,7 +243,7 @@ function Report({ rep }: { rep: ReadinessReport }) {
           <p className="small muted" style={{ marginTop: 0 }}>{rep.usedPCA ? `${rep.nFeatures} features compressed to 12 principal components (${Math.round((rep.explained ?? 0) * 100)}% of variance), one per qubit.` : `${rep.qubits} features, one per qubit.`} Qubits are coupled where features are most correlated: a label-free graph, at most 3 links per qubit.</p>
           <PathwayGraph cohort={fakeCohort} size={280} />
         </div>
-      </section>
+      </Reveal>
     </>
   );
 }
