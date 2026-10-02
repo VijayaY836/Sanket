@@ -323,6 +323,7 @@ body {
 .story-title { font: 800 clamp(30px, 3.4vw, 50px)/1.02 var(--display); letter-spacing: -0.035em; margin: 0 0 16px; text-wrap: balance; font-variation-settings: "opsz" 96; }
 .story-title-xl { font-size: clamp(42px, 5vw, 76px); line-height: 0.95; letter-spacing: -0.045em; font-variation-settings: "opsz" 96, "wdth" 92; }
 .story-body { font-size: 18px; line-height: 1.6; color: var(--ink-2); max-width: 42ch; margin: 0 0 18px; }
+.story-kicker { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--violet); margin: 0 0 14px; }
 .story-note { font-size: 14px; font-weight: 600; color: var(--violet); margin: 0; }
 .proof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 26px; margin: 4px 0 20px; }
 .proof-num { font: 800 34px/1 var(--display); letter-spacing: -0.03em; font-variation-settings: "opsz" 72; }

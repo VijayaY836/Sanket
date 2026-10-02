@@ -40,6 +40,20 @@ export interface Model {
   cidx: Record<KernelKind, { c: number; ci: [number, number] }>;
 }
 
+/** Mean Bloch-vector length over patients and qubits: 1 means unentangled product states, lower means more entanglement. */
+export const meanBlochLength = (bloch: Vec3[][]) => {
+  let s = 0, c = 0;
+  for (const b of bloch) for (const v of b) { s += Math.hypot(v[0], v[1], v[2]); c++; }
+  return c ? s / c : 1;
+};
+/** Bloch vectors of one patient at another bandwidth. */
+export const blochAt = (m: Model, i: number, scale: number) => blochVectors(simulate(m.angles[i], m.cohort.edges, { ...m.spec, scale }));
+/** Mean Bloch length if the cohort were encoded at another bandwidth (up to `cap` evenly spaced patients). */
+export function meanBlochLengthAt(m: Model, scale: number, cap = 150) {
+  const step = Math.max(1, Math.ceil(m.n / cap)), out: Vec3[][] = [];
+  for (let i = 0; i < m.n; i += step) out.push(blochAt(m, i, scale));
+  return meanBlochLength(out);
+}
 export const sqDist3 = (a: Vec3[], b: Vec3[]) => a.reduce((s, v, k) => s + (v[0] - b[k][0]) ** 2 + (v[1] - b[k][1]) ** 2 + (v[2] - b[k][2]) ** 2, 0);
 const sqDist = (a: number[], b: number[]) => a.reduce((s, v, k) => s + (v - b[k]) ** 2, 0);
 

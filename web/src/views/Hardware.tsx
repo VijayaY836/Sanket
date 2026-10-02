@@ -5,9 +5,12 @@ import { blochVectors, simulate } from "../lib/quantum";
 import { mulberry32 } from "../lib/rng";
 import { BlochSphere } from "../components/viz";
 import { HW_TABLE } from "./QuantumLab";
+import { hardwareCircuit } from "../lib/cohort";
 
 export default function Hardware() {
-  const { model, cohort, sel, setSel } = useApp();
+  const { model, cohort, sel, setSel, nested, large } = useApp();
+  const hw = hardwareCircuit(cohort);
+  const runGates = hw && <div className="tiny muted">{Math.round(hw.twoQubitGates!)} in the IBM run ({hw.reps ?? 1} step)</div>;
   const [shots, setShots] = useState(1024);
   const [seed, setSeed] = useState(1);
   const n = model.n;
@@ -41,9 +44,9 @@ export default function Hardware() {
             <input type="range" min={6} max={13} step={1} value={Math.log2(shots)} onChange={(e) => setShots(2 ** +e.target.value)} aria-label="Shots per circuit" />
           </div>
           <table className="table">
-            <thead><tr><th>Kernel</th><th>Circuits</th><th>Total shots</th><th>Two-qubit gates each</th></tr></thead>
+            <thead><tr><th>Kernel</th><th>Circuits</th><th>Total shots</th><th>Two-qubit gates each (2 steps)</th></tr></thead>
             <tbody>
-              <tr><td><b>Projected</b></td><td>{projCircuits.toLocaleString()}</td><td>{(projCircuits * shots).toLocaleString()}</td><td>{HW_TABLE[0].twoq}</td></tr>
+              <tr><td><b>Projected</b></td><td>{projCircuits.toLocaleString()}</td><td>{(projCircuits * shots).toLocaleString()}</td><td>{HW_TABLE[0].twoq}{runGates}</td></tr>
               <tr><td>Fidelity</td><td>{fidCircuits.toLocaleString()}</td><td>{(fidCircuits * shots).toLocaleString()}</td><td>{HW_TABLE[1].twoq}</td></tr>
             </tbody>
           </table>
@@ -64,6 +67,12 @@ export default function Hardware() {
                   <span className="muted"> This shows the hardware preserves the model; it is not a separate claim of predictive accuracy, which is only as good as the simulated model on these patients.</span>
                 </p>
               )}
+              {scored && (
+                <p className="tiny muted" style={{ marginBottom: 0 }}>
+                  <b>Why these differ from the Evidence page{nested ? ` (${nested.proj.c.toFixed(3)})` : ""}:</b> Evidence uses {large ? "leave-one-out with" : "nested cross-validation, re-choosing"} the bandwidth {large ? "chosen on all patients" : "inside every fold"}, with the app's {model.spec.reps}-step encoding. That is the estimate of predictive performance.
+                  The two scores here use the single encoding the IBM job ran (bandwidth {cohort.featureMap?.scale ?? "–"}, {cohort.featureMap?.reps ?? 1} step), fixed in advance and scored leave-one-out on the same patients. Their gap measures what hardware noise costs, not how well the model predicts.
+                </p>
+              )}
             </>
           ) : (
             <div>
@@ -79,9 +88,9 @@ export default function Hardware() {
         <p className="small muted" style={{ marginTop: 0 }}>What each model needs. The quantum kernels tune a single bandwidth; their cost is in circuits and shots, which the pathway wiring keeps small.</p>
         <div className="scroll-x">
           <table className="table">
-            <thead><tr><th>Model</th><th>Qubits</th><th>Two-qubit gates per circuit</th><th>Circuits for {n} patients</th><th>Values tuned or learned</th></tr></thead>
+            <thead><tr><th>Model</th><th>Qubits</th><th>Two-qubit gates per circuit (2 steps)</th><th>Circuits for {n} patients</th><th>Values tuned or learned</th></tr></thead>
             <tbody>
-              <tr><td><b>Projected quantum kernel</b></td><td>{cohort.pathways.length}</td><td>{HW_TABLE[0].twoq}</td><td>{n.toLocaleString()} (one measurement set each)</td><td>1 bandwidth</td></tr>
+              <tr><td><b>Projected quantum kernel</b></td><td>{cohort.pathways.length}</td><td>{HW_TABLE[0].twoq}{runGates}</td><td>{n.toLocaleString()} (one measurement set each)</td><td>1 bandwidth</td></tr>
               <tr><td>Fidelity quantum kernel</td><td>{cohort.pathways.length}</td><td>{HW_TABLE[1].twoq}</td><td>{fidCircuits.toLocaleString()}</td><td>1 bandwidth</td></tr>
               <tr><td>Standard ZZ quantum kernel</td><td>{cohort.pathways.length}</td><td>{HW_TABLE[3].twoq}</td><td>{fidCircuits.toLocaleString()}</td><td>1 bandwidth</td></tr>
               <tr><td>Classical RBF kernel</td><td>none</td><td>none</td><td>none</td><td>1 bandwidth</td></tr>

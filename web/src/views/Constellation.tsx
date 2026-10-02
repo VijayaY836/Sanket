@@ -1,15 +1,17 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../store";
-import { predictPatient, sqDist3 } from "../lib/analysis";
+import { blochAt, meanBlochLength, meanBlochLengthAt, predictPatient, sqDist3 } from "../lib/analysis";
 import { Bars, BlochSphere } from "../components/viz";
 import { outcomeTerms } from "../lib/cohort";
 
 type Mode = "progressor" | "stable" | "pick";
+const WIDE = 1.0; // comparison bandwidth: same circuit, larger rotations
 
 export default function Constellation() {
   const { model, cohort, sel, setSel } = useApp();
   const [mode, setMode] = useState<Mode>("stable");
   const [pick, setPick] = useState(0);
+  const [wide, setWide] = useState(false);
   const pred = useMemo(() => predictPatient(model, sel), [model, sel]);
   const other = useMemo(() => {
     if (mode === "pick") return pick === sel ? (sel + 1) % model.n : pick;
@@ -19,7 +21,11 @@ export default function Constellation() {
     row.forEach((v, j) => { if (j !== sel && model.events[j] === want && (want === 1 || model.times[j] > 48) && (best < 0 || v > row[best])) best = j; });
     return best < 0 ? (sel + 1) % model.n : best;
   }, [mode, pick, sel, model]);
-  const a = model.bloch[sel], b = model.bloch[other];
+  const a = useMemo(() => (wide ? blochAt(model, sel, WIDE) : model.bloch[sel]), [wide, model, sel]);
+  const b = useMemo(() => (wide ? blochAt(model, other, WIDE) : model.bloch[other]), [wide, model, other]);
+  const lenChosen = useMemo(() => meanBlochLength(model.bloch), [model]);
+  const lenWide = useMemo(() => meanBlochLengthAt(model, WIDE), [model]);
+  const nearlyProduct = lenChosen > 0.98;
   const sim = model.K.proj[sel][other];
   const perQubit = a.map((v, k) => (v[0] - b[k][0]) ** 2 + (v[1] - b[k][1]) ** 2 + (v[2] - b[k][2]) ** 2);
   const total = sqDist3(a, b);
@@ -48,6 +54,11 @@ export default function Constellation() {
             <button aria-pressed={mode === "progressor"} onClick={() => setMode("progressor")}>Most similar progressor</button>
             <button aria-pressed={mode === "pick"} onClick={() => setMode("pick")}>Choose</button>
           </div>
+          <span className="spacer" />
+          <div className="seg" role="group" aria-label="Bandwidth shown">
+            <button aria-pressed={!wide} onClick={() => setWide(false)}>Bandwidth {model.spec.scale} (model)</button>
+            <button aria-pressed={wide} onClick={() => setWide(true)}>Bandwidth {WIDE} (comparison)</button>
+          </div>
           {mode === "pick" && (
             <select value={pick} onChange={(e) => setPick(+e.target.value)} aria-label="Comparison patient" style={{ padding: "6px 8px", borderRadius: 8, border: "1px solid var(--line)", background: "var(--surface)" }}>
               {cohort.patients.map((p, i) => <option key={p.id} value={i}>{p.id}</option>)}
@@ -63,18 +74,31 @@ export default function Constellation() {
             <div className="sphere-cell" key={pw.key} style={{ background: perQubit[k] > total / cohort.pathways.length * 1.6 ? "var(--violet-soft)" : "transparent" }}>
               <BlochSphere v={a[k]} ghost={b[k]} size={104} />
               <div className="lbl">q{k} {pw.short}</div>
-              <div className="tiny muted">length {len(a[k]).toFixed(2)}</div>
+              <div className="tiny muted">length {len(a[k]).toFixed(3)}</div>
             </div>
           ))}
         </div>
-        <p className="tiny muted" style={{ marginBottom: 0 }}>Arrows shorter than 1 mean that qubit is entangled with its neighbours: its pathway's information is shared across the circuit. Highlighted cells are where the two patients differ most.</p>
+        <p className="tiny muted" style={{ marginBottom: 0 }}>Arrows shorter than 1 mean that qubit is entangled with its neighbours: its pathway's information is shared across the circuit. Highlighted cells are where the two patients differ most.{wide && " Showing the comparison bandwidth; the model and the similarity below use the chosen one."}</p>
+      </section>
+
+      <section className="panel">
+        <div className="h2">How entangled are these states?</div>
+        <div className="row" style={{ gap: 28, margin: "10px 0" }}>
+          <div><div className="num">{lenChosen.toFixed(3)}</div><div className="tiny muted">mean arrow length at bandwidth {model.spec.scale}, chosen by cross-validation</div></div>
+          <div><div className="num">{lenWide.toFixed(3)}</div><div className="tiny muted">same circuit at bandwidth {WIDE}</div></div>
+        </div>
+        <p className="small" style={{ margin: 0 }}>
+          {nearlyProduct
+            ? <>At the bandwidth cross-validation picks, the qubits are barely entangled: each arrow keeps almost its full length, so the quantum kernel behaves much like a classical kernel on the same pathway scores. That is consistent with quantum and classical performing at parity on this cohort. At bandwidth {WIDE} the same circuit entangles strongly, but on this outcome cross-validation does not reward it. Quantum structure is available; this data does not use it.</>
+            : <>At the chosen bandwidth the arrows are noticeably shorter than 1, so the kernel uses entanglement between pathways. At bandwidth {WIDE} they shorten further.</>}
+        </p>
       </section>
 
       <section className="two">
         <div className="panel">
           <div className="h2">Quantum similarity</div>
           <div className="num-l" style={{ margin: "10px 0 6px" }}>{sim.toFixed(3)}</div>
-          <p className="small muted" style={{ margin: 0 }}>k = exp(−γ Σ‖r<sub>k</sub> − r′<sub>k</sub>‖²) with γ = {model.gammaQ.toFixed(3)}, bandwidth {model.spec.scale} chosen by cross-validation. 1 means identical states.</p>
+          <p className="small muted" style={{ margin: 0 }}>k = exp(−γ Σ‖r<sub>k</sub> − r′<sub>k</sub>‖²) with γ = {model.gammaQ.toFixed(3)}, bandwidth {model.spec.scale} chosen by cross-validation. 1 means identical states. Mean arrow length {lenChosen.toFixed(3)}.</p>
         </div>
         <div className="panel">
           <div className="h2">Where they differ</div>
