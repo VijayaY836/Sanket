@@ -25,7 +25,7 @@ const reduceMotion = () => typeof window !== "undefined" && window.matchMedia?.(
 
 /* ---------- survival curves ---------- */
 export interface Series { curve: Curve; color: string; label: string; dash?: string; width?: number; fill?: boolean }
-export function SurvivalChart({ series, horizon, maxT = 120, height = 260 }: { series: Series[]; horizon?: number; maxT?: number; height?: number }) {
+export function SurvivalChart({ series, horizon, maxT = 120, height = 260, timeFrom = "biopsy", label = "Predicted survival curves" }: { series: Series[]; horizon?: number; maxT?: number; height?: number; timeFrom?: string; label?: string }) {
   const W = 620, H = height, L = 40, R = 14, T = 14, B = 34;
   const x = (t: number) => L + (Math.min(t, maxT) / maxT) * (W - L - R);
   const y = (s: number) => T + (1 - s) * (H - T - B);
@@ -37,7 +37,7 @@ export function SurvivalChart({ series, horizon, maxT = 120, height = 260 }: { s
   const ticks = [];
   for (let t = 0; t <= maxT; t += 24) ticks.push(t);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Predicted cancer-free survival curves" style={{ display: "block" }}>
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={label} style={{ display: "block" }}>
       {[0, 0.25, 0.5, 0.75, 1].map((s) => (
         <g key={s}>
           <line x1={L} x2={W - R} y1={y(s)} y2={y(s)} stroke="var(--line)" strokeWidth={1} />
@@ -45,7 +45,7 @@ export function SurvivalChart({ series, horizon, maxT = 120, height = 260 }: { s
         </g>
       ))}
       {ticks.map((t) => (<text key={t} x={x(t)} y={H - 12} textAnchor="middle" fontSize={11} fill="var(--ink-3)">{t / 12}y</text>))}
-      <text x={W - R} y={H - 0} textAnchor="end" fontSize={10.5} fill="var(--ink-3)">Years since biopsy</text>
+      <text x={W - R} y={H - 0} textAnchor="end" fontSize={10.5} fill="var(--ink-3)">Years since {timeFrom}</text>
       {horizon !== undefined && (
         <g>
           <line x1={x(horizon)} x2={x(horizon)} y1={T} y2={H - B} stroke="var(--ink-3)" strokeDasharray="3 4" />

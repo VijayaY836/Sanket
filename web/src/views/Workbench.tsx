@@ -7,7 +7,7 @@ import { IDownload } from "../icons";
 const MODULES = [
   { name: "Oral precancer progression", data: "GEO GSE26549, 86 patients, time to oral cancer", role: "Flagship: true early detection", match: /oral|gse26549/i },
   { name: "Early breast cancer relapse", data: "METABRIC (cBioPortal), about 1,900 patients", role: "Scale: the data-size experiment", match: /metabric|breast/i },
-  { name: "Leukaemia subtype", data: "Golub AML/ALL, 72 patients", role: "Calibration against published quantum ML", match: /golub|leuk/i },
+  { name: "Leukaemia subtype", data: "Golub AML/ALL, 72 patients (diagnosis labels, no follow-up)", role: "Calibration against published quantum ML", match: /golub|leuk/i, diagnosis: true },
 ];
 
 export default function Workbench() {
@@ -54,7 +54,8 @@ export default function Workbench() {
             <tbody>
               {MODULES.map((m, i) => (
                 <tr key={m.name}><td><b>{m.name}</b></td><td>{m.data}</td><td>{m.role}</td>
-                  <td>{m.match.test(cohort.name) ? <span className={`chip ${cohort.source === "real" ? "chip-teal" : "chip-amber"}`}>{cohort.source === "real" ? "Real data loaded" : "Synthetic stand-in"}</span> : <span className="chip chip-grey">Load its cohort.json</span>}</td></tr>
+                  <td>{m.diagnosis ? <span className="chip chip-grey" title="A diagnosis task, not time-to-event: its results load on the When quantum wins page">See When quantum wins</span>
+                    : m.match.test(cohort.name) ? <span className={`chip ${cohort.source === "real" ? "chip-teal" : "chip-amber"}`}>{cohort.source === "real" ? "Real data loaded" : "Synthetic stand-in"}</span> : <span className="chip chip-grey">Load its cohort.json</span>}</td></tr>
               ))}
             </tbody>
           </table>
@@ -107,7 +108,8 @@ export default function Workbench() {
     { "id": "GSM652749", "pathways": [0.41, -1.2, ...], "time": 42, "event": 1,
       "meta": { "histology": "Moderate dysplasia" } }
   ],
-  "hardware": [{ "backend": "ibm_fez", "jobId": "...", "date": "2026-10-20", "shots": 1024, "patients": 86 }]
+  "hardware": [{ "backend": "ibm_fez", "jobId": "...", "date": "2026-10-20", "shots": 1024, "patients": 86 }],
+  "terms": { "risk": "relapse", "free": "Relapse-free", ... }   // optional wording; oral and breast cohorts are recognised by name
 }`}</pre>
       </section>
     </div>
