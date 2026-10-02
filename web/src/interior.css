@@ -83,6 +83,27 @@
 .shell--interior .banner { border-radius: 6px; border: 1px solid color-mix(in srgb, var(--amber) 25%, var(--line)); }
 .shell--interior .drop { border-radius: 8px; }
 
+/* Evidence reads like a research report: result, clinical context, then exploration. */
+.shell--interior .evidence-page,
+.shell--interior .advantage-page { gap: 26px; }
+.shell--interior .evidence-primary { border-top: 3px solid var(--violet); padding-block: 28px; }
+.shell--interior .evidence-primary .h2 { font-size: clamp(20px, 2.1vw, 28px); font-weight: 600; margin-bottom: 18px; }
+.shell--interior .evidence-primary .tiny { max-width: 95ch; line-height: 1.55; }
+.shell--interior .evidence-comparison { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+.shell--interior .evidence-exploration { grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); }
+.shell--interior .evidence-page .two > .panel,
+.shell--interior .advantage-page .two > .panel { min-width: 0; }
+.shell--interior .advantage-experiment { border-top: 3px solid var(--violet); }
+.shell--interior .advantage-experiment .num { font-size: 36px; }
+.shell--interior .advantage-charts { border-top: 1px solid var(--line); padding-top: 22px; gap: 28px; }
+.shell--interior .advantage-charts > div + div { border-left: 1px solid var(--line); padding-left: 28px; }
+@media (max-width: 1180px) {
+  .shell--interior .evidence-comparison,
+  .shell--interior .evidence-exploration,
+  .shell--interior .advantage-charts { grid-template-columns: 1fr; }
+  .shell--interior .advantage-charts > div + div { border-left: 0; border-top: 1px solid var(--line); padding: 20px 0 0; }
+}
+
 /* Patient case: case file, then the outcome and evidence. */
 .shell--interior .case { grid-template-columns: 236px minmax(0, 1fr); gap: 28px; }
 .shell--interior .cohort-list { padding: 0; top: 22px; max-height: calc(100vh - 44px); }

@@ -35,7 +35,7 @@ export default function Evidence() {
   };
 
   return (
-    <div className="grid">
+    <div className="grid evidence-page">
       <div className="topbar">
         <div>
           <h2 className="page-title">Evidence</h2>
@@ -44,7 +44,7 @@ export default function Evidence() {
         {cohort.source === "synthetic" && <span className="chip chip-amber">Computed on synthetic patients</span>}
       </div>
 
-      <section className="panel">
+      <section className="panel evidence-primary">
         <div className="row">
           <div className="h2">{v ? v.text : "Running nested cross-validation…"}</div>
         </div>
@@ -69,7 +69,7 @@ export default function Evidence() {
       {large ? <LargeCohortNotice /> : <ClinicalUse />}
       <QubitCurve />
 
-      <section className="two">
+      <section className="two evidence-comparison">
         <div className="panel">
           <div className="h2">Can quantum help on this data?</div>
           <p className="small muted" style={{ marginTop: 0 }}>Geometric difference g between the best classical kernel and each quantum kernel (Huang et al., Nature Communications 2021). If g is close to 1, a classical model can match the quantum one on this data. A larger g leaves room for an advantage: necessary, not sufficient.</p>
@@ -95,7 +95,7 @@ export default function Evidence() {
         </div>
       </section>
 
-      <section className="two">
+      <section className="two evidence-exploration">
         <div className="panel">
           <div className="h2">Where would quantum help? Fewer patients</div>
           <p className="small muted" style={{ marginTop: 0 }}>Random subsets of the cohort, 25 repeats each, leave-one-out C-index. Quantum kernels are expected to matter most when data is scarce. On real data the breast cohort extends this to 2,000 patients.</p>

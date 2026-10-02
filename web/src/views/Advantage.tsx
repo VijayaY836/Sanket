@@ -54,7 +54,7 @@ export default function Advantage() {
   const gain = res?.engineered.length ? res.engineered[0].quantum.mean - res.engineered[0].classical.mean : 0;
 
   return (
-    <div className="grid">
+    <div className="grid advantage-page">
       <div className="topbar">
         <div>
           <h2 className="page-title">When quantum wins</h2>
@@ -62,7 +62,7 @@ export default function Advantage() {
         </div>
       </div>
 
-      <section className="panel">
+      <section className="panel advantage-experiment">
         <div className="row">
           <div>
             <div className="h2">Live experiment on {cohort.name.split("(")[0].trim()}</div>
@@ -83,7 +83,7 @@ export default function Advantage() {
               <div><div className="num">g = {res.g.toFixed(2)}</div><div className="tiny muted">geometric difference vs the closest classical kernel ({res.n} patients)</div></div>
               <div><div className="num" style={{ color: gain > 0 ? "var(--violet)" : undefined }}>{gain >= 0 ? "+" : ""}{gain.toFixed(2)}</div><div className="tiny muted">quantum minus classical AUC with {res.engineered[0]?.size} training patients, engineered task</div></div>
             </div>
-            <div className="two" style={{ marginTop: 10 }}>
+            <div className="two advantage-charts" style={{ marginTop: 10 }}>
               <div>
                 <div className="row"><b>Engineered quantum-structured labels</b><span className="chip chip-amber">synthetic labels</span></div>
                 <LineBand xLabel="Training patients" yRange={[0.3, 1]} series={live(res.engineered)} />
