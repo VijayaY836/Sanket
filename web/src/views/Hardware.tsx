@@ -14,11 +14,14 @@ export default function Hardware() {
   // exact reference uses the encoding of the recorded hardware run when there is one
   const exactRef = useMemo(() => (cohort.featureMap ? blochVectors(simulate(model.angles[sel], cohort.edges, { ...model.spec, ...cohort.featureMap })) : model.bloch[sel]), [cohort, model, sel]);
   const est = useMemo(() => { const r = mulberry32(seed * 7919 + sel); return exactRef.map((b) => shotEstimate(b, shots, r)); }, [exactRef, sel, shots, seed]);
-  const shown = cohort.measuredBloch?.[cohort.patients[sel].id] ?? est;
+  const pid = cohort.patients[sel].id;
+  const measured = cohort.measuredBloch?.[pid];
+  const measuredJob = cohort.hardware?.find((h) => h.jobId === cohort.measuredJob?.[pid]);
+  const shown = measured ?? est;
   const err = shown.reduce((s, v, k) => s + Math.hypot(v[0] - exactRef[k][0], v[1] - exactRef[k][1], v[2] - exactRef[k][2]), 0) / est.length;
   const projCircuits = n * 3, fidCircuits = (n * (n - 1)) / 2;
   const jobs = cohort.hardware ?? [];
-  const measured = cohort.measuredBloch?.[cohort.patients[sel].id];
+  const scored = jobs.filter((j) => j.c_index_hardware_kernel != null).pop();
 
   return (
     <div className="grid">
@@ -49,14 +52,23 @@ export default function Hardware() {
         <div className="panel">
           <div className="h2">Hardware job record</div>
           {jobs.length ? (
-            <table className="table">
-              <thead><tr><th>Backend</th><th>Job ID</th><th>Date</th><th>Patients</th><th>Shots</th></tr></thead>
-              <tbody>{jobs.map((j) => (<tr key={j.jobId}><td>{j.backend}{j.note && <div className="tiny muted">{j.note}</div>}</td><td style={{ wordBreak: "break-all" }}>{j.jobId}</td><td>{j.date}</td><td>{j.patients}</td><td>{j.shots}</td></tr>))}</tbody>
-            </table>
+            <>
+              <table className="table">
+                <thead><tr><th>Backend</th><th>Job ID</th><th>Date</th><th>Patients</th><th>Shots</th></tr></thead>
+                <tbody>{jobs.map((j) => (<tr key={j.jobId}><td>{j.backend}{j.note && <div className="tiny muted">{j.note}</div>}</td><td style={{ wordBreak: "break-all" }}>{j.jobId}</td><td>{j.date}</td><td>{j.patients}</td><td>{j.shots}</td></tr>))}</tbody>
+              </table>
+              {scored && (
+                <p className="small" style={{ marginBottom: 0 }}>
+                  On the {scored.patients} patients in job <code>{scored.jobId}</code>, the kernel built from hardware measurements agrees with the exact kernel at <b>{scored.kernel_agreement?.toFixed(2)}</b> correlation,
+                  and its leave-one-out C-index is <b>{scored.c_index_hardware_kernel?.toFixed(3)}</b> against <b>{scored.c_index_exact_kernel?.toFixed(3)}</b> for the same model in exact simulation.
+                  <span className="muted"> This shows the hardware preserves the model; it is not a separate claim of predictive accuracy, which is only as good as the simulated model on these patients.</span>
+                </p>
+              )}
+            </>
           ) : (
             <div>
               <p className="small">No hardware run is recorded for this cohort yet.</p>
-              <p className="small muted">Run <code>python -m engine.hardware --cohort out/cohort.json</code> with your IBM Quantum token. The job ID, backend and measured Bloch vectors are written into <code>cohort.json</code> and appear here, so the demo always shows a real, verifiable run rather than a live call that could time out.</p>
+              <p className="small muted">Run <code>python -m engine.hardware_run --backend least_busy</code> with your IBM Quantum token. The job ID, backend and measured Bloch vectors are written into <code>cohort.json</code> and appear here, so the demo always shows a real, verifiable run rather than a live call that could time out.</p>
             </div>
           )}
         </div>
@@ -90,13 +102,13 @@ export default function Hardware() {
           <button className="btn" onClick={() => setSeed((s) => s + 1)}>Sample again</button>
         </div>
         {measured
-          ? <p className="small muted">Solid arrows: <b>measured</b> in the recorded job ({jobs[jobs.length - 1]?.backend}). Dashed: exact simulated state.</p>
+          ? <p className="small muted">Solid arrows: <b>measured</b> on {measuredJob?.backend ?? "hardware"}{measuredJob && <> in job <code>{measuredJob.jobId}</code> ({measuredJob.date})</>}. Dashed: exact simulated state.</p>
           : <p className="small muted">Solid arrows: estimated from {shots.toLocaleString()} simulated shots per basis. Dashed: exact state. This is a sampling preview, not hardware output.</p>}
         <div className="constellation">
           {(measured ?? est).map((v, k) => (<div className="sphere-cell" key={k}><BlochSphere v={v} ghost={exactRef[k]} size={92} color="var(--teal)" /><div className="lbl">q{k} {cohort.pathways[k].short}</div></div>))}
         </div>
         <div className="row" style={{ marginTop: 10 }}>
-          <div><div className="num">{err.toFixed(3)}</div><div className="tiny muted">mean {cohort.measuredBloch?.[cohort.patients[sel].id] ? "hardware" : "estimation"} error per qubit</div></div>
+          <div><div className="num">{err.toFixed(3)}</div><div className="tiny muted">mean {measured ? "hardware" : "estimation"} error per qubit</div></div>
           <div className="tiny muted" style={{ maxWidth: 420 }}>Error falls roughly as 1/√shots. Quadrupling shots halves it.</div>
         </div>
       </section>

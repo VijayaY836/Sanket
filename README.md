@@ -202,7 +202,8 @@ sanket/
 │   ├── shift.py                  METABRIC leave-one-cohort-out validation
 │   ├── qubits.py, noise.py       Qubit-count curve and expressivity-versus-noise test
 │   ├── readiness.py              Quantum Readiness Check for any CSV (same results as the web page)
-│   ├── hardware.py               IBM Quantum runs (Estimator, Batch mode)
+│   ├── hardware_run.py           IBM Quantum runs (Estimator, Batch mode) and hardware-versus-simulation analysis
+│   ├── hardware.py               Original hardware script (two Trotter steps; superseded by hardware_run.py)
 │   ├── resources.py              Gate-count study on IBM Heron
 │   └── crosscheck.py             Export for browser-vs-Qiskit verification
 ├── web/                          Web application (React 18, TypeScript, Vite)
@@ -309,8 +310,9 @@ python -m engine.noise --task survival --cohort out/metabric_cohort.json    # ge
 
 ```bash
 python -m engine.resources                             # gate counts on IBM Heron
-python -m engine.hardware --backend fake --patients 4  # noisy local dry run
-python -m engine.hardware --backend least_busy         # real QPU (IBM Quantum account)
+python -m engine.hardware_run --backend fake --patients 4  # noisy local dry run (add --record to save it in the cohort file)
+python -m engine.hardware_run --backend least_busy         # real QPU (IBM Quantum account)
+python -m engine.hardware_run --fetch JOB_ID --patients 8  # analyse a finished job later, with the original options
 ```
 
 ### 8 · Quantum Readiness Check on your own data
@@ -376,7 +378,7 @@ Light and dark themes, responsive down to phone width, with every number compute
 - [x] Registered analyses on two independent survival cohorts
 - [x] Engineered quantum-advantage benchmark and diagnosis tasks
 - [x] Hardware-aware circuit design and gate-count study
-- [ ] Full projected-kernel run on IBM Heron hardware
+- [x] Full projected-kernel run on IBM Heron hardware (oral cohort, 86 patients on `ibm_fez`; kernel agreement 0.98 with simulation)
 - [x] Quantum Readiness Check: upload any dataset, get a quantum-headroom verdict
 - [ ] Technical report on Zenodo, then a preprint
 - [ ] Indian oral precancer cohort through a clinical partner

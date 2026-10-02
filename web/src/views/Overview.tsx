@@ -30,8 +30,8 @@ export default function Overview() {
         stats={{
           quantum: nested ? nested.proj.c : model.cidx.proj.c, classical: nested ? nested.rbf.c : model.cidx.rbf.c,
           hwBackend: hwBest?.backend, hwPatients: hwBest?.patients,
-          hwCorr: (hwBest as unknown as { correlation_with_exact?: number } | null)?.correlation_with_exact,
-          hwKernel: (hwBest as unknown as { kernel_agreement?: number } | null)?.kernel_agreement,
+          hwCorr: hwBest?.correlation_with_exact,
+          hwKernel: hwBest?.kernel_agreement,
         }}
         onOpenCase={() => { setSel(pair[0].i); go("case"); }} onEvidence={() => go("evidence")} />
 
