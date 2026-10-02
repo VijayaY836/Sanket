@@ -23,6 +23,8 @@
 [At a glance](#at-a-glance) ·
 [Overview](#overview) ·
 [Key results](#key-results) ·
+[Detect](#detecting-oral-cancer-and-dysplasia-from-tissue) ·
+[How SANKET compares](#how-sanket-compares) ·
 [IBM hardware run](#run-on-ibm-quantum-hardware) ·
 [App tour](#the-web-application) ·
 [Architecture](#system-architecture) ·
@@ -43,15 +45,16 @@
 | | |
 |---|---|
 | **Problem statement** | SIH26139: Hybrid Quantum Machine Learning Platform for Early Disease Detection (Egreen Quanta) · MedTech / BioTech / HealthTech · Software |
-| **Clinical problem** | About 1 in 5 oral precancers (leukoplakia) becomes cancer, and doctors cannot tell which. SANKET estimates which lesions will progress, and when. |
+| **Clinical problem** | About 1 in 5 oral precancers (leukoplakia) becomes cancer, and doctors cannot tell which. SANKET first reads the tissue (normal, dysplasia or cancer?), then estimates which precancers will progress, and when. |
 | **Idea** | Compress ~20,000 genes into 12 biological pathways, encode one pathway per qubit, and wire the qubits like the biology (pathways that share genes interact). |
 | **Quantum model** | Projected quantum kernel on a Hamiltonian (Trotterised) feature map, inside a kernel-weighted survival model |
-| **Real patients** | 2,133 across three cancers: 86 oral precancer (GEO GSE26549), 1,975 breast cancer (METABRIC), 72 leukaemia (Golub) |
+| **Real data** | 2,394 samples across three cancers: 86 oral precancer with follow-up (GEO GSE26549), 229 oral tissue biopsies labelled normal, dysplasia or cancer (GSE30784), 32 oral tissues from Tata Memorial Centre, Navi Mumbai (GSE23558, independent check), 1,975 breast cancer (METABRIC), 72 leukaemia (Golub) |
+| **Detect** | Normal, dysplasia or cancer from oral tissue: AUC **0.98** cancer vs normal and **0.95** dysplasia vs normal (projected quantum kernel), tied with classical as registered in advance. Upload your own gene-activity file and it is scored on the 12 pathways in the browser. |
 | **Run on IBM quantum hardware** | All 86 oral-cohort patients on IBM's 156-qubit Heron processor `ibm_fez`: 1,024 shots each, 49 two-qubit gates per circuit, **0.98 agreement** between the hardware kernel and exact simulation |
-| **Honest result** | On real clinical outcomes the quantum kernel matches classical methods (METABRIC C-index 0.582 vs 0.582, p = 0.98). On data with quantum structure it wins decisively (AUC 0.97 vs 0.66 with 50 patients). |
+| **Honest result** | On real clinical outcomes the quantum kernel matches classical methods (METABRIC C-index 0.582 vs 0.582, p = 0.98; oral diagnosis ties on all three tasks). On data with quantum structure it wins decisively (AUC 0.97 vs 0.66 with 50 patients). Models trained on a US cohort did **not** transfer to the Indian cohort, and we report it. |
 | **Why parity** | At the setting cross-validation chooses, the qubits barely entangle (mean Bloch-vector length 0.994; 1 = no entanglement). Quantum structure is available, but these outcomes do not reward it. |
 | **Hardware efficiency** | ~5× fewer two-qubit gates than the standard ZZ feature map on IBM Heron (188 vs 906); the projected kernel's circuit count grows linearly with patients, not with patient pairs |
-| **Working prototype** | React + TypeScript web app with an exact 12-qubit simulator in the browser (matches Qiskit to 10⁻¹⁵), patient case files, HL7 FHIR R4 export, and a Quantum Readiness Check for any dataset |
+| **Working prototype** | React + TypeScript web app with an exact 12-qubit simulator in the browser (matches Qiskit to 10⁻¹⁵), a Detect page for oral tissue with gene-activity upload (ssGSEA in the browser, matches gseapy to 3 × 10⁻⁴), patient case files, HL7 FHIR R4 export, and a Quantum Readiness Check for any dataset |
 | **Rigour** | Equal tuning budgets, nested and repeated cross-validation, Holm-corrected tests, analysis plans pre-registered on OSF before outcomes were examined |
 
 ---
@@ -90,6 +93,26 @@ Oral cohort, nested leave-one-out (bandwidth re-chosen inside every fold): proje
   <img src="out/figures/metabric_size_curve.png" alt="METABRIC data-size curve: test C-index against training patients" width="47%"/>
 </p>
 <p align="center"><sub>Left: oral cohort, 20×5 repeated cross-validation. Right: METABRIC, C-index as the training set grows from 50 to 1,600 patients.</sub></p>
+
+### Detecting oral cancer and dysplasia from tissue
+
+Before predicting whether a precancer will progress, SANKET reads the tissue itself, with the same 12 pathways and the same quantum circuit. The analysis plan ([`docs/osf_oral_diagnosis.md`](docs/osf_oral_diagnosis.md)) was written before any model was run: GSE30784 (Fred Hutchinson Cancer Research Center, 229 biopsies), repeated stratified 5-fold cross-validation with 10 repeats, equal tuning budgets, projected quantum kernel against a tuned classical RBF kernel as the primary test (Bouckaert–Frank corrected t-test, Holm-corrected). Datasets are scored separately and never pooled.
+
+| Task | Samples | Projected quantum AUC | Classical RBF AUC | Best classical | Quantum vs RBF | Verdict |
+|---|---|---|---|---|---|---|
+| Cancer vs normal | 167 vs 45 | **0.980** ± 0.026 · sensitivity 97%, specificity 86% | 0.985 | 0.990 · random forest | p = 0.72 | Tie |
+| Dysplasia vs normal | 17 vs 45 | **0.953** ± 0.051 · sensitivity 51%, specificity 96% | 0.957 | 0.977 · logistic regression | p = 0.83 | Tie |
+| Cancer vs dysplasia | 167 vs 17 | **0.753** ± 0.141 · sensitivity 99%, specificity 7% | 0.813 | 0.871 · random forest | p = 0.22 | Tie |
+
+- **Cancer vs normal** works as a ranking and as a yes/no call, for every model. It confirms the pipeline; nobody expected quantum to win it.
+- **Dysplasia vs normal** ranks well, but at the default threshold the quantum model catches only 51% of dysplasias. A screening threshold chosen for sensitivity is planned as a declared amendment.
+- **Cancer vs dysplasia** is not usable yet: with 167 cancers against 17 dysplasias, every model labels nearly all dysplasias as cancer.
+
+**Independent check on Indian patients.** The cancer-vs-normal models were applied once, unchanged, to GSE23558 from the Advanced Centre for Treatment, Research and Education in Cancer (ACTREC), Tata Memorial Centre, Navi Mumbai: 27 cancers and 5 normals on a different microarray platform (Agilent GPL6480 vs Affymetrix GPL570). **They did not transfer.** Every model called almost everything cancer or almost everything normal (projected quantum: sensitivity 78%, specificity 0%; classical RBF: 100% and 0%). The likely cause is the platform change, but with only 5 normals nothing firmer can be said. This is why SANKET's roadmap needs Indian training data from a clinical partner rather than a model trained abroad, and why the app never mixes scores across datasets.
+
+<p align="center">
+  <img src="docs/screenshots/detect-results.jpg" alt="Registered oral diagnosis results: quantum and classical tie on all three tasks" width="90%"/>
+</p>
 
 ### Where quantum wins
 
@@ -156,6 +179,34 @@ A scroll-driven story: a particle system morphs from tissue to genes, pathways, 
 <p align="center">
   <img src="docs/screenshots/overview-circuit.jpg" alt="Story chapter: each patient runs through the circuit" width="49%"/>
   <img src="docs/screenshots/overview-proof.jpg" alt="Story finale: tested honestly, run on real quantum hardware" width="49%"/>
+</p>
+
+### Detect: normal, dysplasia or cancer?
+
+The first step of the clinical path. All 229 GSE30784 biopsies are simulated live as 12-qubit states and placed on a map by quantum similarity alone (the labels are never used to position them). Pick any sample to see its twelve qubits, the diagnosis its quantum neighbours suggest and how its pathways differ from normal tissue, then reveal the pathologist's diagnosis, including the cases where the estimate is wrong. A "Try a sample" panel lets you move a sample's pathway scores with sliders, or paste 12 scores, and watch where it lands. The registered results and the failed Indian transfer are shown on the same page.
+
+<p align="center">
+  <img src="docs/screenshots/detect.jpg" alt="Detect page: normal, dysplasia or cancer, with registered AUCs" width="90%"/>
+</p>
+<p align="center">
+  <img src="docs/screenshots/detect-map.jpg" alt="Quantum similarity map of 229 oral tissue samples, and the pathways that change from normal to cancer" width="49%"/>
+  <img src="docs/screenshots/detect-sample.jpg" alt="One dysplasia sample: twelve Bloch spheres, the quantum-neighbour estimate and the revealed diagnosis" width="49%"/>
+</p>
+
+**Use your own data.** Upload a gene-activity table (CSV or TSV): gene symbols in the first column, one column per sample, and a row named `diagnosis` with normal, dysplasia or cancer for the reference samples. Leave the diagnosis empty for the patients you want estimated.
+
+```
+gene,      S1,     S2,        S3,     P1
+diagnosis, normal, dysplasia, cancer,
+TP53,      7.21,   7.80,      8.93,   8.10
+MYC,       6.02,   6.55,      7.41,   7.02
+…          (500+ genes)
+```
+
+The browser scores every sample on the 12 Hallmark pathways with ssGSEA (`web/src/lib/ssgsea.ts`, the same rank-normalised method the engine runs through gseapy, matching it to 3 × 10⁻⁴ after standardisation on test data), simulates the quantum states and places the unlabelled patients among your labelled samples. The file never leaves the device. Patients are compared **only with labelled samples from the same file**, because scores from different platforms or labs do not line up (the failed Indian transfer above). A scored file can be downloaded and re-loaded, and a JSON written by `python -m engine.oral_diagnosis --accession GSE…` loads the same way for probe-level GEO data. Estimates on uploaded data are illustrative, never a diagnosis.
+
+<p align="center">
+  <img src="docs/screenshots/detect-upload.jpg" alt="Upload gene activity or pathway scores, with the file format explained" width="90%"/>
 </p>
 
 ### Patient case
@@ -246,6 +297,28 @@ The Hardware page shows the circuit budget, the IBM job record and measured vers
 | **Readiness check** | Go / wait / classical verdict for any uploaded dataset, with a downloadable report |
 | **Hardware** | Circuit budget, IBM job record, measured versus simulated Bloch vectors, why hardware and Evidence scores differ |
 | **Data** | Load cohorts, generate synthetic data, verify the browser simulator against Qiskit |
+
+---
+
+## How SANKET compares
+
+Many quantum machine learning prototypes for healthcare follow one pattern: a public benchmark dataset (breast cancer, diabetes, heart disease) or an image classifier with a small quantum layer, a single train/test split, and a headline such as "98% accuracy, quantum beats classical". SANKET is built to answer the question those projects skip.
+
+| | Typical quantum-ML health prototype | SANKET |
+|---|---|---|
+| **Data** | One public benchmark | 2,394 real samples, five cohorts, three cancers, including an Indian cohort (Tata Memorial Centre) |
+| **Clinical question** | One prediction | The full path: detect (normal / dysplasia / cancer), predict progression and timing, explain and refer |
+| **Quantum design** | Generic feature map | One pathway per qubit, entangled only where pathways share genes; ~5× fewer two-qubit gates than the standard ZZ map |
+| **Quantum hardware** | Simulator only | 86 patients on IBM `ibm_fez` (156-qubit Heron), kernel agreement 0.98 with simulation |
+| **Comparison** | Untuned or no classical baseline | Four tuned classical models, equal budgets, nested and repeated CV, corrected tests with Holm correction |
+| **Reporting** | Best number | Analysis plans registered before results; ties and failures reported (oral diagnosis ties, Indian transfer failed) |
+| **When to use quantum** | Assumed | Quantum Readiness Check: go / wait / classical for any dataset, with a positive control |
+
+**Where we are still weaker, and what we are doing about it**
+
+- **The input.** A doctor in a district hospital has a biopsy slide, a photograph and a history, not a whole-genome expression profile, which needs a specialised lab. Next step: test whether a small, fixed gene panel (a few dozen genes across the 12 pathways, measurable by qPCR or a targeted panel at a fraction of the cost) reproduces the pathway scores and the diagnosis results on GSE30784, with the analysis plan written first.
+- **No quantum win on real outcomes yet.** The tie is the correct finding at this data size, and we show why (the qubits barely entangle at the bandwidth cross-validation selects). The engineered positive control shows the pipeline would detect an advantage if one existed.
+- **Transfer across platforms.** Models trained on US data failed on the Indian cohort. The fix is Indian training data through a clinical partner, not more tuning.
 
 ---
 
@@ -373,7 +446,9 @@ sanket/
 │   ├── model.py                  Kernels, Beran survival, C-index, nested CV
 │   ├── benchmark.py              Oral benchmark: nested + repeated CV, baselines, tests
 │   ├── scale.py                  Large-cohort evaluation and data-size curve
-│   ├── classify.py               Diagnosis tasks and exploratory upgrades (incl. kernel-target alignment)
+│   ├── classify.py               Diagnosis tasks (incl. oral normal / dysplasia / cancer, external check) and exploratory upgrades
+│   ├── oral_diagnosis.py         Oral tissue diagnosis cohorts (GSE30784, GSE23558, any GEO accession) → out/*.json
+│   ├── export_detect.py          Bundles the oral diagnosis results and the 12 pathway gene lists for the Detect page
 │   ├── advantage.py              Engineered quantum-advantage benchmark
 │   ├── clinical.py               Calibration, Brier, decision curves, screening threshold, multimodal
 │   ├── shift.py                  METABRIC leave-one-cohort-out validation
@@ -385,9 +460,9 @@ sanket/
 │   └── crosscheck.py             Export for browser-vs-Qiskit verification
 ├── web/                          Web application (React 18, TypeScript, Vite, Framer Motion)
 │   └── src/
-│       ├── lib/                  quantum · analysis · survival · clinical · linalg · advantage · readiness · cohort
+│       ├── lib/                  quantum · analysis · survival · clinical · linalg · advantage · readiness · cohort · ssgsea
 │       ├── components/           Story, case file, cinematic page heroes and card stack, charts, Bloch spheres
-│       ├── data/                 Sample CSV for the Readiness check (Golub)
+│       ├── data/                 Sample CSV for the Readiness check (Golub), oral Detect bundle, Hallmark gene lists
 │       └── views/                One file per screen
 ├── out/                          Cohorts, results, IBM job records and figures
 ├── docs/                         OSF registration texts and README screenshots
@@ -463,6 +538,20 @@ python -m engine.classify --task metabric_basal
 python -m engine.classify --task golub --upgrades      # exploratory
 ```
 
+**Oral tissue diagnosis** (declared in `docs/osf_oral_diagnosis.md`):
+
+```bash
+python -m engine.oral_diagnosis --inspect                    # labels, counts, platform, submitter; no model output
+python -m engine.oral_diagnosis                              # GSE30784 → out/oral_dx_cohort.json
+python -m engine.oral_diagnosis --dataset gse23558           # GSE23558 → out/oral_dx_external_cohort.json
+python -m engine.classify --task oral_cancer_normal
+python -m engine.classify --task oral_dysplasia_normal
+python -m engine.classify --task oral_cancer_dysplasia
+python -m engine.classify --task oral_cancer_normal --external   # GSE30784 → GSE23558, run once
+python -m engine.export_detect                               # → web/src/data/oral_detect.json and hallmark12.json
+python -m engine.oral_diagnosis --accession GSE12345         # any other GEO tissue series, loadable on the Detect page
+```
+
 ### 5 · Clinical usefulness and cohort shift
 
 Declare first (`docs/osf_clinical_shift.md`), then:
@@ -521,6 +610,7 @@ Load any `out/*.json` file on the app's **Data**, **When quantum wins** or **Rea
 - **No outcome leakage.** The 12 pathways were fixed from prior cancer biology; no feature was selected using outcomes.
 - **Appropriate statistics.** Nested leave-one-out and repeated stratified cross-validation, bootstrap confidence intervals, Wilcoxon signed-rank and the Bouckaert–Frank corrected t-test for repeated cross-validation, with Holm correction.
 - **Positive and negative controls.** Engineered quantum-structured labels must come out as a quantum win, and the Readiness Check includes a control that must come out "go".
+- **Separate datasets stay separate.** Each dataset is scored and standardised on its own; expression values are never pooled, and an external cohort is used once, unchanged, after training.
 - **Exploratory work labelled as such.** Engineered labels are always presented as synthetic; upgrades are reported alongside, never instead of, registered results; simulated hardware runs are kept out of the hardware record.
 
 ---
@@ -532,6 +622,8 @@ Load any `out/*.json` file on the app's **Data**, **When quantum wins** or **Rea
 - No model in this study is clinically ready; the best real-outcome C-indices (0.62–0.66) are modest, in line with the published literature.
 - On real outcomes the quantum kernel matches, but does not beat, classical methods. Its demonstrated advantages are on quantum-structured data and in circuit cost.
 - The oral cohort is small (86 patients) and comes from a single trial; external validation on Indian patients is required.
+- Oral diagnosis: quantum and classical tie on all three tasks; dysplasia sensitivity is 51% at the default threshold; cancer vs dysplasia is not usable (17 dysplasias); and the models did not transfer to the Indian cohort (GSE23558, 32 samples, different platform).
+- Gene-activity uploads are scored within the uploaded file only, need labelled reference samples in the same file, and give illustrative estimates, not a diagnosis.
 - METABRIC relapse reflects historical treatment, which affects outcomes.
 - METABRIC subtype labels are themselves derived from gene expression, so high scores on that task are expected.
 - The hardware run covers the oral cohort (86 patients) and an 8-patient METABRIC sample; gate fidelities in the cost table are calibration-based estimates.
@@ -549,6 +641,9 @@ Load any `out/*.json` file on the app's **Data**, **When quantum wins** or **Rea
 - [x] Full projected-kernel run on IBM Heron hardware (86 patients on `ibm_fez`; kernel agreement 0.98 with simulation)
 - [x] Quantum Readiness Check: upload any dataset, get a quantum-headroom verdict
 - [x] Clinical web prototype with case files, FHIR R4 export and disease-aware wording
+- [x] Detect: registered oral tissue diagnosis (normal / dysplasia / cancer), independent Indian check, gene-activity upload scored in the browser
+- [ ] Small gene panel: test whether a few dozen genes reproduce the 12 pathway scores (lower-cost input)
+- [ ] Declared amendments: screening threshold for dysplasia, investigation of the failed platform transfer
 - [ ] Technical report on Zenodo, then a preprint
 - [ ] Clinician dashboard and API service (FastAPI, Docker)
 - [ ] Indian oral precancer cohort through a clinical partner
@@ -558,7 +653,7 @@ Load any `out/*.json` file on the app's **Data**, **When quantum wins** or **Rea
 
 ## License
 
-Code is released under the [MIT License](LICENSE). The datasets keep their own terms: GEO GSE26549 and the Golub data are public, METABRIC is used under cBioPortal's terms, and MSigDB Hallmark gene sets are licensed by the Broad Institute.
+Code is released under the [MIT License](LICENSE). The datasets keep their own terms: GEO GSE26549, GSE30784, GSE23558 and the Golub data are public, METABRIC is used under cBioPortal's terms, and MSigDB Hallmark gene sets are licensed by the Broad Institute.
 
 ---
 
@@ -577,6 +672,8 @@ Code is released under the [MIT License](LICENSE). The datasets keep their own t
 11. Barbie, D. A. *et al.* Systematic RNA interference reveals that oncogenic KRAS-driven cancers require TBK1. *Nature* **462**, 108–112 (2009). (ssGSEA)
 12. Beran, R. Nonparametric regression with randomly censored survival data. Technical report, University of California, Berkeley (1981).
 13. Bouckaert, R. R. & Frank, E. Evaluating the replicability of significance tests for comparing learning algorithms. *PAKDD*, 3–12 (2004).
+14. Chen, C. *et al.* Gene expression profiling identifies genes predictive of oral squamous cell carcinoma. *Cancer Epidemiol. Biomarkers Prev.* **17**, 2152–2162 (2008). (GSE30784)
+15. Ambatipudi, S. *et al.* Genomic profiling of advanced-stage oral cancers reveals chromosome 11q alterations as markers of poor clinical outcome. *PLoS One* **7**, e32436 (2012). (GSE23558)
 
 ---
 
