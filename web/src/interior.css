@@ -17,8 +17,8 @@
   --teal-soft: #e0f4f2;
   --amber: #996213;
   --amber-soft: #fcf1dd;
-  --display: "Figtree", "Segoe UI", system-ui, sans-serif;
-  --body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --body: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   --r-panel: 12px;
   --r-ctl: 7px;
   --shadow: none;
