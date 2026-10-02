@@ -43,6 +43,7 @@ export default function Hardware() {
             <div className="slider-head"><span>Shots per circuit</span><b>{shots.toLocaleString()}</b></div>
             <input type="range" min={6} max={13} step={1} value={Math.log2(shots)} onChange={(e) => setShots(2 ** +e.target.value)} aria-label="Shots per circuit" />
           </div>
+          <div className="scroll-x">
           <table className="table">
             <thead><tr><th>Kernel</th><th>Circuits</th><th>Total shots</th><th>Two-qubit gates each (2 steps)</th></tr></thead>
             <tbody>
@@ -50,6 +51,7 @@ export default function Hardware() {
               <tr><td>Fidelity</td><td>{fidCircuits.toLocaleString()}</td><td>{(fidCircuits * shots).toLocaleString()}</td><td>{HW_TABLE[1].twoq}</td></tr>
             </tbody>
           </table>
+          </div>
           <p className="small" style={{ marginBottom: 0 }}>The projected kernel needs <b>{Math.round(fidCircuits / projCircuits)}× fewer circuits</b>, which is why the full cohort fits a free-tier IBM Quantum allowance instead of a test sample.</p>
         </div>
         <div className="panel">
