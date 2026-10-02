@@ -190,7 +190,7 @@ function Report({ rep }: { rep: ReadinessReport }) {
             <div style={{ position: "absolute", left: `calc(${pos * 100}% - 7px)`, top: -4, width: 14, height: 18, borderRadius: 4, background: "var(--ink)", border: "2px solid var(--surface)" }} />
           </div>
           <div className="row tiny muted" style={{ justifyContent: "space-between" }}><span>1: classical can match</span><span>√N: maximal</span></div>
-          <table className="table" style={{ marginTop: 10 }}>
+          <table className="table table-numeric-all" style={{ marginTop: 10 }}>
             <thead><tr><th>Quantum bandwidth</th><th>g vs closest classical</th></tr></thead>
             <tbody>{rep.scan.map((s) => <tr key={s.scale}><td>{s.scale}</td><td><b>{s.g.toFixed(2)}</b> <span className="tiny muted">(RBF ×{s.closest})</span></td></tr>)}</tbody>
           </table>
@@ -218,7 +218,7 @@ function Report({ rep }: { rep: ReadinessReport }) {
           <div className="h2">Your real outcome</div>
           {rep.real ? (
             <>
-              <table className="table">
+              <table className="table table-numeric-after-first">
                 <thead><tr><th>Model</th><th>AUC</th></tr></thead>
                 <tbody>
                   <tr><td style={{ color: "var(--violet)", fontWeight: 700 }}>Quantum kernel</td><td><b>{rep.real.quantum.mean.toFixed(3)}</b> <span className="tiny muted">± {rep.real.quantum.sd.toFixed(3)}</span></td></tr>

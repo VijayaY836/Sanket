@@ -37,7 +37,7 @@ export default function Hardware() {
             <div className="slider-head"><span>Shots per circuit</span><b>{shots.toLocaleString()}</b></div>
             <input type="range" min={6} max={13} step={1} value={Math.log2(shots)} onChange={(e) => setShots(2 ** +e.target.value)} aria-label="Shots per circuit" />
           </div>
-          <table className="table">
+          <table className="table table-numeric-after-first">
             <thead><tr><th>Kernel</th><th>Circuits</th><th>Total shots</th><th>Two-qubit gates each</th></tr></thead>
             <tbody>
               <tr><td><b>Projected</b></td><td>{projCircuits.toLocaleString()}</td><td>{(projCircuits * shots).toLocaleString()}</td><td>{HW_TABLE[0].twoq}</td></tr>

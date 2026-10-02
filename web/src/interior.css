@@ -77,6 +77,8 @@
 .shell--interior .table td, .shell--interior .table th { padding: 11px 12px; }
 .shell--interior .table tr:last-child td { border-bottom: 1px solid var(--line); }
 .shell--interior .table .numeric { text-align: right; }
+.shell--interior .table-numeric-after-first :is(th, td):not(:first-child),
+.shell--interior .table-numeric-all :is(th, td) { text-align: right; }
 .shell--interior .legend { gap: 10px 20px; color: var(--ink-2); }
 .shell--interior .legend i { border-radius: 0; }
 .shell--interior .tier { border-radius: 5px; }

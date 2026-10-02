@@ -192,7 +192,7 @@ function ClinicalUse() {
         <div>
           <b className="small">Screening threshold (catches ≥90%)</b>
           {sp ? (
-            <div className="scroll-x"><table className="table" style={{ marginTop: 6 }}>
+            <div className="scroll-x"><table className="table table-numeric-all" style={{ marginTop: 6 }}>
               <thead><tr><th>Refer if risk ≥</th><th>Progressions caught</th><th>Patients referred</th><th>Specificity</th><th>Cancer-free if not referred</th><th>Progress if referred</th></tr></thead>
               <tbody><tr><td><b>{pct(sp.threshold)}</b></td><td><b>{pct(sp.sensitivity)}</b></td><td>{pct(sp.referral)}</td><td>{pct(sp.specificity)}</td><td>{pct(sp.npv)}</td><td>{pct(sp.ppv)}</td></tr></tbody>
             </table></div>
@@ -233,7 +233,7 @@ function QubitCurve() {
             <div className="legend"><span><i style={{ background: "var(--violet)" }} />Projected quantum kernel</span><span><i style={{ background: "var(--ink-2)" }} />Classical RBF kernel</span></div>
           </div>
           <div className="scroll-x">
-            <table className="table">
+            <table className="table table-numeric-all">
               <thead><tr><th>Qubits</th><th>Couplings</th><th>Quantum</th><th>Classical</th><th>Difference</th></tr></thead>
               <tbody>{rows.map((r) => <tr key={r.qubits}><td>{r.qubits}</td><td>{r.couplings}</td><td><b>{r.quantum.toFixed(3)}</b></td><td>{r.classical.toFixed(3)}</td><td>{r.quantum - r.classical >= 0 ? "+" : ""}{(r.quantum - r.classical).toFixed(3)}</td></tr>)}</tbody>
             </table>
