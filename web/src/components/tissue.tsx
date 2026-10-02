@@ -37,6 +37,7 @@ export function TissueField({ cohort, height = 460, run = 0, z }: { cohort: Coho
       c.width = W * dpr; c.height = H * dpr; c.style.width = `${W}px`; c.style.height = `${H}px`;
       const ctx = c.getContext("2d")!;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const bodyFont = getComputedStyle(c).getPropertyValue("--body").trim() || "system-ui";
       const col = { violet: cssVar("--violet"), eosin: cssVar("--eosin"), ink: cssVar("--ink"), surface: cssVar("--surface"), teal: cssVar("--teal"), ink3: cssVar("--ink-3") };
       const rand = mulberry32(26549);
       const q = cohort.pathways.length, cx = W * 0.5, cy = H * 0.52, R = Math.min(W * 0.36, H * 0.38);
@@ -116,10 +117,10 @@ export function TissueField({ cohort, height = 460, run = 0, z }: { cohort: Coho
             ctx.fillStyle = v >= 0 ? rgba(col.violet, 0.25 + 0.6 * Math.abs(v)) : rgba(col.teal, 0.25 + 0.6 * Math.abs(v));
             ctx.beginPath(); ctx.arc(nd.x, nd.y, r, 0, Math.PI * 2); ctx.fill();
             ctx.strokeStyle = hov === k ? col.eosin : rgba(col.violet, 0.9); ctx.lineWidth = hov === k ? 2.5 : 1.5; ctx.stroke();
-            ctx.fillStyle = col.ink; ctx.font = "700 10.5px Figtree, system-ui, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillStyle = col.ink; ctx.font = `700 10.5px ${bodyFont}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
             ctx.fillText(`q${k}`, nd.x, nd.y + 0.5);
             const lx = nd.x + Math.cos(nd.t) * (r + 18), ly = nd.y + Math.sin(nd.t) * (r + 14);
-            ctx.fillStyle = hov === k ? col.ink : rgba(col.ink3, 1); ctx.font = `${hov === k ? 700 : 500} 12px Figtree, system-ui, sans-serif`;
+            ctx.fillStyle = hov === k ? col.ink : rgba(col.ink3, 1); ctx.font = `${hov === k ? 700 : 500} 12px ${bodyFont}`;
             ctx.textAlign = Math.cos(nd.t) > 0.3 ? "left" : Math.cos(nd.t) < -0.3 ? "right" : "center";
             ctx.fillText(hov === k ? cohort.pathways[k].label : cohort.pathways[k].short, lx, ly);
             ctx.globalAlpha = 1;

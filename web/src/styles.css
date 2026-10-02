@@ -116,6 +116,8 @@ a { color: var(--violet); }
 .chip-violet { background: var(--violet-soft); color: var(--violet); }
 .chip-eosin { background: var(--eosin-soft); color: var(--eosin); }
 .chip-grey { background: var(--surface-2); color: var(--ink-2); }
+.overview-care-path .row > .row { max-width: 100%; }
+.overview-care-path .chip { max-width: 100%; white-space: normal; }
 
 .seg { display: inline-flex; background: var(--surface-2); border-radius: var(--r-ctl); padding: 3px; gap: 2px; flex-wrap: wrap; }
 .seg button { border: 0; background: transparent; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
@@ -132,8 +134,8 @@ input[type="range"] { width: 100%; accent-color: var(--violet); }
 .table tr:last-child td { border-bottom: 0; }
 .scroll-x { overflow-x: auto; }
 
-.banner { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border-radius: var(--r-ctl); background: var(--amber-soft); color: var(--ink); font-size: 13.5px; margin-bottom: 18px; }
-.banner b { color: var(--amber); }
+.banner { display: block; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--amber) 20%, var(--line)); border-left: 3px solid var(--amber); border-radius: 6px; background: var(--amber-soft); color: var(--ink); font-size: 13.5px; margin-bottom: 18px; }
+.banner b { color: var(--amber); margin-right: 8px; white-space: nowrap; }
 
 .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); }
 .legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
@@ -254,6 +256,7 @@ body {
 }
 .panel { border-radius: 20px; border-color: color-mix(in srgb, var(--line) 85%, transparent); box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 4%, transparent), 0 18px 40px -28px color-mix(in srgb, var(--ink) 35%, transparent); }
 .panel-flat { border-radius: 20px; }
+.shell--overview .panel, .shell--overview .panel-flat { border-radius: 12px; box-shadow: none; }
 .page-title { font-size: 38px; letter-spacing: -0.03em; }
 
 /* rail */
@@ -353,6 +356,9 @@ body {
 @media (max-width: 900px) {
   .story-copy { background: none; backdrop-filter: none; padding: 0; }
   .story-chapter { align-self: end; padding: 14px 16px; border-radius: 16px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .shell--overview .story-stage { align-items: center; }
+  .shell--overview .story-copy { margin: 0 20px; }
+  .shell--overview .story-chapter { align-self: center; }
 }
 
 /* =====================  Case file hero (darkfield)  ===================== */

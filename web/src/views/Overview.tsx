@@ -35,7 +35,7 @@ export default function Overview() {
         }}
         onOpenCase={() => { setSel(pair[0].i); go("case"); }} onEvidence={() => go("evidence")} />
 
-      <section className="panel-flat" style={{ padding: "16px 20px" }}>
+      <section className="panel-flat overview-care-path" style={{ padding: "16px 20px" }}>
         <div className="row" style={{ gap: 10 }}>
           <b className="small">Where SANKET fits</b>
           {["Oral screening by a dentist", "Biopsy of the suspicious patch", "SANKET risk from the biopsy's gene activity", "Referral or routine surveillance"].map((x, i, arr) => (

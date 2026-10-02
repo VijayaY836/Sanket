@@ -123,7 +123,7 @@
   background: transparent;
   color: var(--ink-2);
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 400;
   cursor: pointer;
   white-space: nowrap;
   transition: color 0.15s ease;
@@ -133,7 +133,7 @@
 }
 .interior-nav-btn[aria-current="page"] {
   color: var(--ink);
-  font-weight: 650;
+  font-weight: 700;
 }
 .interior-nav-active {
   position: absolute;
@@ -557,8 +557,9 @@
   padding: 16px 20px;
 }
 .shell--interior .banner {
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--amber) 30%, var(--line));
+  border-radius: 6px;
+  border-color: color-mix(in srgb, var(--amber) 30%, var(--line));
+  border-left: 3px solid var(--amber);
   background: var(--amber-soft);
   padding: 12px 18px;
   font-size: 13.5px;

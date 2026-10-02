@@ -275,6 +275,7 @@ export function GeneStrip({ z, labels, run, height = 150, onDone }: { z: number[
     const W = box.clientWidth, H = height, dpr = window.devicePixelRatio || 1;
     c.width = W * dpr; c.height = H * dpr; c.style.width = W + "px"; c.style.height = H + "px";
     const ctx = c.getContext("2d")!; ctx.scale(dpr, dpr);
+    const bodyFont = getComputedStyle(c).getPropertyValue("--body").trim() || "system-ui";
     const G = 20000, P = z.length, mid = H / 2 - 8, amp = H / 2 - 22;
     // deterministic pseudo-random gene field derived from the pathway scores
     let seed = 1234 + Math.round(z.reduce((a, b) => a + b * 97, 0));
@@ -304,7 +305,7 @@ export function GeneStrip({ z, labels, run, height = 150, onDone }: { z: number[
         ctx.fillRect(xx, v >= 0 ? mid - h : mid, 1, Math.max(h, 0.6));
       }
       ctx.globalAlpha = 1;
-      ctx.fillStyle = ink; ctx.font = "11px Figtree, system-ui"; ctx.textAlign = "center";
+      ctx.fillStyle = ink; ctx.font = `11px ${bodyFont}`; ctx.textAlign = "center";
       if (e > 0.6) { ctx.globalAlpha = (e - 0.6) / 0.4; if (barW >= 34) labels.forEach((l, p) => ctx.fillText(l, p * barW + barW / 2, H - 4)); else { ctx.textAlign = "left"; ctx.fillText(`${P} pathway scores`, 2, H - 4); } ctx.globalAlpha = 1; }
       else { ctx.textAlign = "left"; ctx.fillText("20,000 genes", 2, H - 4); }
       if (t < 1) id = requestAnimationFrame(draw); else onDone?.();

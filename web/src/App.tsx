@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 import { useApp, View } from "./store";
 import { ICase, ICircuit, IChip, IData, IEvidence, IOverview, IGauge, ISpark, IStars, ITheme, Mark } from "./icons";
 import Overview from "./views/Overview";
@@ -35,7 +36,18 @@ const ALL_NAV_ITEMS = NAV.flatMap((g) => g.items);
 
 export default function App() {
   const { view, go, cohort, theme, cycleTheme } = useApp();
+  const navRef = useRef<HTMLElement>(null);
   const Page = { overview: Overview, case: PatientCase, constellation: Constellation, lab: QuantumLab, evidence: Evidence, advantage: Advantage, readiness: Readiness, hardware: Hardware, workbench: Workbench }[view];
+
+  useEffect(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !active) return;
+    const navBox = nav.getBoundingClientRect();
+    const activeBox = active.getBoundingClientRect();
+    const delta = activeBox.left + activeBox.width / 2 - navBox.left - navBox.width / 2;
+    nav.scrollTo({ left: nav.scrollLeft + delta, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }, [view]);
 
   return (
     <div className={view === "overview" ? "shell shell--overview" : "shell shell--interior"}>
@@ -48,7 +60,7 @@ export default function App() {
           </div>
         </button>
 
-        <nav className="interior-topbar-nav" aria-label="Main navigation">
+        <nav ref={navRef} className="interior-topbar-nav" aria-label="Main navigation">
           <div className="interior-nav-list">
             {ALL_NAV_ITEMS.map((n) => (
               <button

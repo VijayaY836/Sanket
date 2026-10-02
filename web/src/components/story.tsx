@@ -87,6 +87,9 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
   useEffect(() => {
     const c = cvs.current; if (!c) return;
     const ctx = c.getContext("2d")!;
+    const fonts = getComputedStyle(c);
+    const bodyFont = fonts.getPropertyValue("--body").trim() || "system-ui";
+    const displayFont = fonts.getPropertyValue("--display").trim() || "system-ui";
     let W = 0, H = 0, raf = 0, alive = true;
     const rand = mulberry32(26549);
     const col = { violet: hexToRgb(cssVar("--violet")), eosin: hexToRgb(cssVar("--eosin")), teal: hexToRgb(cssVar("--teal")), ink: hexToRgb(cssVar("--ink")), ink3: hexToRgb(cssVar("--ink-3")) };
@@ -234,7 +237,7 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
         [0, 0.25, 0.5, 0.75, 1].forEach((s) => { const y = geo.top + (1 - s) * geo.tall; ctx.beginPath(); ctx.moveTo(geo.left, y); ctx.lineTo(geo.left + geo.span, y); ctx.stroke(); });
         const hx = geo.left + (36 / 120) * geo.span;
         ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(hx, geo.top); ctx.lineTo(hx, geo.top + geo.tall); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle = `rgba(${col.ink3.join(",")},${0.9 * fCurve})`; ctx.font = "12px Figtree, system-ui"; ctx.textAlign = "left";
+        ctx.fillStyle = `rgba(${col.ink3.join(",")},${0.9 * fCurve})`; ctx.font = `12px ${bodyFont}`; ctx.textAlign = "left";
         ctx.fillText("3 years", hx + 6, geo.top + 14); ctx.fillText("100% cancer-free", geo.left, geo.top - 8); ctx.fillText("10 years", geo.left + geo.span - 52, geo.top + geo.tall + 18);
       }
 
@@ -259,20 +262,20 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
         ctx.globalAlpha = (fRing - 0.3) / 0.7;
         for (let k = 0; k < q; k++) {
           const [nx, ny] = geo.node(k), t = -Math.PI / 2 + (2 * Math.PI * k) / q;
-          ctx.fillStyle = `rgb(${col.ink.join(",")})`; ctx.font = "600 12px Figtree, system-ui";
+          ctx.fillStyle = `rgb(${col.ink.join(",")})`; ctx.font = `600 12px ${bodyFont}`;
           ctx.textAlign = Math.cos(t) > 0.3 ? "left" : Math.cos(t) < -0.3 ? "right" : "center";
           ctx.fillText(cohort.pathways[k].short, nx + Math.cos(t) * 26, ny + Math.sin(t) * 22 + 4);
         }
         ctx.globalAlpha = 1;
       }
       if (fWire > 0.3) {
-        ctx.globalAlpha = (fWire - 0.3) / 0.7; ctx.fillStyle = `rgb(${col.ink3.join(",")})`; ctx.font = "11px Figtree, system-ui"; ctx.textAlign = "right";
+        ctx.globalAlpha = (fWire - 0.3) / 0.7; ctx.fillStyle = `11px ${bodyFont}`; ctx.textAlign = "right";
         for (let k = 0; k < q; k++) ctx.fillText(cohort.pathways[k].short, geo.left - 10, geo.top + (k + 0.5) * (geo.tall / q) + 4);
         ctx.globalAlpha = 1;
       }
       const fStars = fur(5);
       if (fStars > 0.4) {
-        ctx.globalAlpha = (fStars - 0.4) / 0.6; ctx.font = "700 13px Figtree, system-ui"; ctx.textAlign = "left";
+        ctx.globalAlpha = (fStars - 0.4) / 0.6; ctx.font = `700 13px ${bodyFont}`; ctx.textAlign = "left";
         sub.filter((s) => s.hero >= 0).forEach((s) => {
           const px = geo.left + geo.span * (0.08 + 0.84 * s.x), py = geo.top + geo.tall * (0.06 + 0.88 * s.y);
           ctx.strokeStyle = `rgb(${(s.hero === 0 ? col.eosin : col.teal).join(",")})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, 10, 0, 7); ctx.stroke();
@@ -281,7 +284,7 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
         ctx.globalAlpha = 1;
       }
       if (fCurve > 0.5) {
-        ctx.globalAlpha = (fCurve - 0.5) / 0.5; ctx.font = `800 ${W < 900 ? 15 : 22}px 'Bricolage Grotesque', Figtree, system-ui`; ctx.textAlign = "left";
+        ctx.globalAlpha = (fCurve - 0.5) / 0.5; ctx.font = `800 ${W < 900 ? 15 : 22}px ${displayFont}`; ctx.textAlign = "left";
         pair.forEach((pp, w) => {
           const yy = geo.top + (1 - (1 - pp.risk)) * geo.tall;
           ctx.fillStyle = `rgb(${(w === 0 ? col.eosin : col.teal).join(",")})`;
@@ -299,6 +302,7 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
   const opacityOf = (k: number) => {
     const local = prog * CHAPTERS.length - k;
     if (local < -0.05 || local > 1.05) return 0;
+    if (k === 0) return clamp01((0.98 - local) / 0.18);
     if (k === CHAPTERS.length - 1) return clamp01((local - 0.05) / 0.25);
     return clamp01(Math.min((local - 0.08) / 0.22, (0.98 - local) / 0.18));
   };
