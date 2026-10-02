@@ -3,7 +3,7 @@ import { Cohort, syntheticCohort } from "./lib/cohort";
 import { KernelKind, Model, nestedCV } from "./lib/analysis";
 import { geometricDifference } from "./lib/linalg";
 
-export type View = "overview" | "case" | "constellation" | "lab" | "evidence" | "advantage" | "readiness" | "hardware" | "workbench";
+export type View = "overview" | "detect" | "case" | "constellation" | "lab" | "evidence" | "advantage" | "readiness" | "hardware" | "workbench";
 type Nested = Record<KernelKind, { c: number; ci: [number, number]; picks: number[] }>;
 
 interface Ctx {

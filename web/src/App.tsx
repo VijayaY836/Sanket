@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp, View } from "./store";
-import { ICase, ICircuit, IChip, IData, IEvidence, IOverview, IGauge, ISpark, IStars, ITheme } from "./icons";
+import { ICase, ICircuit, IChip, IData, IEvidence, IOverview, IGauge, ISpark, IStars, ITheme, IMicroscope } from "./icons";
 import sanketMark from "./assets/sanket-mark.png";
 import Overview from "./views/Overview";
 import PatientCase from "./views/PatientCase";
+import Detect from "./views/Detect";
 import Constellation from "./views/Constellation";
 import QuantumLab from "./views/QuantumLab";
 import Evidence from "./views/Evidence";
@@ -15,6 +16,7 @@ import Workbench from "./views/Workbench";
 const NAV: { group: string; items: { id: View; label: string; icon: () => JSX.Element }[] }[] = [
   { group: "Story", items: [
     { id: "overview", label: "Overview", icon: IOverview },
+    { id: "detect", label: "Detect", icon: IMicroscope },
     { id: "case", label: "Patient case", icon: ICase },
   ] },
   { group: "Quantum", items: [
@@ -34,7 +36,7 @@ const NAV: { group: string; items: { id: View; label: string; icon: () => JSX.El
 
 export default function App() {
   const { view, go, cohort, theme, cycleTheme } = useApp();
-  const Page = { overview: Overview, case: PatientCase, constellation: Constellation, lab: QuantumLab, evidence: Evidence, advantage: Advantage, readiness: Readiness, hardware: Hardware, workbench: Workbench }[view];
+  const Page = { overview: Overview, detect: Detect, case: PatientCase, constellation: Constellation, lab: QuantumLab, evidence: Evidence, advantage: Advantage, readiness: Readiness, hardware: Hardware, workbench: Workbench }[view];
   return (
     <div className="shell">
       <nav className="rail" aria-label="Sections">
@@ -69,7 +71,7 @@ export default function App() {
         </div>
       </nav>
       <main className="main">
-        {cohort.source === "synthetic" && (
+        {cohort.source === "synthetic" && view !== "detect" && (
           <div className="banner" role="note">
             <b>Synthetic data.</b>
             <span>Every number on screen is computed live, but the 86 patients are generated stand-ins shaped like GEO GSE26549. Load the engine's <code>cohort.json</code> under Data to run on real patients.</span>

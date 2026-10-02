@@ -11,6 +11,7 @@ export const ITheme = () => (<svg {...P}><circle cx="12" cy="12" r="4" /><path d
 export const IPlay = () => (<svg {...P} width={16} height={16}><path d="M7 4l13 8-13 8z" fill="currentColor" /></svg>);
 export const IDownload = () => (<svg {...P} width={16} height={16}><path d="M12 3v12M7 10l5 5 5-5M4 21h16" /></svg>);
 export const IReplay = () => (<svg {...P} width={16} height={16}><path d="M4 4v6h6" /><path d="M4.6 15a8 8 0 1 0 1.9-8.3L4 10" /></svg>);
+export const IMicroscope = () => (<svg {...P}><path d="M6 18h8M3 21h18M14 21a7 7 0 0 0 4-12.6" /><path d="M9 14l-2-2 5-5 2 2zM11 6l2-2 2 2-2 2" /><path d="M9 14a2 2 0 1 0 0 4" /></svg>);
 export const ISpark = () => (<svg {...P}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" /></svg>);
 export const IGauge = () => (<svg {...P}><path d="M4 18a8 8 0 1 1 16 0" /><path d="M12 18l4-6" /><circle cx="12" cy="18" r="1.4" fill="currentColor" /></svg>);
 export const IUpload = () => (<svg {...P} width={16} height={16}><path d="M12 21V9M7 14l5-5 5 5M4 3h16" /></svg>);

@@ -202,6 +202,25 @@ export function SplitArt() {
   );
 }
 
+/** Three groups of tissue samples (normal, dysplasia, cancer) drifting apart. */
+export function TissueArt() {
+  const groups: [string, number, number, number][] = [["#4fd1c5", 92, 150, 0], ["#e9b44c", 160, 92, 1], ["#ff7a9f", 228, 158, 2]];
+  return (
+    <svg viewBox="0 0 320 260" className="cine-svg">
+      <Defs />
+      <circle cx={CX} cy={CY} r={95} fill="url(#cine-glow)" />
+      {groups.map(([c, gx, gy, g]) => (
+        <g key={g} className={g === 0 ? "art-drift-l" : g === 2 ? "art-drift-r" : undefined}>
+          {Array.from({ length: g === 1 ? 9 : 22 }, (_, i) => { const a = i * 2.39996 + g, r = 4 + 5.2 * Math.sqrt(i); return <circle key={i} cx={gx + Math.cos(a) * r} cy={gy + Math.sin(a) * r} r={3.3} fill={c} opacity={0.88} />; })}
+        </g>
+      ))}
+      <text x={92} y={212} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">normal</text>
+      <text x={160} y={44} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">dysplasia</text>
+      <text x={228} y={220} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">cancer</text>
+    </svg>
+  );
+}
+
 /** A dial sweeping across classical, wait and go. */
 export function DialArt() {
   const arc = (a0: number, a1: number, r: number) => { const p = (a: number) => [CX + r * Math.cos(Math.PI * (1 - a)), 170 - r * Math.sin(Math.PI * (1 - a))]; const [x0, y0] = p(a0), [x1, y1] = p(a1); return `M${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1}`; };
