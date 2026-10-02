@@ -191,6 +191,9 @@
 .shell--interior .milestone { border-radius: 5px; }
 .shell--interior .milestone-num { font: 650 26px/1 var(--body); }
 .shell--interior .case-support { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.shell--interior .case-results { gap: 24px; }
+.shell--interior .case-section-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 18px; padding-top: 10px; }
+.shell--interior .case-section-head .h2, .shell--interior .case-section-head p { margin: 0; }
 
 @media (max-width: 1180px) {
   .shell--interior .case-result { grid-template-columns: 1fr; }

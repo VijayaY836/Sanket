@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useApp } from "../store";
 import { attribution, predictPatient, Prediction, whatIf } from "../lib/analysis";
 import { Bars, GeneStrip, PathwayGraph, pct, SurvivalChart } from "../components/viz";
@@ -20,7 +20,7 @@ export default function PatientCase() {
   const { model, cohort, sel, setSel } = useApp();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"risk" | "id">("risk");
-  const [stage, setStage] = useState(0);
+  const [stage, setStage] = useState(3);
   const [run, setRun] = useState(0);
   const [fhir, setFhir] = useState(false);
   const p = cohort.patients[sel];
@@ -29,9 +29,10 @@ export default function PatientCase() {
   const attr = useMemo(() => attribution(model, sel), [model, sel]);
   const timers = useRef<number[]>([]);
 
-  // one orchestrated reveal per patient: genes -> pathways -> qubits -> prediction
+  // Show the case findings immediately; Replay demonstrates the analysis stages.
   useEffect(() => {
     timers.current.forEach(clearTimeout);
+    if (run === 0) { setStage(3); return; }
     setStage(0);
     const steps = [1900, 2800, 3700];
     timers.current = steps.map((ms, k) => window.setTimeout(() => setStage(k + 1), ms));
@@ -81,31 +82,7 @@ export default function PatientCase() {
           verdict={screen && pred.tier !== "uncertain" ? (pred.risk >= screen.threshold ? `Screening rule: refer (risk at or above ${pct(screen.threshold)})` : `Screening rule: routine surveillance (risk below ${pct(screen.threshold)})`) : pred.tier === "uncertain" ? "Too few similar patients: refer for specialist review" : null}
           onReplay={() => setRun((r) => r + 1)} onFhir={() => setFhir(true)} />
 
-        <section className="pipeline" aria-label="Analysis pipeline">
-          <Stage n={1} title="Genes measured" active={stage >= 0} progress={stage >= 1 ? 1 : undefined}>
-            <GeneStrip z={p.pathways} labels={cohort.pathways.map((x) => x.short.slice(0, 4))} run={run * 1000 + sel} height={140} />
-          </Stage>
-          <Stage n={2} title="Pathway scores" active={stage >= 1} progress={stage >= 2 ? 1 : undefined}>
-            <Faded on={stage >= 1}>
-              <Bars domain={2.5} labelW={58} items={cohort.pathways.slice(0, 6).map((pw, k) => ({ label: pw.short, value: p.pathways[k] }))} format={(v) => (v > 0 ? "+" : "") + v.toFixed(1)} />
-              <div className="tiny muted" style={{ marginTop: 6 }}>Top 6 of 12 shown, z-scored against the cohort</div>
-            </Faded>
-          </Stage>
-          <Stage n={3} title="Encoded on 12 qubits" active={stage >= 2} progress={stage >= 3 ? 1 : undefined}>
-            <Faded on={stage >= 2}><PathwayGraph cohort={cohort} z={stage >= 2 ? p.pathways : undefined} size={190} /></Faded>
-          </Stage>
-          <Stage n={4} title="Prediction" active={stage >= 3}>
-            <Faded on={stage >= 3}>
-              <div className="num-l" style={{ color: tier.color }}>{pct(pred.risk)}</div>
-              <div className="small muted" style={{ marginTop: 6 }}>chance of {terms.risk} within {cohort.horizon / 12} years</div>
-              <div className="tiny muted" style={{ marginTop: 10 }}>From the {pred.neighbours.length} most similar patients in quantum feature space</div>
-            </Faded>
-          </Stage>
-        </section>
-
-        <AnimatePresence>
-          {stage >= 3 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="grid">
+        <div className="grid case-results">
               <section className="result case-result">
                 <div className="panel" style={{ display: "grid", gap: 12, alignContent: "start" }}>
                   <div className="h2">Predicted future</div>
@@ -171,9 +148,33 @@ export default function PatientCase() {
                   </div>
                 </div>
               </section>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </div>
+        <div className="case-section-head">
+          <div className="h2">How this estimate was made</div>
+          <p className="small muted">The same four steps are used for every patient. Replay them from the case header.</p>
+        </div>
+        <section className="pipeline" aria-label="Analysis pipeline">
+          <Stage n={1} title="Genes measured" active={stage >= 0} progress={stage >= 1 ? 1 : undefined}>
+            <GeneStrip z={p.pathways} labels={cohort.pathways.map((x) => x.short.slice(0, 4))} run={run * 1000 + sel} height={140} />
+          </Stage>
+          <Stage n={2} title="Pathway scores" active={stage >= 1} progress={stage >= 2 ? 1 : undefined}>
+            <Faded on={stage >= 1}>
+              <Bars domain={2.5} labelW={58} items={cohort.pathways.slice(0, 6).map((pw, k) => ({ label: pw.short, value: p.pathways[k] }))} format={(v) => (v > 0 ? "+" : "") + v.toFixed(1)} />
+              <div className="tiny muted" style={{ marginTop: 6 }}>Top 6 of 12 shown, z-scored against the cohort</div>
+            </Faded>
+          </Stage>
+          <Stage n={3} title="Encoded on 12 qubits" active={stage >= 2} progress={stage >= 3 ? 1 : undefined}>
+            <Faded on={stage >= 2}><PathwayGraph cohort={cohort} z={stage >= 2 ? p.pathways : undefined} size={190} /></Faded>
+          </Stage>
+          <Stage n={4} title="Prediction" active={stage >= 3}>
+            <Faded on={stage >= 3}>
+              <div className="num-l" style={{ color: tier.color }}>{pct(pred.risk)}</div>
+              <div className="small muted" style={{ marginTop: 6 }}>chance of {terms.risk} within {cohort.horizon / 12} years</div>
+              <div className="tiny muted" style={{ marginTop: 10 }}>From the {pred.neighbours.length} most similar patients in quantum feature space</div>
+            </Faded>
+          </Stage>
+        </section>
+
       </div>
       {fhir && <FhirModal onClose={() => setFhir(false)} id={p.id} risk={pred.risk} tier={tier.title} attr={attr} />}
     </div>
