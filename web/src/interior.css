@@ -106,11 +106,13 @@
 .shell--interior .constellation-workspace > .constellation { padding: 14px 22px 18px; }
 .shell--interior .constellation-workspace > p:last-child { border-top: 1px solid var(--line); padding: 16px 22px; margin: 0 !important; }
 .shell--interior .sphere-cell { border-radius: 5px; }
-.shell--interior .hardware-summary { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+.shell--interior .hardware-summary { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); align-items: start; }
+.shell--interior .hardware-summary--empty > .panel:last-child { background: transparent; border-style: dashed; }
 .shell--interior .hardware-page .scroll-x { border: 1px solid var(--line); border-radius: 6px; }
 .shell--interior .hardware-page .scroll-x .table { margin: 0; }
 /* Data tools use a narrow setup column and a wider working area. */
-.shell--interior .readiness-setup { grid-template-columns: minmax(270px, .8fr) minmax(0, 1.2fr); }
+.shell--interior .readiness-setup { grid-template-columns: minmax(270px, .8fr) minmax(0, 1.2fr); align-items: start; }
+.shell--interior .readiness-setup--empty > .panel:last-child { background: transparent; border-style: dashed; }
 .shell--interior .readiness-results { grid-template-columns: minmax(290px, .8fr) minmax(0, 1.2fr); }
 .shell--interior .readiness-verdict { border-top: 3px solid var(--violet); }
 .shell--interior .readiness-verdict .tier { margin-top: 16px; padding: 18px 20px; }

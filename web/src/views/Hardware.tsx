@@ -29,7 +29,7 @@ export default function Hardware() {
         </div>
       </div>
 
-      <section className="two hardware-summary">
+      <section className={`two hardware-summary${jobs.length ? "" : " hardware-summary--empty"}`}>
         <div className="panel">
           <div className="h2">Circuit budget for the whole cohort</div>
           <p className="small muted" style={{ marginTop: 0 }}>The projected kernel needs 3 circuits per patient (measure every qubit in X, Y and Z). A fidelity kernel needs one circuit per pair of patients.</p>

@@ -73,7 +73,7 @@ export default function Readiness() {
         </div>
       </div>
 
-      <section className="two readiness-setup">
+      <section className={`two readiness-setup${table ? "" : " readiness-setup--empty"}`}>
         <div className="panel">
           <div className="h2">1 · Choose data</div>
           <div className="drop" data-over={over} style={{ marginTop: 10 }} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
