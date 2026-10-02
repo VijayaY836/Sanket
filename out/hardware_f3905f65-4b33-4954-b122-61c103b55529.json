@@ -1,0 +1,13 @@
+{
+ "backend": "fake_fez",
+ "jobId": "f3905f65-4b33-4954-b122-61c103b55529",
+ "date": "2026-10-02",
+ "shots": 32,
+ "patients": 1,
+ "note": "local noisy simulation (FakeFez), not hardware; bandwidth 0.25, 1 Trotter step(s)",
+ "twoQubitGates": 49.0,
+ "twoQubitDepth": 19.0,
+ "mean_error_per_qubit": 0.2674,
+ "correlation_with_exact": 0.9506,
+ "length_ratio_measured_vs_exact": 0.9565
+}

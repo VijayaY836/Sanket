@@ -1,0 +1,11 @@
+{
+ "backend": "ibm_fez",
+ "jobId": "davjuitj371s73dn2570",
+ "date": "2026-10-02",
+ "shots": 1024,
+ "patients": 8,
+ "note": "resilience level 1; bandwidth 0.25, 1 Trotter step(s)",
+ "mean_error_per_qubit": 0.1054,
+ "correlation_with_exact": 0.9911,
+ "length_ratio_measured_vs_exact": 0.9497
+}
