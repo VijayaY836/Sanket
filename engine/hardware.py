@@ -1,5 +1,8 @@
 """Run the projected quantum kernel's measurements on IBM hardware and record the job in cohort.json.
 
+Superseded by engine.hardware_run (one Trotter step, hardware-versus-simulation analysis); kept for the original
+two-step encoding. A dry run on the noisy model is only written into the cohort file with --record.
+
 One circuit per patient; the Estimator measures all 36 single-qubit Pauli expectations (X, Y, Z on 12 qubits),
 which are exactly the Bloch vectors the projected kernel needs.
 
@@ -27,6 +30,7 @@ def main():
     ap.add_argument("--patients", type=int, default=0, help="limit for a quick test (0 = all)")
     ap.add_argument("--scale", type=float, default=None, help="bandwidth; default = value chosen in the app/benchmark")
     ap.add_argument("--resilience", type=int, default=1, help="0 none, 1 readout mitigation (TREX), 2 adds ZNE")
+    ap.add_argument("--record", action="store_true", help="also write a local dry run (--backend fake) into the cohort file")
     a = ap.parse_args()
     cfg = load_config()
     coh = load_cohort(a.cohort)
@@ -74,8 +78,12 @@ def main():
 
     rec = {"backend": backend.name, "jobId": job.job_id(), "date": dt.date.today().isoformat(), "shots": a.shots,
            "patients": len(pts), "note": "local noisy simulation (FakeFez), not hardware" if a.backend == "fake" else f"resilience level {a.resilience}"}
+    if a.backend == "fake" and not a.record:
+        print("Local dry run, not written into the cohort file (add --record to write it there):", rec)
+        return
     coh.setdefault("hardware", []).append(rec)
     coh.setdefault("measuredBloch", {}).update(measured)
+    coh.setdefault("measuredJob", {}).update({pid: job.job_id() for pid in measured})
     coh["featureMap"] = {"reps": cfg["reps"], "beta": cfg["beta"], "scale": scale}
     save_json(coh, a.cohort)
     print("Recorded:", rec)

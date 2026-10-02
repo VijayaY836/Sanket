@@ -8,7 +8,12 @@ export interface Patient {
   event: 0 | 1;       // 1 = progressed to oral cancer
   meta?: { age?: number; sex?: string; site?: string; histology?: string };
 }
-export interface HardwareRecord { backend: string; jobId: string; date: string; shots: number; patients: number; note?: string }
+export interface HardwareRecord {
+  backend: string; jobId: string; date: string; shots: number; patients: number; note?: string;
+  // hardware versus exact simulation, written by engine/hardware_run.py
+  mean_error_per_qubit?: number; correlation_with_exact?: number; length_ratio_measured_vs_exact?: number;
+  c_index_hardware_kernel?: number; c_index_exact_kernel?: number; kernel_agreement?: number;
+}
 export interface Cohort {
   name: string;
   disease: string;
@@ -20,8 +25,10 @@ export interface Cohort {
   edges: [number, number][]; // pathway crosstalk graph (shared-gene overlap)
   patients: Patient[];
   hardware?: HardwareRecord[];
-  /** Bloch vectors measured on hardware, keyed by patient id (written by engine/hardware.py). */
+  /** Bloch vectors measured on hardware, keyed by patient id (written by engine/hardware_run.py). */
   measuredBloch?: Record<string, [number, number, number][]>;
+  /** Job ID each patient's measured vectors came from, keyed by patient id. */
+  measuredJob?: Record<string, string>;
   /** Encoding used for the recorded hardware run (written by engine/hardware_run.py). */
   featureMap?: { reps: number; beta: number; scale: number };
 }

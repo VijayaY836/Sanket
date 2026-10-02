@@ -9,6 +9,7 @@ are exactly the Bloch vectors the projected kernel needs. After the job finishes
   * builds the projected kernel from the hardware data and scores it (leave-one-out C-index) against the
     same kernel from exact simulation, on the patients that were run
   * writes the job record and measured vectors into the cohort file, so the app's Hardware page shows them
+    (a local dry run on the noisy model is only written there with --record, so simulation never shows as hardware)
 
     # 1. one-time account setup
     python -c "from qiskit_ibm_runtime import QiskitRuntimeService as S; S.save_account(channel='ibm_quantum_platform', token='YOUR_TOKEN', overwrite=True)"
@@ -87,10 +88,9 @@ def run_estimator(backend, pubs, shots, resilience, fake):
     except Exception as err:  # some plans do not allow batch mode: fall back to a single job
         print(f"Batch mode unavailable ({err.__class__.__name__}); submitting as a single job.")
         job = submit(backend)
-    if True:
-        print(f"Submitted job {job.job_id()} to {backend.name}. Queue times vary; you can close this terminal and run")
-        print(f"   python -m engine.hardware_run --fetch {job.job_id()} ...same options...   later.")
-        return job
+    print(f"Submitted job {job.job_id()} to {backend.name}. Queue times vary; you can close this terminal and run")
+    print(f"   python -m engine.hardware_run --fetch {job.job_id()} ...same options...   later.")
+    return job
 
 
 def analyse(P, idx, measured, exact, horizon, k):
@@ -119,6 +119,7 @@ def main():
     ap.add_argument("--resilience", type=int, default=1, help="0 none, 1 readout mitigation (TREX), 2 adds ZNE")
     ap.add_argument("--fetch", help="job ID of a finished IBM job to analyse instead of submitting")
     ap.add_argument("--transpile-only", action="store_true")
+    ap.add_argument("--record", action="store_true", help="also write a local dry run (--backend fake) into the cohort file")
     a = ap.parse_args()
     cfg = load_config()
     coh = load_cohort(a.cohort); P = coh["patients"]; edges = coh["edges"]; n = len(coh["pathways"])
@@ -157,11 +158,15 @@ def main():
            "note": ("local noisy simulation (FakeFez), not hardware" if fake else f"resilience level {a.resilience}") + f"; bandwidth {a.scale}, {a.reps} Trotter step(s)",
            **({"twoQubitGates": round(float(np.mean(twoq)), 1), "twoQubitDepth": round(float(np.mean(depth)), 1)} if not a.fetch else {}),
            **{k: round(v, 4) for k, v in stats.items()}}
+    save_json(rec, OUT / f"hardware_{job.job_id()}.json")
+    if fake and not a.record:
+        print("\nLocal dry run: not written into the cohort file (add --record to write it there).")
+        return
     coh.setdefault("hardware", []).append(rec)
     coh.setdefault("measuredBloch", {}).update({P[i]["id"]: measured[j].round(4).tolist() for j, i in enumerate(idx)})
+    coh.setdefault("measuredJob", {}).update({P[i]["id"]: job.job_id() for i in idx})  # which job each patient's vectors came from
     coh["featureMap"] = {"reps": a.reps, "beta": cfg["beta"], "scale": a.scale}
     save_json(coh, a.cohort)
-    save_json(rec, OUT / f"hardware_{job.job_id()}.json")
     print("\nRecorded in the cohort file; reload it in the app's Data page to see the run on the Hardware page.")
 
 
