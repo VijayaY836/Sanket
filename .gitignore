@@ -54,6 +54,7 @@ dist/
 # Build outputs
 build/
 dist/
+dist-single/
 *.tsbuildinfo
 
 # OS
