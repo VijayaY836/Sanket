@@ -58,6 +58,8 @@ a { color: var(--violet); }
 
 /* ---------- shell ---------- */
 .shell { display: grid; grid-template-columns: 240px 1fr; height: 100%; }
+.shell--overview { display: flex; flex-direction: column; min-height: 100vh; height: auto; }
+.shell--overview .main { width: 100%; }
 .rail {
   position: sticky; top: 0; height: 100vh; overflow-y: auto;
   display: flex; flex-direction: column; gap: 6px; padding: 22px 14px 18px;
