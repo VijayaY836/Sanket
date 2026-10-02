@@ -26,6 +26,9 @@ are exactly the Bloch vectors the projected kernel needs. After the job finishes
 
     # gate counts only (no run)
     python -m engine.hardware_run --transpile-only --backend fake
+
+    # diagnosis cohort (docs/osf_oral_diagnosis.md, section 8): 12 cancer + 12 normal
+    python -m engine.hardware_run --cohort out/oral_dx_cohort.json --diagnoses cancer,normal --patients 24 --backend least_busy
 """
 from __future__ import annotations
 import argparse
@@ -39,12 +42,21 @@ from .fastsim import bloch_batch, projected_kernel
 from .model import c_index, loo_risks
 
 
+def outcome(p):
+    """1/0 outcome used for stratification: survival event, or diagnosis label (cancer = 1) for diagnosis cohorts."""
+    if "event" in p:
+        return int(p["event"])
+    if "label" in p:
+        return int(p["label"])
+    return int(p.get("diagnosis") == "cancer")
+
+
 def pick_patients(P, k, seed=7):
-    """Stratified random subset (keeps the event rate), so a small run is still informative."""
+    """Stratified random subset (keeps the outcome rate), so a small run is still informative."""
     if not k or k >= len(P):
         return list(range(len(P)))
     rng = np.random.default_rng(seed)
-    ev = [i for i, p in enumerate(P) if p.get("event")]; ne = [i for i, p in enumerate(P) if not p.get("event")]
+    ev = [i for i, p in enumerate(P) if outcome(p)]; ne = [i for i, p in enumerate(P) if not outcome(p)]
     k_ev = max(1, round(k * len(ev) / len(P)))
     idx = list(rng.choice(ev, min(k_ev, len(ev)), replace=False)) + list(rng.choice(ne, min(k - k_ev, len(ne)), replace=False))
     return sorted(int(i) for i in idx)
@@ -93,11 +105,30 @@ def run_estimator(backend, pubs, shots, resilience, fake):
     return job
 
 
+def loo_svm_auc(K, y, C=1.0):
+    from sklearn.svm import SVC
+    from sklearn.metrics import roc_auc_score
+    d = np.zeros(len(y))
+    for i in range(len(y)):
+        tr = np.array([j for j in range(len(y)) if j != i])
+        d[i] = SVC(kernel="precomputed", C=C).fit(K[np.ix_(tr, tr)], y[tr]).decision_function(K[np.ix_([i], tr)])[0]
+    return float(roc_auc_score(y, d))
+
+
 def analyse(P, idx, measured, exact, horizon, k):
     err = np.linalg.norm(measured - exact, axis=2)                   # (patients, qubits)
     corr = float(np.corrcoef(measured.ravel(), exact.ravel())[0, 1])
     shrink = float(np.linalg.norm(measured, axis=2).mean() / max(np.linalg.norm(exact, axis=2).mean(), 1e-9))
     out = {"mean_error_per_qubit": float(err.mean()), "correlation_with_exact": corr, "length_ratio_measured_vs_exact": shrink}
+    if "time" not in P[idx[0]]:  # diagnosis cohort: kernel agreement and leave-one-out kernel-SVM AUC
+        Kh, Ke = projected_kernel(measured), projected_kernel(exact)
+        iu = np.triu_indices(len(idx), 1)
+        out["kernel_agreement"] = float(np.corrcoef(Kh[iu], Ke[iu])[0, 1])
+        yv = np.array([outcome(P[i]) for i in idx])
+        if len(idx) >= 12 and 3 <= yv.sum() <= len(yv) - 3:
+            out["auc_hardware_kernel"] = loo_svm_auc(Kh, yv)
+            out["auc_exact_kernel"] = loo_svm_auc(Ke, yv)
+        return out
     t = np.array([P[i]["time"] for i in idx], float); e = np.array([P[i]["event"] for i in idx], int)
     if len(idx) >= 20 and e.sum() >= 3 and (len(e) - e.sum()) >= 3:
         Kh, Ke = projected_kernel(measured), projected_kernel(exact)
@@ -119,10 +150,14 @@ def main():
     ap.add_argument("--resilience", type=int, default=1, help="0 none, 1 readout mitigation (TREX), 2 adds ZNE")
     ap.add_argument("--fetch", help="job ID of a finished IBM job to analyse instead of submitting")
     ap.add_argument("--transpile-only", action="store_true")
+    ap.add_argument("--diagnoses", help="diagnosis cohorts only: comma-separated classes to include, e.g. cancer,normal")
     ap.add_argument("--record", action="store_true", help="also write a local dry run (--backend fake) into the cohort file")
     a = ap.parse_args()
     cfg = load_config()
     coh = load_cohort(a.cohort); P = coh["patients"]; edges = coh["edges"]; n = len(coh["pathways"])
+    if a.diagnoses:
+        keep = set(a.diagnoses.split(","))
+        P = [p for p in P if p.get("diagnosis") in keep]
     idx = pick_patients(P, a.patients)
     if a.fetch:
         from qiskit_ibm_runtime import QiskitRuntimeService
@@ -146,7 +181,11 @@ def main():
     print(f"  mean Bloch-vector error per qubit   {stats['mean_error_per_qubit']:.3f}")
     print(f"  correlation of measured with exact   {stats['correlation_with_exact']:.3f}")
     print(f"  arrow length, measured / exact       {stats['length_ratio_measured_vs_exact']:.2f}  (below 1 = noise shrinkage)")
-    if "c_index_hardware_kernel" in stats:
+    if "auc_hardware_kernel" in stats:
+        print(f"  AUC from hardware kernel            {stats['auc_hardware_kernel']:.3f}")
+        print(f"  AUC from exact kernel               {stats['auc_exact_kernel']:.3f}  (same {len(idx)} samples, leave-one-out kernel SVM)")
+        print(f"  kernel agreement (correlation)       {stats['kernel_agreement']:.3f}")
+    elif "c_index_hardware_kernel" in stats:
         print(f"  C-index from hardware kernel         {stats['c_index_hardware_kernel']:.3f}")
         print(f"  C-index from exact kernel            {stats['c_index_exact_kernel']:.3f}  (same {len(idx)} patients, leave-one-out)")
         print(f"  kernel agreement (correlation)       {stats['kernel_agreement']:.3f}")

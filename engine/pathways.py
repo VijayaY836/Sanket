@@ -22,8 +22,8 @@ def hallmark_sets(cfg: dict) -> dict[str, list[str]]:
     return sets
 
 
-def ssgsea_scores(expr: pd.DataFrame, sets: dict[str, list[str]], keys: list[str]) -> pd.DataFrame:
-    """Sample x pathway matrix of ssGSEA normalised enrichment scores, z-scored across the cohort."""
+def ssgsea_scores(expr: pd.DataFrame, sets: dict[str, list[str]], keys: list[str], standardize: bool = True) -> pd.DataFrame:
+    """Sample x pathway matrix of ssGSEA normalised enrichment scores, z-scored across the cohort (raw if standardize=False)."""
     import gseapy
     missing = [k for k in keys if k not in sets]
     if missing:
@@ -31,4 +31,4 @@ def ssgsea_scores(expr: pd.DataFrame, sets: dict[str, list[str]], keys: list[str
     res = gseapy.ssgsea(data=expr, gene_sets={k: sets[k] for k in keys}, sample_norm_method="rank",
                         outdir=None, min_size=10, max_size=1000, no_plot=True, threads=4, seed=123)
     wide = res.res2d.pivot(index="Name", columns="Term", values="NES").astype(float)[keys]
-    return (wide - wide.mean()) / wide.std(ddof=1)
+    return (wide - wide.mean()) / wide.std(ddof=1) if standardize else wide
