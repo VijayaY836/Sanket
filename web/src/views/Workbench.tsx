@@ -5,9 +5,9 @@ import { angleOf, blochVectors, simulate } from "../lib/quantum";
 import { IDownload } from "../icons";
 
 const MODULES = [
-  { name: "Oral precancer progression", data: "GEO GSE26549, 86 patients, time to oral cancer", role: "Flagship: true early detection" },
-  { name: "Early breast cancer relapse", data: "METABRIC (cBioPortal), about 1,900 patients", role: "Scale: the data-size experiment" },
-  { name: "Leukaemia subtype", data: "Golub AML/ALL, 72 patients", role: "Calibration against published quantum ML" },
+  { name: "Oral precancer progression", data: "GEO GSE26549, 86 patients, time to oral cancer", role: "Flagship: true early detection", match: /oral|gse26549/i },
+  { name: "Early breast cancer relapse", data: "METABRIC (cBioPortal), about 1,900 patients", role: "Scale: the data-size experiment", match: /metabric|breast/i },
+  { name: "Leukaemia subtype", data: "Golub AML/ALL, 72 patients", role: "Calibration against published quantum ML", match: /golub|leuk/i },
 ];
 
 export default function Workbench() {
@@ -54,7 +54,7 @@ export default function Workbench() {
             <tbody>
               {MODULES.map((m, i) => (
                 <tr key={m.name}><td><b>{m.name}</b></td><td>{m.data}</td><td>{m.role}</td>
-                  <td>{i === 0 ? <span className={`chip ${cohort.source === "real" ? "chip-teal" : "chip-amber"}`}>{cohort.source === "real" ? "Real data loaded" : "Synthetic stand-in"}</span> : <span className="chip chip-grey">Load its cohort.json</span>}</td></tr>
+                  <td>{m.match.test(cohort.name) ? <span className={`chip ${cohort.source === "real" ? "chip-teal" : "chip-amber"}`}>{cohort.source === "real" ? "Real data loaded" : "Synthetic stand-in"}</span> : <span className="chip chip-grey">Load its cohort.json</span>}</td></tr>
               ))}
             </tbody>
           </table>

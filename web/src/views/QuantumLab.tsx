@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useApp } from "../store";
+import { LARGE, useApp } from "../store";
 import { layerTrace, gateCounts, Layer } from "../lib/quantum";
 import { depolarisedBloch, looCIndex, projKernelFrom, shotNoisyFidelity } from "../lib/analysis";
 import { eigSym, psdProject } from "../lib/linalg";
@@ -83,8 +83,7 @@ export default function QuantumLab() {
         <p className="tiny muted" style={{ marginBottom: 0 }}>Computed by the team with Qiskit 2.5 transpilation (optimisation level 3, best of 8 seeds) onto IBM Heron using the FakeFez calibration snapshot, on the real 14-edge crosstalk graph from GSE26549. Estimated fidelity is the product of calibrated gate and readout success rates.</p>
       </section>
 
-      <NoiseLab />
-      <ExpressivityNoise />
+      {model.n > LARGE ? <LargeCohortNoiseNotice /> : <><NoiseLab /><ExpressivityNoise /></>}
     </div>
   );
 }
@@ -195,6 +194,15 @@ function NoiseLab() {
           <div><div className="num">{fid.cRep.toFixed(3)}</div><div className="tiny muted">C-index, repaired</div></div>
         </div>
       </div>
+    </section>
+  );
+}
+
+function LargeCohortNoiseNotice() {
+  return (
+    <section className="panel">
+      <div className="h2">Noise laboratory</div>
+      <p className="small muted" style={{ marginBottom: 0 }}>The browser skips noisy full-kernel simulations for this 1,975-patient cohort because they require large matrix calculations and would block the page. The circuit walkthrough and hardware cost remain live above; run <code>python -m engine.noise --task survival --cohort out/metabric_cohort.json</code> for the registered noise analysis.</p>
     </section>
   );
 }

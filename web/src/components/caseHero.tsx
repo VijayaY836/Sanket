@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Cohort, Patient } from "../lib/cohort";
+import { Cohort, outcomeTerms, Patient } from "../lib/cohort";
 import { IDownload, IReplay } from "../icons";
 
 const STAGES = ["Reading 20,000 genes", "Scoring 12 pathways", "Encoding on 12 qubits", "Prediction ready"];
 const reduced = () => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 /** Large animated ring: 12 pathway beads around the outside light up as the patient is encoded. */
-function RiskRing({ risk, ready, stage, z, color }: { risk: number; ready: boolean; stage: number; z: number[]; color: string }) {
+function RiskRing({ risk, ready, stage, z, color, outcome }: { risk: number; ready: boolean; stage: number; z: number[]; color: string; outcome: string }) {
   const [v, setV] = useState(0);
   useEffect(() => {
     if (!ready) { setV(0); return; }
@@ -32,7 +32,7 @@ function RiskRing({ risk, ready, stage, z, color }: { risk: number; ready: boole
         return <circle key={k} cx={x} cy={y} r={on ? 4 + 4 * mag : 3} fill={zk >= 0 ? "#9c8cff" : "#4fd1c5"} opacity={on ? 0.35 + 0.65 * mag : 0.25} style={{ transition: `all .5s ${k * 40}ms` }} />;
       })}
       <text x={c} y={c - 4} textAnchor="middle" fontSize={ready ? 54 : 15} fontWeight={800} fill="#fff" style={{ fontFamily: "var(--display)" }}>{ready ? `${Math.round(v * 100)}%` : STAGES[Math.min(stage, 3)]}</text>
-      {ready && <text x={c} y={c + 24} textAnchor="middle" fontSize={12} fill="rgba(255,255,255,.7)">risk of oral cancer</text>}
+      {ready && <text x={c} y={c + 24} textAnchor="middle" fontSize={12} fill="rgba(255,255,255,.7)">risk of {outcome}</text>}
       {ready && <text x={c} y={c + 40} textAnchor="middle" fontSize={12} fill="rgba(255,255,255,.7)">within 3 years</text>}
     </svg>
   );
@@ -44,6 +44,7 @@ export function CaseHero({ p, cohort, risk, stage, color, verdict, onReplay, onF
   const [reveal, setReveal] = useState(false);
   useEffect(() => setReveal(false), [p.id]);
   const ready = stage >= 3;
+  const terms = outcomeTerms(cohort);
   const facts = [p.meta?.age && `Age ${p.meta.age}`, p.meta?.sex && (p.meta.sex === "M" ? "Male" : p.meta.sex === "F" ? "Female" : p.meta.sex), p.meta?.histology, p.meta?.site].filter(Boolean) as string[];
   return (
     <section className="case-hero">
@@ -68,11 +69,11 @@ export function CaseHero({ p, cohort, risk, stage, color, verdict, onReplay, onF
         </div>
       </div>
       <div className="case-hero-ring">
-        <RiskRing risk={risk} ready={ready} stage={stage} z={p.pathways} color={color} />
+        <RiskRing risk={risk} ready={ready} stage={stage} z={p.pathways} color={color} outcome={terms.risk} />
         <AnimatePresence>
           {reveal && (
             <motion.div className={`case-stamp ${p.event ? "bad" : "good"}`} initial={{ opacity: 0, scale: 1.6, rotate: -14 }} animate={{ opacity: 1, scale: 1, rotate: -8 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ type: "spring", stiffness: 260, damping: 18 }}>
-              <b>{p.event ? "Developed cancer" : "Cancer-free"}</b>
+              <b>{p.event ? terms.event : terms.free}</b>
               <span>{p.event ? `at ${(p.time / 12).toFixed(1)} years` : `at last follow-up, ${(p.time / 12).toFixed(1)} years`}</span>
             </motion.div>
           )}

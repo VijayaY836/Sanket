@@ -26,6 +26,27 @@ export interface Cohort {
   featureMap?: { reps: number; beta: number; scale: number };
 }
 
+export function outcomeTerms(cohort: Pick<Cohort, "name" | "disease">) {
+  const breast = /breast|metabric/i.test(`${cohort.name} ${cohort.disease}`);
+  return breast ? {
+    risk: "breast cancer relapse",
+    event: "Relapsed",
+    eventPast: "relapsed",
+    free: "Relapse-free",
+    freePast: "relapse-free",
+    progression: "relapses",
+    specialist: "breast oncology",
+  } : {
+    risk: "oral cancer",
+    event: "Developed cancer",
+    eventPast: "progressed",
+    free: "Cancer-free",
+    freePast: "cancer-free",
+    progression: "progressions",
+    specialist: "oral oncology",
+  };
+}
+
 export const HALLMARK_12: PathwayDef[] = [
   { key: "HALLMARK_MYC_TARGETS_V1", label: "MYC targets", short: "MYC", group: "Proliferation" },
   { key: "HALLMARK_E2F_TARGETS", label: "E2F targets", short: "E2F", group: "Proliferation" },
