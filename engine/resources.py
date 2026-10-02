@@ -48,24 +48,25 @@ def main():
     ap.add_argument("--cohort", default=str(OUT / "cohort.json"))
     ap.add_argument("--seeds", type=int, default=8)
     ap.add_argument("--only-bio", action="store_true")
+    ap.add_argument("--reps", type=int, default=2, help="Trotter steps for the SANKET circuits")
     a = ap.parse_args()
     coh = json.load(open(a.cohort, encoding="utf-8"))
     edges = [tuple(e) for e in coh["edges"]]; n = len(coh["pathways"])
     be = FakeFez()
     rng = np.random.default_rng(0); x = rng.uniform(0, np.pi / 2, n); y = rng.uniform(0, np.pi / 2, n)
     sets = [("sanket", edges)] + ([] if a.only_bio else [("all_to_all", [(i, j) for i in range(n) for j in range(i + 1, n)])])
-    res = {"edges": len(edges)}
+    res = {"edges": len(edges), "reps": a.reps}
     for name, el in sets:
-        U = ham_map(x, el)
+        U = ham_map(x, el, reps=a.reps)
         proj = U.copy(); proj.measure_all()
-        fid = U.compose(ham_map(y, el).inverse()); fid.measure_all()
+        fid = U.compose(ham_map(y, el, reps=a.reps).inverse()); fid.measure_all()
         res[name] = {"projected": stats(proj, be, a.seeds), "fidelity": stats(fid, be, a.seeds)}
         print(name, res[name])
     if not a.only_bio:
         zz = zz_feature_map(n, reps=2, entanglement="full").assign_parameters(x)
         zzf = zz.compose(zz_feature_map(n, reps=2, entanglement="full").assign_parameters(y).inverse()); zzf.measure_all()
         res["zz_full_fidelity"] = stats(zzf, be, a.seeds); print("zz", res["zz_full_fidelity"])
-    save_json(res, OUT / "resources.json")
+    save_json(res, OUT / f"resources_reps{a.reps}.json")
 
 
 if __name__ == "__main__":

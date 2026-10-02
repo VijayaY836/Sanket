@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useApp } from "../store";
 import { predictPatient, verdict } from "../lib/analysis";
-import { SurvivalChart } from "../components/viz";
-import { IPlay } from "../icons";
+import { CountUp } from "../components/tissue";
+import { Story } from "../components/story";
 
 export default function Overview() {
   const { model, go, setSel, nested, nestedProgress, cohort, large } = useApp();
@@ -19,52 +19,21 @@ export default function Overview() {
   }, [model, cohort]);
   const v = nested ? verdict(nested.proj, nested.rbf) : null;
   const followUp = [...model.times].sort((x, y) => x - y)[Math.floor(model.n / 2)];
+  const storyPair = useMemo(() => pair.map(({ i, p, pred }) => ({ i, id: p.id, risk: pred.risk, curve: pred.curve, histology: p.meta?.histology })), [pair]);
+  const hw = (cohort.hardware ?? []).filter((h) => !/not hardware/i.test(h.note ?? ""));
+  const hwBest = hw.reduce<typeof hw[number] | null>((b, h) => (!b || h.patients > b.patients ? h : b), null);
 
   return (
     <div className="grid" style={{ gap: 22 }}>
-      <section className="panel hero">
-        <div>
-          <h1>Same white patch. Two different futures.</h1>
-          <p>About one in five oral precancers turns into cancer, and doctors cannot tell which. SANKET reads the gene activity in a biopsy, encodes it into a quantum circuit wired like the biology, and estimates whether and when a lesion will become cancer.</p>
-          <div className="row">
-            <button className="btn btn-primary" onClick={() => { setSel(pair[0].i); go("case"); }}><IPlay /> Open a patient case</button>
-            <button className="btn" onClick={() => go("evidence")}>See the evidence</button>
-          </div>
-        </div>
-        <div>
-          <div className="row" style={{ marginBottom: 8 }}>
-            {pair.map(({ p, pred }, k) => (
-              <div key={p.id} style={{ flex: 1, minWidth: 150 }}>
-                <div className="row" style={{ gap: 8 }}>
-                  <span className="dot" style={{ background: k === 0 ? "var(--eosin)" : "var(--teal)" }} />
-                  <b>{p.id}</b>
-                  <span className="muted small">{p.meta?.histology}</span>
-                </div>
-                <div className="small muted">{Math.round(pred.risk * 100)}% predicted 3-year risk</div>
-              </div>
-            ))}
-          </div>
-          <SurvivalChart horizon={cohort.horizon} height={250} series={[
-            { curve: pair[0].pred.curve, color: "var(--eosin)", label: pair[0].p.id },
-            { curve: pair[1].pred.curve, color: "var(--teal)", label: pair[1].p.id },
-            { curve: model.km, color: "var(--ink-3)", label: "Cohort", dash: "4 4", width: 1.5 },
-          ]} />
-          <div className="legend"><span><i style={{ background: "var(--ink-3)" }} />Whole cohort</span><span>Predictions are leave-one-out: each patient is scored as if new.</span></div>
-        </div>
-      </section>
-
-      <section className="panel-flat" style={{ padding: 0 }}>
-        <div className="steps">
-          {[
-            ["1", "Genes", "A biopsy's 20,000 gene activities, measured once."],
-            ["2", "Pathways", "Compressed into 12 biological pathway scores a biologist can read."],
-            ["3", "Qubits", "One pathway per qubit, entangled only where the pathways interact."],
-            ["4", "Time to cancer", "Similar patients in quantum feature space give a survival curve."],
-          ].map(([n, t, d]) => (
-            <div className="step" key={n}><div className="step-n">Step {n}</div><h3>{t}</h3><p>{d}</p></div>
-          ))}
-        </div>
-      </section>
+      <Story cohort={cohort} model={model}
+        pair={storyPair}
+        stats={{
+          quantum: nested ? nested.proj.c : model.cidx.proj.c, classical: nested ? nested.rbf.c : model.cidx.rbf.c,
+          hwBackend: hwBest?.backend, hwPatients: hwBest?.patients,
+          hwCorr: (hwBest as unknown as { correlation_with_exact?: number } | null)?.correlation_with_exact,
+          hwKernel: (hwBest as unknown as { kernel_agreement?: number } | null)?.kernel_agreement,
+        }}
+        onOpenCase={() => { setSel(pair[0].i); go("case"); }} onEvidence={() => go("evidence")} />
 
       <section className="panel-flat" style={{ padding: "16px 20px" }}>
         <div className="row" style={{ gap: 10 }}>
@@ -81,9 +50,9 @@ export default function Overview() {
 
       <section className="panel-flat" style={{ padding: 0 }}>
         <div className="facts-strip">
-          <div className="fact"><div className="num">{model.n}</div><div className="small muted">patients with precancer</div></div>
-          <div className="fact"><div className="num">{model.events.reduce((a, b) => a + b, 0)}</div><div className="small muted">progressed to cancer</div></div>
-          <div className="fact"><div className="num">{(followUp / 12).toFixed(1)}y</div><div className="small muted">median follow-up</div></div>
+          <div className="fact"><div className="num"><CountUp value={model.n} /></div><div className="small muted">patients with precancer</div></div>
+          <div className="fact"><div className="num"><CountUp value={model.events.reduce((a, b) => a + b, 0)} /></div><div className="small muted">progressed to cancer</div></div>
+          <div className="fact"><div className="num"><CountUp value={followUp / 12} decimals={1} suffix="y" /></div><div className="small muted">median follow-up</div></div>
           <div className="fact"><div className="num">{model.q}</div><div className="small muted">qubits, one per pathway</div></div>
           <div className="fact"><div className="num">~5×</div><div className="small muted">fewer two-qubit gates than a standard map on IBM Heron (188 vs 906)</div></div>
           <div className="fact">

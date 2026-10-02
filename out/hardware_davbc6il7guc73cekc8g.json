@@ -1,0 +1,16 @@
+{
+ "backend": "ibm_fez",
+ "jobId": "davbc6il7guc73cekc8g",
+ "date": "2026-10-02",
+ "shots": 1024,
+ "patients": 86,
+ "note": "resilience level 1; bandwidth 0.25, 1 Trotter step(s)",
+ "twoQubitGates": 48.7,
+ "twoQubitDepth": 19.0,
+ "mean_error_per_qubit": 0.1742,
+ "correlation_with_exact": 0.9609,
+ "length_ratio_measured_vs_exact": 0.9282,
+ "c_index_hardware_kernel": 0.5659,
+ "c_index_exact_kernel": 0.5932,
+ "kernel_agreement": 0.9785
+}

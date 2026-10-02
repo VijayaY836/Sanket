@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../store";
 import { shotEstimate } from "../lib/analysis";
+import { blochVectors, simulate } from "../lib/quantum";
 import { mulberry32 } from "../lib/rng";
 import { BlochSphere } from "../components/viz";
 import { HW_TABLE } from "./QuantumLab";
@@ -10,9 +11,11 @@ export default function Hardware() {
   const [shots, setShots] = useState(1024);
   const [seed, setSeed] = useState(1);
   const n = model.n;
-  const est = useMemo(() => { const r = mulberry32(seed * 7919 + sel); return model.bloch[sel].map((b) => shotEstimate(b, shots, r)); }, [model, sel, shots, seed]);
+  // exact reference uses the encoding of the recorded hardware run when there is one
+  const exactRef = useMemo(() => (cohort.featureMap ? blochVectors(simulate(model.angles[sel], cohort.edges, { ...model.spec, ...cohort.featureMap })) : model.bloch[sel]), [cohort, model, sel]);
+  const est = useMemo(() => { const r = mulberry32(seed * 7919 + sel); return exactRef.map((b) => shotEstimate(b, shots, r)); }, [exactRef, sel, shots, seed]);
   const shown = cohort.measuredBloch?.[cohort.patients[sel].id] ?? est;
-  const err = shown.reduce((s, v, k) => s + Math.hypot(v[0] - model.bloch[sel][k][0], v[1] - model.bloch[sel][k][1], v[2] - model.bloch[sel][k][2]), 0) / est.length;
+  const err = shown.reduce((s, v, k) => s + Math.hypot(v[0] - exactRef[k][0], v[1] - exactRef[k][1], v[2] - exactRef[k][2]), 0) / est.length;
   const projCircuits = n * 3, fidCircuits = (n * (n - 1)) / 2;
   const jobs = cohort.hardware ?? [];
   const measured = cohort.measuredBloch?.[cohort.patients[sel].id];
@@ -90,7 +93,7 @@ export default function Hardware() {
           ? <p className="small muted">Solid arrows: <b>measured</b> in the recorded job ({jobs[jobs.length - 1]?.backend}). Dashed: exact simulated state.</p>
           : <p className="small muted">Solid arrows: estimated from {shots.toLocaleString()} simulated shots per basis. Dashed: exact state. This is a sampling preview, not hardware output.</p>}
         <div className="constellation">
-          {(measured ?? est).map((v, k) => (<div className="sphere-cell" key={k}><BlochSphere v={v} ghost={model.bloch[sel][k]} size={92} color="var(--teal)" /><div className="lbl">q{k} {cohort.pathways[k].short}</div></div>))}
+          {(measured ?? est).map((v, k) => (<div className="sphere-cell" key={k}><BlochSphere v={v} ghost={exactRef[k]} size={92} color="var(--teal)" /><div className="lbl">q{k} {cohort.pathways[k].short}</div></div>))}
         </div>
         <div className="row" style={{ marginTop: 10 }}>
           <div><div className="num">{err.toFixed(3)}</div><div className="tiny muted">mean {cohort.measuredBloch?.[cohort.patients[sel].id] ? "hardware" : "estimation"} error per qubit</div></div>

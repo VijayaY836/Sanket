@@ -22,6 +22,8 @@ export interface Cohort {
   hardware?: HardwareRecord[];
   /** Bloch vectors measured on hardware, keyed by patient id (written by engine/hardware.py). */
   measuredBloch?: Record<string, [number, number, number][]>;
+  /** Encoding used for the recorded hardware run (written by engine/hardware_run.py). */
+  featureMap?: { reps: number; beta: number; scale: number };
 }
 
 export const HALLMARK_12: PathwayDef[] = [
