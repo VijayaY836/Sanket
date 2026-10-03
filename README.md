@@ -23,7 +23,9 @@
 [At a glance](#at-a-glance) ·
 [Overview](#overview) ·
 [Key results](#key-results) ·
-[Detect](#detecting-oral-cancer-and-dysplasia-from-tissue) ·
+[Two cancers](#two-cancers-one-platform) ·
+[Detect: oral](#detecting-oral-cancer-and-dysplasia-from-tissue) ·
+[Detect: breast](#detecting-breast-cancer-from-tissue) ·
 [How SANKET compares](#how-sanket-compares) ·
 [IBM hardware run](#run-on-ibm-quantum-hardware) ·
 [App tour](#the-web-application) ·
@@ -45,23 +47,40 @@
 | | |
 |---|---|
 | **Problem statement** | SIH26139: Hybrid Quantum Machine Learning Platform for Early Disease Detection (Egreen Quanta) · MedTech / BioTech / HealthTech · Software |
-| **Clinical problem** | About 1 in 5 oral precancers (leukoplakia) becomes cancer, and doctors cannot tell which. SANKET first reads the tissue (normal, dysplasia or cancer?), then estimates which precancers will progress, and when. |
+| **Clinical problem** | India's two most common cancers. **Oral (#2):** about 1 in 5 oral precancers (leukoplakia) becomes cancer, and doctors cannot tell which; SANKET first reads the tissue (normal, dysplasia or cancer?), then estimates which precancers will progress, and when. **Breast (#1):** SANKET detects cancer in breast tissue and estimates 5-year relapse risk after diagnosis. |
 | **Idea** | Compress ~20,000 genes into 12 biological pathways, encode one pathway per qubit, and wire the qubits like the biology (pathways that share genes interact). |
 | **Quantum model** | Projected quantum kernel on a Hamiltonian (Trotterised) feature map, inside a kernel-weighted survival model |
-| **Real data** | 2,394 samples across three cancers: 86 oral precancer with follow-up (GEO GSE26549), 229 oral tissue biopsies labelled normal, dysplasia or cancer (GSE30784), 32 oral tissues from Tata Memorial Centre, Navi Mumbai (GSE23558, independent check), 1,975 breast cancer (METABRIC), 72 leukaemia (Golub) |
-| **Detect** | Normal, dysplasia or cancer from oral tissue: AUC **0.98** cancer vs normal and **0.95** dysplasia vs normal (projected quantum kernel), tied with classical as registered in advance. With a declared screening cut-off it catches **87%** of dysplasias with NPV 95%. On an independent Indian cohort (Tata Memorial Centre) the ranking transfers, AUC **0.90**. Upload your own gene-activity file and it is scored on the 12 pathways in the browser. |
-| **Run on IBM quantum hardware** | All 86 oral-cohort patients on IBM's 156-qubit Heron processor `ibm_fez`: 1,024 shots each, 49 two-qubit gates per circuit, **0.98 agreement** between the hardware kernel and exact simulation |
+| **Real data** | 2,573 samples across three cancers and seven cohorts: 86 oral precancer with follow-up (GEO GSE26549), 229 oral tissue biopsies labelled normal, dysplasia or cancer (GSE30784), 32 oral tissues from Tata Memorial Centre, Navi Mumbai (GSE23558, independent check), 1,975 breast cancer (METABRIC), 121 breast tissues labelled cancer or normal (GSE42568), 58 breast tissues from Granada (GSE10810, independent check), 72 leukaemia (Golub) |
+| **Detect** | **Oral:** normal, dysplasia or cancer from tissue: AUC **0.98** cancer vs normal and **0.95** dysplasia vs normal (projected quantum kernel), tied with classical as registered in advance. With a declared screening cut-off it catches **87%** of dysplasias with NPV 95%. On an independent Indian cohort (Tata Memorial Centre) the ranking transfers, AUC **0.90**. **Breast:** cancer vs normal tissue, AUC **0.98**, independent check in Spain. Upload your own gene-activity file and it is scored on the 12 pathways in the browser. |
+| **Run on IBM quantum hardware** | All 86 oral-cohort patients on IBM's 156-qubit Heron processor `ibm_fez`: 1,024 shots each, 49 two-qubit gates per circuit, **0.98 agreement** between the hardware kernel and exact simulation. A pilot of 8 METABRIC breast cancer patients on the same machine agrees with simulation at 0.99 |
 | **Honest result** | On real clinical outcomes the quantum kernel matches classical methods (METABRIC C-index 0.582 vs 0.582, p = 0.98; oral diagnosis ties on all three tasks). On data with quantum structure it wins decisively (AUC 0.97 vs 0.66 with 50 patients). Our first check on an Indian cohort failed because of a scaling error we then found, fixed and report openly (registered AUC 0.24, corrected 0.90). |
 | **Why parity** | At the setting cross-validation chooses, the qubits barely entangle (mean Bloch-vector length 0.994; 1 = no entanglement). Quantum structure is available, but these outcomes do not reward it. |
 | **Hardware efficiency** | ~5× fewer two-qubit gates than the standard ZZ feature map on IBM Heron (188 vs 906); the projected kernel's circuit count grows linearly with patients, not with patient pairs |
-| **Working prototype** | React + TypeScript web app with an exact 12-qubit simulator in the browser (matches Qiskit to 10⁻¹⁵), a Detect page for oral tissue with gene-activity upload (ssGSEA in the browser, matches gseapy to 3 × 10⁻⁴), patient case files, HL7 FHIR R4 export, and a Quantum Readiness Check for any dataset |
+| **Working prototype** | React + TypeScript web app with an exact 12-qubit simulator in the browser (matches Qiskit to 10⁻¹⁵), a Detect page (oral tissue, plus the breast detection results) with gene-activity upload (ssGSEA in the browser, matches gseapy to 3 × 10⁻⁴), patient case files, HL7 FHIR R4 export, and a Quantum Readiness Check for any dataset |
 | **Rigour** | Equal tuning budgets, nested and repeated cross-validation, Holm-corrected tests, analysis plans pre-registered on OSF before outcomes were examined |
+
+---
+
+## Two cancers, one platform
+
+Oral cancer is the flagship story: it has the precancer stage SANKET is built around, the Indian cohort and the full hardware run. Breast cancer runs through the same pipeline, the same 12 pathways and the same quantum circuit. A dash means that piece does not exist yet for that cancer.
+
+| | Oral cancer (India's #2) | Breast cancer (India's #1) | Leukaemia |
+|---|---|---|---|
+| **Detect from tissue** | ✓ Normal / dysplasia / cancer: AUC 0.98 cancer vs normal, 0.95 dysplasia vs normal; screening cut-off catches 87% of dysplasias (GSE30784, 229) | ✓ Cancer vs normal: AUC 0.98; screening cut-off 89% sensitivity, 94% specificity (GSE42568, 121) | Subtype only: AML vs ALL (Golub, 72), used as a calibration task |
+| **Predict the future** | ✓ Precancer → cancer: whether and when (GSE26549, 86 with follow-up) | ✓ 5-year relapse (METABRIC, 1,975); pathways add value to the clinical NPI (C-index 0.639 → 0.662) | – |
+| **Independent check** | ✓ Tata Memorial Centre, India (GSE23558): AUC 0.90 after correcting a scaling error | ✓ Granada, Spain (GSE10810): AUC 0.79–0.91 across models | – |
+| **IBM quantum hardware** | ✓ All 86 patients on `ibm_fez`, agreement 0.98 | ✓ Pilot: 8 patients on `ibm_fez`, agreement 0.99 | – |
+| **Quantum vs classical** | Tie on every task | Tie within datasets; quantum transfers worst to Spain | Classical ahead |
+| **In the app** | Detect page (live map, upload), patient case files, constellation, hardware | Detect page results; METABRIC cohort loads on the Data page (patient cases, evidence) | Readiness Check sample data |
+
+Across both cancers the pattern is the same: detection works within a dataset, the ranking carries across labs and countries, and the cut-off needs local calibration, which is why SANKET's roadmap trains on Indian data with a clinical partner.
 
 ---
 
 ## Overview
 
-About one in five oral precancers (leukoplakia) turns into cancer, and under the microscope the lesions that will progress look the same as those that will not. India carries one of the world's highest burdens of oral cancer, and most cases are diagnosed late. SANKET reads the gene activity in a biopsy, encodes it into a quantum circuit **wired like the biology itself**, and estimates whether and when a lesion will become cancer.
+About one in five oral precancers (leukoplakia) turns into cancer, and under the microscope the lesions that will progress look the same as those that will not. India carries one of the world's highest burdens of oral cancer, and most cases are diagnosed late. SANKET reads the gene activity in a biopsy, encodes it into a quantum circuit **wired like the biology itself**, and estimates whether and when a lesion will become cancer. The same pipeline, changed only by a configuration file, covers breast cancer, India's most common: it detects cancer in breast tissue and predicts relapse after diagnosis.
 
 Most quantum machine learning projects report high accuracy on easy benchmarks and stop there. SANKET is built around a harder question: **does the quantum part actually help, and how would we know?** Every quantum model is compared against classical models with the same tuning budget, analysis plans are registered publicly before outcomes are examined, a geometric-difference test checks in advance whether quantum has any room to help on a given dataset, and the model has been run end to end on a real IBM quantum processor.
 
@@ -150,6 +169,29 @@ The ranking transfers, but the calibration does not: at the default cut-off the 
 
 <p align="center">
   <img src="docs/screenshots/detect-external.jpg" alt="Indian check: registered failure, the scaling error, and the corrected result" width="90%"/>
+</p>
+
+### Detecting breast cancer from tissue
+
+Breast cancer is India's most common cancer. METABRIC, used for relapse prediction, holds tumours only, so detection uses two GEO datasets with normal breast tissue. The plan ([`docs/osf_breast_diagnosis.md`](docs/osf_breast_diagnosis.md)) was committed before any data were downloaded: same 12 pathways, same quantum circuit, same models, same 10-repeat cross-validation and primary test.
+
+- **H1 · Cancer vs normal on GSE42568** (Dublin City University, 104 cancers, 17 normals): projected quantum AUC **0.983** ± 0.030, fidelity 0.986 ± 0.027, classical RBF 0.948 ± 0.106, logistic 0.952, random forest 0.945, gradient boosting 0.901. **A tie** (projected vs RBF p = 0.45; no secondary comparison significant after Holm correction). The two quantum kernels have the highest mean AUC and vary least across folds (SD 0.03 against about 0.11), a descriptive observation, not a claimed advantage.
+- **H2 · Screening cut-off:** with only 17 normals the default cut-off calls almost everything cancer (quantum specificity 33%). The declared screening rule gives **89% sensitivity and 94% specificity** (PPV 99%, NPV 62%); classical models land in the same place.
+- **H3 · Independent check on GSE10810** (Hospital Universitario San Cecilio, Granada; 31 cancers, 27 normals), applied once, each dataset standardised on its own:
+
+| Model | AUC (95% CI, descriptive) | Sensitivity | Specificity |
+|---|---|---|---|
+| Logistic regression | 0.91 (0.83–0.97) | 100% | 33% |
+| Random forest | 0.88 (0.77–0.96) | 100% | 7% |
+| Classical RBF | 0.87 (0.77–0.95) | 100% | 41% |
+| Gradient boosting | 0.80 (0.68–0.90) | 100% | 26% |
+| Projected quantum | 0.79 (0.65–0.91) | 100% | 41% |
+| Fidelity quantum | 0.76 (0.62–0.89) | 100% | 37% |
+
+The ranking transfers for every model, and cancer moves the same way in both datasets for 11 of 12 pathways (p53 is the exception, with a tiny effect in both). The quantum kernels transfer worst here; the intervals overlap, and GSE10810 mapped 11,289 genes against 23,392 for GSE42568, so its pathway scores rest on fewer genes. As in the oral Indian check, every model catches every cancer but clears only a minority of normals. **Two cancers, two independent checks, one pattern: the ranking carries across labs and countries, the cut-off needs local calibration.** Many GSE10810 samples are tumour–normal pairs from the same women; the check uses no cross-validation, so pairing cannot leak, but the bootstrap intervals treat samples as independent and are slightly optimistic.
+
+<p align="center">
+  <img src="docs/screenshots/detect-breast.jpg" alt="Breast detection on the Detect page: benchmark, screening cut-off and independent check" width="90%"/>
 </p>
 
 <p align="center">
@@ -348,8 +390,8 @@ Many quantum machine learning prototypes for healthcare follow one pattern: a pu
 
 | | Typical quantum-ML health prototype | SANKET |
 |---|---|---|
-| **Data** | One public benchmark | 2,394 real samples, five cohorts, three cancers, including an Indian cohort (Tata Memorial Centre) |
-| **Clinical question** | One prediction | The full path: detect (normal / dysplasia / cancer), predict progression and timing, explain and refer |
+| **Data** | One public benchmark | 2,573 real samples, seven cohorts, three cancers, including an Indian cohort (Tata Memorial Centre) |
+| **Clinical question** | One prediction | The full path for oral and breast cancer: detect (normal / dysplasia / cancer), predict progression and timing, explain and refer |
 | **Quantum design** | Generic feature map | One pathway per qubit, entangled only where pathways share genes; ~5× fewer two-qubit gates than the standard ZZ map |
 | **Quantum hardware** | Simulator only | 86 patients on IBM `ibm_fez` (156-qubit Heron), kernel agreement 0.98 with simulation |
 | **Comparison** | Untuned or no classical baseline | Four tuned classical models, equal budgets, nested and repeated CV, corrected tests with Holm correction |
@@ -491,6 +533,7 @@ sanket/
 │   ├── classify.py               Diagnosis tasks (incl. oral normal / dysplasia / cancer, external check) and exploratory upgrades
 │   ├── oral_diagnosis.py         Oral tissue diagnosis cohorts (GSE30784, GSE23558, any GEO accession) → out/*.json
 │   ├── oral_amendments.py        Declared amendments A1–A3: corrected Indian check, screening cut-off, class weighting
+│   ├── breast_detect.py          Breast detection: screening cut-off and independent check (GSE42568 → GSE10810)
 │   ├── export_detect.py          Bundles the oral diagnosis results and the 12 pathway gene lists for the Detect page
 │   ├── advantage.py              Engineered quantum-advantage benchmark
 │   ├── clinical.py               Calibration, Brier, decision curves, screening threshold, multimodal
@@ -594,6 +637,11 @@ python -m engine.classify --task oral_cancer_normal --external   # GSE30784 → 
 python -m engine.oral_amendments --a1                        # Amendment A1: corrected external check
 python -m engine.oral_amendments --a2                        # Amendment A2: screening cut-off, all three tasks
 python -m engine.oral_amendments --a3                        # Amendment A3: class weighting, cancer vs dysplasia
+python -m engine.oral_diagnosis --dataset gse42568           # breast tissue cohort -> out/breast_dx_cohort.json
+python -m engine.oral_diagnosis --dataset gse10810           # breast independent cohort -> out/breast_dx_external_cohort.json
+python -m engine.classify --task breast_cancer_normal        # breast H1: registered benchmark
+python -m engine.breast_detect --screening                   # breast H2: screening cut-off
+python -m engine.breast_detect --external                    # breast H3: independent check on GSE10810, run once
 python -m engine.export_detect                               # → web/src/data/oral_detect.json and hallmark12.json
 python -m engine.oral_diagnosis --accession GSE12345         # any other GEO tissue series, loadable on the Detect page
 ```
@@ -669,6 +717,7 @@ Load any `out/*.json` file on the app's **Data**, **When quantum wins** or **Rea
 - On real outcomes the quantum kernel matches, but does not beat, classical methods. Its demonstrated advantages are on quantum-structured data and in circuit cost.
 - The oral cohort is small (86 patients) and comes from a single trial; external validation on Indian patients is required.
 - Oral diagnosis: quantum and classical tie on all three tasks. Dysplasia sensitivity is 51% at the default threshold and 87% at the declared screening cut-off. Cancer vs dysplasia is not usable at the default settings and reaches AUC 0.87 only in an exploratory class-weighted analysis (17 dysplasias). The registered check on the Indian cohort (GSE23558, 32 samples, different platform) failed because of a scaling error; the post-hoc corrected check ranks well (AUC 0.90) but clears only 2 of 5 Indian normals at the default cut-off.
+- Breast detection: quantum and classical tie on GSE42568 (AUC 0.983 vs 0.948, p = 0.45). On the independent Granada cohort the ranking transfers but the quantum kernels transfer worst (AUC 0.79 against 0.91 for logistic regression), and every model clears only a minority of normals at the default cut-off.
 - Gene-activity uploads are scored within the uploaded file only, need labelled reference samples in the same file, and give illustrative estimates, not a diagnosis.
 - METABRIC relapse reflects historical treatment, which affects outcomes.
 - METABRIC subtype labels are themselves derived from gene expression, so high scores on that task are expected.
@@ -690,7 +739,8 @@ Load any `out/*.json` file on the app's **Data**, **When quantum wins** or **Rea
 - [x] Detect: registered oral tissue diagnosis (normal / dysplasia / cancer), independent Indian check, gene-activity upload scored in the browser
 - [ ] Small gene panel: test whether a few dozen genes reproduce the 12 pathway scores (lower-cost input)
 - [x] Declared amendments: screening cut-off for dysplasia (87% caught, NPV 95%), the failed Indian transfer traced to a scaling error and corrected (AUC 0.90), class weighting for cancer vs dysplasia
-- [ ] Indian training data through a clinical partner, to calibrate the cut-off for Indian patients
+- [x] Breast detection: cancer vs normal (AUC 0.98), screening cut-off, independent check on a Spanish cohort
+- [ ] Indian training data through a clinical partner, to calibrate the cut-off for Indian patients (oral and breast)
 - [ ] Technical report on Zenodo, then a preprint
 - [ ] Clinician dashboard and API service (FastAPI, Docker)
 - [ ] Indian oral precancer cohort through a clinical partner

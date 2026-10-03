@@ -42,6 +42,15 @@ const SCR = (Object.values(detect.tasks)[0] as unknown as { screening?: ModelSet
   : null;
 const BAL = (detect.tasks.oral_cancer_dysplasia as unknown as { balanced?: ModelSet }).balanced ?? null;
 const EXT = (detect.external as unknown as { corrected?: { models: Record<string, Metrics & { auc_ci: [number, number] }>; biology: { pathway: string; train: number; external: number; same: boolean }[]; agree: number } }).corrected ?? null;
+type BreastData = {
+  accession: string; institute: string; city: string; country: string; n: number; positives: number; primaryP: number; repeats?: number;
+  models: Record<string, { auc: number; auc_sd: number; sensitivity: number; specificity: number }>;
+  screening?: ModelSet;
+  external?: { accession: string; institute: string; city: string; country: string; n: number; positives: number; agree: number; opposite: string[];
+               models: Record<string, Metrics & { auc_ci: [number, number] }> };
+};
+/** Breast detection (docs/osf_breast_diagnosis.md): cancer vs normal on GSE42568, screening cut-off, independent check. */
+const BREAST = (detect as unknown as { breast?: BreastData }).breast ?? null;
 const TARGET = (detect as unknown as { screeningTarget?: number | null }).screeningTarget ?? 0.9;
 
 const BUNDLED: DxData = {
@@ -509,6 +518,33 @@ export default function Detect() {
             </div>
             {!EXT && <p className="small" style={{ marginBottom: 0 }}>Every model either called almost everything cancer or almost everything normal. The most likely cause is the platform change, but with only {detect.external.n - detect.external.positives} normals nothing firmer can be said. <b>This is why SANKET's roadmap needs Indian training data from a clinical partner</b>, rather than a model trained abroad.</p>}
           </Reveal>
+
+          {BREAST && (
+            <Reveal className="panel">
+              <div className="row"><div className="h2">The same detection on breast tissue</div><span className="spacer" /><span className="chip chip-grey">Registered before it was run</span></div>
+              <p className="small" style={{ marginTop: 0 }}>Breast cancer is India's most common cancer. METABRIC, used for relapse prediction, holds tumours only, so detection uses {BREAST.accession} ({BREAST.institute}, {BREAST.country}): {BREAST.positives} breast cancers and {BREAST.n - BREAST.positives} normal breast tissues, scored on the same 12 pathways with the same quantum circuit and the same {BREAST.repeats ?? 10}-repeat cross-validation (plan: docs/osf_breast_diagnosis.md).</p>
+              <div className="scroll-x">
+                <table className="table">
+                  <thead><tr><th>Model</th><th>AUC</th>{BREAST.screening && <><th>Sensitivity, screening cut-off</th><th>Specificity, screening cut-off</th></>}{BREAST.external && <th>AUC on {BREAST.external.accession} (95% CI)</th>}</tr></thead>
+                  <tbody>
+                    {Object.entries(BREAST.models).map(([m, v]) => (
+                      <tr key={m}>
+                        <td>{MODEL_NAME[m] ?? m}</td>
+                        <td><b>{v.auc.toFixed(3)}</b> <span className="tiny muted">± {v.auc_sd.toFixed(3)}</span></td>
+                        {BREAST.screening && <><td>{pct(BREAST.screening[m].sensitivity)}</td><td>{pct(BREAST.screening[m].specificity)}</td></>}
+                        {BREAST.external && <td>{BREAST.external.models[m].auc.toFixed(2)} <span className="tiny muted">({BREAST.external.models[m].auc_ci[0].toFixed(2)}–{BREAST.external.models[m].auc_ci[1].toFixed(2)})</span></td>}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="grid" style={{ gap: 6, marginTop: 10 }}>
+                <p className="small" style={{ margin: 0 }}><b>Detection works on breast tissue, and quantum ties classical</b> (projected quantum vs RBF, p = {BREAST.primaryP.toFixed(2)}). The two quantum kernels have the highest mean AUC and vary least across folds, a descriptive observation, not a claimed advantage.</p>
+                {BREAST.screening && <p className="small" style={{ margin: 0 }}><b>Screening cut-off:</b> with only {BREAST.n - BREAST.positives} normals, the default cut-off calls almost everything cancer; the declared screening rule gives {pct(BREAST.screening.proj.sensitivity)} sensitivity and {pct(BREAST.screening.proj.specificity)} specificity for the quantum kernel.</p>}
+                {BREAST.external && <p className="small" style={{ margin: 0 }}><b>Independent check on {BREAST.external.accession}</b> ({BREAST.external.institute}, {BREAST.external.city}, {BREAST.external.country}; {BREAST.external.positives} cancers, {BREAST.external.n - BREAST.external.positives} normals), applied once: the ranking transfers for every model, and cancer moves the same way in both datasets for {BREAST.external.agree} of 12 pathways{BREAST.external.opposite.length ? ` (not ${BREAST.external.opposite.join(", ")})` : ""}. The quantum kernels transfer worst here (AUC {BREAST.external.models.proj.auc.toFixed(2)} against {BREAST.external.models.logistic.auc.toFixed(2)} for logistic regression), and as in the oral Indian check every model catches every cancer but clears only a minority of normals: <b>the ranking carries across labs, the cut-off needs local calibration.</b></p>}
+              </div>
+            </Reveal>
+          )}
         </>
       ) : (
         <Reveal className="panel">

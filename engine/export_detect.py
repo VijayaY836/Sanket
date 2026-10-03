@@ -1,8 +1,8 @@
 """Bundle the oral diagnosis cohort and its registered results for the app's Detect page.
 
 Reads out/oral_dx_cohort.json, out/oral_dx_external_cohort.json and out/results_classify_oral_*.json (built by
-engine.oral_diagnosis and engine.classify), plus the declared amendments out/results_amend_a*.json when present (built by
-engine.oral_amendments), and writes a compact web/src/data/oral_detect.json.
+engine.oral_diagnosis and engine.classify), plus the declared amendments out/results_amend_a*.json (engine.oral_amendments) and the breast detection results
+out/results_*breast*.json (engine.classify, engine.breast_detect) when present, and writes a compact web/src/data/oral_detect.json.
 
 Also writes web/src/data/hallmark12.json: the member genes of the 12 Hallmark pathways in config.yaml, which the app
 uses to score uploaded gene-activity files in the browser exactly as engine.pathways does.
@@ -90,6 +90,25 @@ def main():
             "biology": [{"pathway": b["pathway"], "train": round(b["diff_train"], 3), "external": round(b["diff_external"], 3),
                          "same": b["same_direction"]} for b in a1["biology"]],
             "agree": a1["biology_agree"]}
+    if (OUT / "results_classify_breast_cancer_normal.json").exists():   # breast detection, docs/osf_breast_diagnosis.md
+        bc = load("breast_dx_cohort.json"); br = load("results_classify_breast_cancer_normal.json")
+        prim = next(t for t in br["tests_vs_projected"] if t["primary"])
+        g = bc.get("geo") or {}
+        breast = {"accession": g.get("accession"), "institute": g.get("contact_institute"), "city": g.get("contact_city"),
+                  "country": g.get("contact_country"), "n": br["n"], "positives": br["positives"], "repeats": br["cv"]["repeats"],
+                  "models": {m: {k: round(v[k], 4) for k in keep if k in v} for m, v in br["summary"].items()},
+                  "primaryP": round(prim["p"], 4)}
+        if (OUT / "results_breast_screening.json").exists():
+            bs = load("results_breast_screening.json")
+            breast["screening"] = {m: {k: r4(v.get(k)) for k in metric_keys} for m, v in bs["summary"].items()}
+        if (OUT / "results_breast_external.json").exists():
+            be = load("results_breast_external.json"); ge = be.get("geo") or {}
+            breast["external"] = {"accession": ge.get("accession"), "institute": ge.get("contact_institute"), "city": ge.get("contact_city"),
+                                  "country": ge.get("contact_country"), "n": be["n"], "positives": be["positives"],
+                                  "models": {m: {k: r4(v.get(k)) for k in ("auc", "sensitivity", "specificity", "auc_ci")} for m, v in be["summary"].items()},
+                                  "agree": be["biology_agree"],
+                                  "opposite": [b["pathway"] for b in be["biology"] if not b["same_direction"]]}
+        out["breast"] = breast
     path = ROOT / "web/src/data/oral_detect.json"
     path.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
     print(f"wrote {path} ({path.stat().st_size // 1024} KB, {len(out['samples'])} samples)")
