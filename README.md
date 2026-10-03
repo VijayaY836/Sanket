@@ -40,6 +40,8 @@
 
 <img src="docs/screenshots/overview.jpg" alt="SANKET overview: a scroll-driven story that follows one biopsy from 20,000 genes to a quantum risk estimate" width="900"/>
 
+Prototype Link : https://sanket-sepia.vercel.app/
+
 </div>
 
 ---
