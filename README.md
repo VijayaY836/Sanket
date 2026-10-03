@@ -17,12 +17,14 @@
 [![Pre-registered](https://img.shields.io/badge/analyses-pre--registered%20on%20OSF-13807e)](https://osf.io)
 [![Status](https://img.shields.io/badge/status-research%20prototype-a86e0a)](#limitations-and-intended-use)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2b7a3d)](LICENSE)
+[![Technical report](https://img.shields.io/badge/technical%20report-PDF-1f3864)](docs/SANKET_technical_report.pdf)
 
 **Team Yukthi6G** (Team ID 165798) · BVRIT Hyderabad College of Engineering for Women
 
 [At a glance](#at-a-glance) ·
 [Overview](#overview) ·
 [Key results](#key-results) ·
+[Technical report (PDF)](docs/SANKET_technical_report.pdf) ·
 [Two cancers](#two-cancers-one-platform) ·
 [Detect: oral](#detecting-oral-cancer-and-dysplasia-from-tissue) ·
 [Detect: breast](#detecting-breast-cancer-from-tissue) ·
