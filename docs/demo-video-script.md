@@ -1,188 +1,157 @@
-# SANKET demo video: full script (≈ 5 minutes)
+# SANKET demo video script (3 minutes)
 
-**Goal:** in five minutes a judge should remember three things:
-1. **Same white patch, two different futures.** SANKET tells them apart from gene activity.
-2. **It is real.** A working app, real patients, and an actual run on IBM's quantum computer.
-3. **It is honest.** We test whether quantum helps before claiming it, and show exactly where it does.
+SIH26139 · Team Yukthi6G
 
-**Pace:** about 140 spoken words per minute. The narration below is about 610 words (about 4.5 minutes spoken), which leaves room for pauses while things animate. Read it calmly. Silence while something animates is fine.
+## At a glance
 
----
+The video runs 3:00 in ten scenes: a 12-second title, 2 minutes 34 seconds of the live web app, and a 14-second close. It needs one narrator and about 430 spoken words, a calm 2.4 words per second. The structure follows the judges' questions in order: problem, solution, proof it works, proof it is real, proof it scales across cancers, impact.
 
-## Before you record (do all of this first)
+| # | Time | On screen | What the judge should take away |
+| --- | --- | --- | --- |
+| 1 | 0:00 – 0:12 | PPT slide 1 (title) | Team, PS ID, one-line idea |
+| 2 | 0:12 – 0:32 | App: Overview hero, "Same white patch" | The clinical problem is real and unsolved |
+| 3 | 0:32 – 0:50 | App: Overview scroll story | How SANKET works |
+| 4 | 0:50 – 1:08 | App: Detect | It detects cancer and precancer, and was tested on Indian patients |
+| 5 | 1:08 – 1:45 | App: Patient case | It predicts when a precancer may turn malignant |
+| 6 | 1:45 – 1:58 | App: Constellation | The quantum part is real and biology-shaped |
+| 7 | 1:58 – 2:16 | App: Hardware | It ran on a real IBM quantum computer |
+| 8 | 2:16 – 2:32 | App: sidebar switch to Breast cancer, then Detect | One platform, three cancers; detection for oral and breast (2,573 samples) |
+| 9 | 2:32 – 2:46 | App: Evidence | We test honestly |
+| 10 | 2:46 – 3:00 | PPT slide 5, then slide 6 (QR) | Impact for India, and where to verify |
 
-**Machine and browser**
-- Use Chrome, full screen (F11), window at **1920 × 1080**, browser zoom **100 %**.
-- Close every other tab, mute notifications (Do Not Disturb), hide the bookmarks bar.
-- Run the app: `cd web && npm run dev`, then open the localhost link.
-- Use the **light theme** (the "Theme" button at the bottom of the sidebar: set it to *light*). It looks cleaner on video. The dark heroes stay dark anyway.
+## Before you record
 
-**Load the real data (important)**
-- Go to **Data**, click **Choose file** under *Load a cohort* and pick **`out/cohort.json`**.
-- Check the sidebar says **"Real cohort loaded"** and **"Run on IBM hardware"**, and that the yellow *Synthetic data* banner is gone.
+Set everything up so each scene is one click away; a 3-minute video has no time for loading screens or searching.
 
-**Pre-warm the slow pages** (so nothing loads on camera)
-- Open **Evidence** once and wait until the headline says *"Quantum and classical kernels perform at parity on this cohort"* (about 15 s).
-- Open **Readiness check**, click **Use the loaded cohort (86 patients)**, then **Run readiness check**, and wait for the **Verdict** box. You can either show it already done, or record the click and cut the wait.
-- Open **When quantum wins**, click **Run experiment** once. It finishes in a few seconds; it will say **Run again** after.
-- Go back to **Overview** and scroll to the very top before you start.
-
-**Recording**
-- Record the screen with OBS Studio (free) at 1080p, 30 fps. Record voice separately or with a good headset mic in a quiet room. A phone voice memo held 20 cm from your mouth is better than a laptop mic.
-- Easiest workflow: **record the screen first in silence, following the "DO" column; then record the voice-over reading the "SAY" column, and line them up in the editor** (CapCut, DaVinci Resolve or Clipchamp). This gives a much smoother result than talking while clicking.
-- Move the mouse slowly and deliberately. Pause the cursor on whatever you are talking about. Never wiggle it.
-- Add soft background music at about 10 % volume (YouTube Audio Library, "cinematic" or "ambient tech").
-- Add burned-in subtitles (CapCut auto-captions, then fix spelling of *SANKET*, *qubit*, *ibm_fez*, *Kaplan–Meier*).
-
-**The two demo patients (both have the same biopsy diagnosis: hyperplasia)**
-
-| Patient | Age, sex | SANKET 3-year risk | Tier shown | What actually happened |
-|---|---|---:|---|---|
-| **GSM652833** | 71, male | **53 %** | High risk: refer to oral oncology | **Developed cancer at 3.8 years** |
-| **GSM652770** | 60, female | **13 %** | Low risk: routine surveillance | **Cancer-free at 11.6 years** |
-
-Find each one by typing the ID into the **Search** box on the Patient case page.
-
----
+- [ ] Run the app locally (`cd web && npm run dev`), or use the single-file build (`npm run build:single`) so nothing depends on Wi-Fi
+- [ ] The app opens on real oral cancer patients. Check the sidebar shows **Oral cancer** selected and "Real patients" at the bottom; if not, click Oral cancer
+- [ ] Pick your demo patient in advance (GSM652763 is the one in the screenshots) and rehearse its outcome reveal and FHIR report
+- [ ] Light theme, browser at 100% zoom, full screen (F11), bookmarks bar and extensions hidden, notifications off
+- [ ] Record at 1920×1080, 30 fps (OBS Studio or the Windows/Mac built-in recorder)
+- [ ] Open the PPT in a second window, already on slide 1, in slideshow mode
+- [ ] External or earphone mic, quiet room, phone on silent; record voice separately if your screen recorder makes keyboard noise
+- [ ] Read the full script aloud twice with a timer before the real take
 
 ## The script
 
-### 0:00 – 0:20 · Cold open: the problem
+Each scene lists what is on screen, what your hands do, and the exact words. The word counts are sized to the time slot; if you run long, use the trims in the last section.
 
-| DO | SAY |
-|---|---|
-| Start on **Overview**, at the very top. The particle animation and the headline *"Same white patch. Two different futures."* are on screen. Hold still for 2 seconds. | *"Two patients. The same white patch in the mouth. Under the microscope, they look exactly the same."* |
-| Hold. Slow push-in in the editor (optional, 105 % zoom). | *"One of them will develop oral cancer. The other never will. Today, no doctor can tell which. This is SANKET, and it can."* |
+### Scene 1 · Title (0:00 – 0:12)
 
-> Title card overlay (editor, 2 s, bottom-left): **SANKET · Quantum Intelligence for Cancer Prevention · Team Yukthi6G · SIH26139**
+**Show:** PPT slide 1, title page.
 
-### 0:20 – 1:00 · How it works (scroll story)
+**Do:** Hold still. No clicks.
 
-| DO | SAY |
-|---|---|
-| Scroll down slowly to chapter 2: *"Inside every biopsy, 20,000 genes."* | *"Every biopsy carries the activity of twenty thousand genes."* |
-| Scroll to chapter 3: *"Compressed into 12 pathways a biologist can read."* | *"We compress them into twelve biological pathways: cell growth, DNA repair, hypoxia, inflammation. Chosen from biology, never from outcomes."* |
-| Scroll to chapter 4: the ring of 12 qubits. | *"Each pathway becomes one qubit, and the qubits are wired exactly like the biology: two pathways interact only if they share genes."* |
-| Scroll to chapter 5: the circuit. | *"Every patient runs through this quantum circuit."* |
-| Scroll to chapter 6: the constellation of dots. Point at a pink cluster, then a teal one. | *"Patients with similar quantum states have similar futures. Pink went on to develop cancer. Teal stayed cancer-free."* |
+> Hello, we are Team Yukthi6G. Our problem statement is SIH26139: a hybrid quantum machine learning platform for early disease detection. Our solution is called SANKET.
 
-### 1:00 – 2:05 · The patient case (the "wow" moment)
+### Scene 2 · The problem (0:12 – 0:32)
 
-| DO | SAY |
-|---|---|
-| Click **Patient case** in the sidebar. Type **GSM652833** in Search, click it. Let the four stages animate (about 4 s): genes → pathways → qubits → prediction. | *"Here is a real patient from the GEO oral precancer study. Seventy-one years old, diagnosed with hyperplasia, the mildest finding there is. SANKET reads twenty thousand genes, scores twelve pathways, encodes them on twelve qubits..."* |
-| The ring fills to **53 %**. Hover over *"High risk: Consider referral to oral oncology"*. | *"...and estimates a fifty-three percent chance of cancer within three years. High risk: refer to oncology."* |
-| Click **Reveal what actually happened**. The stamp drops: **Developed cancer at 3.8 years**. Pause 2 seconds. | *"The model never saw this outcome. This patient developed cancer."* |
-| Clear the search, type **GSM652770**, click it, let it animate. Ring shows **13 %**, *Low risk: routine surveillance*. Click **Reveal**: **Cancer-free at 11.6 years**. | *"Now a second patient. Same diagnosis. Same white patch. Thirteen percent risk. Eleven years later: still cancer-free. Same white patch, two different futures, told apart from gene activity alone."* |
-| Scroll down to **Why this risk** (the bars). | *"And it explains itself, pathway by pathway, so a clinician can see why."* |
-| Scroll up and click **FHIR report**. Let the modal show for 2 seconds, then close it. | *"The result exports as a standard HL7 FHIR report, ready for digital health records."* |
+**Show:** App, Overview page, the hero "Same white patch. Two different futures."
 
-### 2:05 – 2:35 · The circuit
+**Do:** Switch from the PPT to the browser. Let the particle background move for a second before you speak.
 
-| DO | SAY |
-|---|---|
-| Click **Circuit and noise**. The hero *"The circuit, gate by gate."* is visible. Scroll a little to the feature-map panel and click **Run circuit**. The steps play and the twelve Bloch spheres move. | *"This is the actual circuit, simulated exactly in the browser and verified against IBM's Qiskit to fifteen decimal places."* |
-| Scroll to **Hardware cost on IBM Heron**. Point at the green bottom row: **"SANKET, 1 step: run on ibm_fez", 49 gates**. | *"Because it follows the biology, it is small: about five times fewer two-qubit gates than the standard quantum feature map. Small enough for today's real quantum hardware."* |
+> Oral cancer is India's second most common cancer, and most cases are caught late. Many begin as a white patch in the mouth called leukoplakia. About one in five turns into cancer, but under the microscope the dangerous ones look exactly like the harmless ones. Doctors cannot tell which patient needs urgent follow-up.
 
-### 2:35 – 3:05 · Real quantum hardware
+### Scene 3 · How SANKET works (0:32 – 0:50)
 
-| DO | SAY |
-|---|---|
-| Click **Hardware**. The hero shows **86 · 0.98 · 49 · 2**. Hold 2 seconds. | *"So we ran it. All eighty-six patients, on IBM's 156-qubit Heron processor, ibm_fez."* |
-| Scroll to **What finite shots look like**. Point at the solid (measured) vs dashed (exact) arrows. | *"Solid arrows are measured on the quantum computer. Dashed arrows are the exact simulation. They agree. The similarity between patients computed on real hardware matches simulation at zero point nine eight."* |
+**Show:** Overview scroll story: tissue → genes → pathways → qubits → circuit.
 
-### 3:05 – 3:55 · The honest evidence
+**Do:** Scroll slowly and steadily, one chapter per sentence. Stop on "Each patient runs through the circuit".
 
-| DO | SAY |
-|---|---|
-| Click **Evidence**. Hero: *"Tested like a clinical model."* Hold 1 second. | *"Now the part most quantum projects skip: does the quantum part actually help?"* |
-| Scroll slowly through the **stacked cards**. Card 1: **0.55**, *"perform at parity"*. | *"We gave quantum and classical models the same data and the same tuning. On real clinical outcomes, they tie. We report that."* |
-| Card 2: **0.994**, *"the qubits barely entangle."* | *"And we found out why: at the setting the data chooses, the qubits barely entangle, so the quantum model behaves almost classically."* |
-| Card 3: **g 2.5**, headroom. Card 4: **0.98**, hardware. Card 5: the clinical referral rule. | *"There is room for quantum in principle, the model survives real hardware, and a referral rule built on it catches over ninety percent of cancers."* |
+> SANKET reads the gene activity in a biopsy. It compresses twenty thousand genes into twelve biological pathways, like DNA repair and inflammation. Each pathway becomes one qubit, and qubits interact only where pathways share genes, so the circuit is shaped like the biology.
 
-### 3:55 – 4:30 · Where quantum wins, and a tool for everyone
+### Scene 4 · Detect: normal, precancer or cancer? (0:50 – 1:08)
 
-| DO | SAY |
-|---|---|
-| Click **When quantum wins**. Show the live experiment result (already run): the purple quantum line above the classical one on the left chart. | *"When data does have quantum structure, the picture changes. Here the quantum model pulls ahead with just ten training patients, and in our full benchmark it wins clearly: zero point nine seven against zero point six six."* |
-| Click **Readiness check**. Show the **Verdict** box: *"Quantum matches classical on your outcome: choose classical."* | *"So we turned this into a tool. Upload any medical dataset, and SANKET tells you honestly whether quantum is worth it: go, wait, or stay classical. For this data, it says classical, and it is right."* |
+**Show:** Detect page: the hero numbers (0.98 · 0.95 · 87% · 0.90), then the tissue map.
 
-### 4:30 – 5:00 · Close
+**Do:**
 
-| DO | SAY |
-|---|---|
-| Click **Overview** and scroll to the last chapter: *"Tested honestly. Run on real quantum hardware."* with the four numbers. | *"Oral and breast cancer are India's two most common cancers. Eighty percent of oral cancers here are found late."* |
-| Hold on the four numbers. | *"SANKET: real patients, two cancers, a working platform, an actual run on a quantum computer, and an honest answer to when quantum helps."* |
-| Cut to the **logo end card** (`docs/logo.png` on a white background, 4 s). | *"Built for India's National Quantum Mission. We are Team Yukthi6G. Thank you."* |
+1. Click Detect in the sidebar and hold on the hero numbers for one sentence.
+2. Scroll to the map and click one yellow dysplasia sample so its twelve qubits and neighbour estimate appear.
+3. Click reveal so the pathologist's diagnosis shows.
 
-> End card text: **SANKET · Quantum Intelligence for Cancer Prevention** · Team Yukthi6G · SIH26139 · github.com/VijayaY836/sanket
+> First, SANKET reads the tissue: normal, precancer or cancer. It tells cancer from normal tissue with an AUC of zero point nine eight, and with a screening cut-off it catches eighty-seven percent of precancers. On an independent Indian cohort from Tata Memorial Centre, it reaches zero point nine.
 
----
+### Scene 5 · Predict: a patient case (1:08 – 1:45)
 
-## Timing check
+**Show:** Patient case page, patient GSM652763.
 
-| Section | Time | Length |
-|---|---|---:|
-| Cold open | 0:00 – 0:20 | 20 s |
-| How it works | 0:20 – 1:00 | 40 s |
-| Patient case | 1:00 – 2:05 | 65 s |
-| Circuit | 2:05 – 2:35 | 30 s |
-| Real hardware | 2:35 – 3:05 | 30 s |
-| Honest evidence | 3:05 – 3:55 | 50 s |
-| Where quantum wins + Readiness | 3:55 – 4:30 | 35 s |
-| Close | 4:30 – 5:00 | 30 s |
+**Do:**
 
-**If you run long:** cut the FHIR report (−8 s) and the Circuit section's first line (−8 s). **If you must hit 4 minutes:** drop the Circuit section entirely and fold "five times fewer gates" into the Hardware section.
+1. Click Patient case in the sidebar and select GSM652763. Let the pipeline animation finish.
+2. Move the cursor around the risk ring, then scroll to the cancer-free curve.
+3. Hover "Why this risk", then "Most similar patients".
+4. Click FHIR report and let the JSON appear for two seconds.
 
----
+> Then, for a precancer, SANKET predicts the future. Here is a real patient from a public oral precancer study. It gives the risk of cancer within three years and a full cancer-free curve, not just a yes or no. It explains why, showing the pathways driving the risk and the most similar past patients. When too few similar patients exist, SANKET refuses to guess and refers the case. And with one click it produces an HL7 FHIR report, the standard India's digital health mission builds on.
 
-## Words to use, and words to avoid
+### Scene 6 · The quantum core (1:45 – 1:58)
 
-Judges in quantum and medicine will check claims. Every number in this script is real and comes from the repository.
+**Show:** Constellation page.
 
-**Say:**
-- "ties", "matches classical", "at parity" on real outcomes
-- "wins on data with quantum structure"
-- "ran on IBM's quantum computer", "86 patients on ibm_fez"
-- "research prototype", "decision support"
+**Do:** Open Constellation and let the 12 Bloch spheres animate. Hover one sphere as you say "twelve qubits".
 
-**Never say:**
-- "quantum beats classical at predicting cancer" (it does not on real outcomes)
-- "diagnoses cancer" or "replaces the biopsy" (it is decision support after biopsy)
-- "100 % accurate" or any accuracy you cannot point to on screen
-- "first in the world" (cannot be verified)
+> Here, every patient becomes twelve qubits, shown as Bloch spheres. Patients with similar quantum states tend to have similar futures, and that similarity is our quantum kernel.
 
-**If you get asked "how much would this cost a patient?" (one line):**
-*"SANKET reads only 12 biological pathways, under 2,400 genes instead of 20,000, so it can move from whole-transcriptome profiling to a small targeted gene panel that costs a fraction as much, and the quantum step itself takes seconds per patient."*
+### Scene 7 · Real quantum hardware (1:58 – 2:16)
 
-(If pushed: the 12 Hallmark gene sets have at most 200 genes each; trimming them to a minimal clinical panel is planned work, not done yet.)
+**Show:** Hardware page: hero (86 · 0.98 · 49), then measured vs simulated Bloch vectors.
 
-**If you get asked "so why use quantum at all?":**
-*"Three reasons. It matches the best classical kernel on real outcomes while running on hardware five times smaller than standard quantum circuits. It wins clearly where data has quantum structure, which is where future quantum-sensor medical data is heading. And our Readiness Check tells any hospital in advance whether quantum is worth the cost for their data, which no one else offers."*
+**Do:** Pause on the hero numbers for a full sentence, then scroll to the measured Bloch spheres.
 
----
+> We ran all eighty-six patients on IBM's 156-qubit Heron processor, ibm\_fez. Each circuit needs only forty-nine two-qubit gates, and the hardware results agree with exact simulation at zero point nine eight: about five times fewer gates than the standard quantum feature map.
 
-## Quick facts to have ready (for Q&A or captions)
+### Scene 8 · One pipeline, three cancers (2:16 – 2:32)
 
-| Fact | Value |
-|---|---|
-| Oral cohort | GEO GSE26549: 86 patients with oral premalignant lesions, 35 progressed to cancer |
-| Breast cohort | METABRIC: 1,975 patients, 800 relapses |
-| Real patients across three cancers | 2,133 (oral, breast, leukaemia) |
-| Hardware run | IBM `ibm_fez` (Heron, 156 qubits), job `davbc6il7guc73cekc8g`, 86 patients × 1,024 shots |
-| Hardware agreement | kernel 0.98, Bloch vectors 0.96 correlation |
-| Circuit size | 49 two-qubit gates on hardware; 188 vs 906 for the standard ZZ map (≈ 5×) |
-| Real-outcome result | METABRIC C-index 0.582 vs 0.582 (p = 0.98); oral nested CV 0.554 vs 0.580 |
-| Quantum win (engineered data) | AUC 0.97 vs 0.66 with 50 training patients |
-| Why parity | mean Bloch length 0.994 at the chosen setting (1 = no entanglement) |
-| Referral rule | catches ≥ 90 % of progressions |
-| Rigour | pre-registered on OSF, equal tuning budgets, nested and repeated cross-validation |
+**Show:** the sidebar's **Oral cancer / Breast cancer** switch, the Overview hero in breast cancer mode ("Same diagnosis. Two different futures."), then the Detect page's breast cancer numbers.
 
----
+**Do:**
 
-## Optional polish (if you have time)
+1. Click **Breast cancer** in the sidebar. The page stays up for about 5 seconds while the quantum kernels build; cut that wait in editing.
+2. Hold on the breast cancer Overview hero for one sentence.
+3. Click Detect so the breast cancer hero numbers (0.98, 89%, 94%) are on screen as you say "zero point nine eight".
 
-- **Split-screen moment (1:40):** put GSM652833 and GSM652770 side by side in the editor, both ring results visible, with the caption *"Same diagnosis. Different futures."*
-- **Lower-third captions** for each key number when it first appears: "53 % risk → developed cancer", "13 % risk → cancer-free 11.6 years", "86 patients on IBM ibm_fez", "0.98 agreement".
-- **Face cam:** a 5-second intro of the team at the start, or a small circular face cam in a corner, makes it personal. Keep it off during the patient case so the screen stays clean.
-- **Phone shot (5 s):** show the app on a phone (the layout works at phone width) during the close, to say "works anywhere".
+> The same pipeline, changed only by a config file, detects breast cancer in tissue at an AUC of zero point nine eight, predicts five-year relapse for 1,975 breast cancer patients, and tells two leukaemia types apart: 2,573 real samples across three cancers.
+
+### Scene 9 · Honest evidence (2:32 – 2:46)
+
+**Show:** Evidence page stacked findings (breast cancer is still selected, which is fine: it shows the same tie).
+
+**Do:** Scroll through two finding cards on the Evidence page. Pause on the "Quantum and classical kernels perform at parity" card.
+
+> Every analysis was written down before it was run. Where data has quantum structure, our kernel wins clearly; on today's clinical outcomes it ties classical, and we say so.
+
+### Scene 10 · Impact and close (2:46 – 3:00)
+
+**Show:** PPT slide 5 (Impact), then slide 6 with the QR code for the last 5 seconds.
+
+**Do:** Switch back to slideshow. Click to slide 6 on "Scan the code". Hold the QR on screen until the video ends.
+
+> SANKET covers India's two most common cancers, runs on a laptop with free-tier IBM Quantum, and is ready for Indian quantum hardware. Scan the code to explore everything. We are Team Yukthi6G. Thank you.
+
+## Recording and editing
+
+Record the screen and the voice in separate passes: screen first while you follow the Do steps, voice second while you watch it back. It is far easier than talking and clicking at once.
+
+- **Pace:** let every click land before the next sentence. Judges watch the screen, so the screen must match the words.
+- **Cursor:** move slowly and point at the number you are saying. Turn on cursor highlighting in OBS if available.
+- **Face cam (optional):** a small circle in a corner for scenes 1 and 10 only. It shows a real team, but keep it off the app scenes.
+- **Captions:** burn in short captions for the key numbers (86 patients, 0.98, 49 gates, 5× fewer). Many judges watch on mute.
+- **Music:** soft background track at about 10% volume, or none. Never louder than the voice.
+- **Editing:** cut every pause longer than one second and every loading moment. Add a 1-second fade only at the start and end.
+- **Say the numbers exactly as the deck does.** If the video and PPT disagree on a figure, judges notice.
+- **Do not:** read slides aloud word for word, show code or a terminal, apologise for anything, or claim it diagnoses cancer. It is screening and referral support.
+- **Upload:** export 1080p MP4 and check SIH's current submission rules for length, platform and visibility (usually an unlisted YouTube or Drive link). Test the link in an incognito window.
+
+## If you run long or short
+
+Time your first full take. If it is over 3:00, make these cuts in order until it fits; never speed up your speech instead.
+
+1. Scene 5: drop "When too few similar patients exist, SANKET refuses to guess and refers the case" (saves \~5 s).
+2. Scene 2: drop "Many begin as a white patch in the mouth called leukoplakia" and say "About one in five oral precancers turns into cancer" instead (saves \~4 s).
+3. Scene 3: drop "like DNA repair and inflammation" (saves \~2 s).
+4. Never cut Scene 4 or Scene 8: they are the only places detection, the Indian cohort, breast cancer and leukaemia appear on screen.
+
+If it is under 2:45, add this line at the end of Scene 7, while the measured Bloch spheres are on screen:
+
+> Solid arrows are what IBM's hardware measured; dashed arrows are the exact simulation. They line up almost perfectly.
