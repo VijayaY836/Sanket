@@ -24,7 +24,7 @@ The app has **two modes**, chosen with the **Oral cancer / Breast cancer** switc
 
 ## The two modes and the benchmark
 
-Keep these three lines straight in the narration, the captions and the deck. Every number below is in the README and the app.
+In one line: **2,573 real samples from seven cohorts, covering oral cancer and breast cancer plus a leukaemia benchmark.** Keep these three columns straight in the narration, the captions and the deck. Every number below is in the README and the app.
 
 | | Oral cancer mode | Breast cancer mode | Leukaemia (benchmark) |
 | --- | --- | --- | --- |
@@ -171,7 +171,7 @@ Record the screen and the voice in separate passes: screen first while you follo
 - **Music:** soft background track at about 10% volume, or none. Never louder than the voice.
 - **Editing:** cut every pause longer than one second and every loading moment, especially the breast kernel build in scene 8. Add a 1-second fade only at the start and end.
 - **Say the numbers exactly as the deck does.** If the video and PPT disagree on a figure, judges notice.
-- **Do not:** call leukaemia a third mode or say "three cancers" without "benchmark", read slides aloud word for word, show code or a terminal, apologise for anything, or claim it diagnoses cancer. It is screening and referral support.
+- **Do not:** call leukaemia a third mode or say "three cancers" (say "two cancers plus a leukaemia benchmark"), read slides aloud word for word, show code or a terminal, apologise for anything, or claim it diagnoses cancer. It is screening and referral support.
 - **Upload:** export 1080p MP4 and check SIH's current submission rules for length, platform and visibility (usually an unlisted YouTube or Drive link). Test the link in an incognito window.
 
 ## If you run long or short
