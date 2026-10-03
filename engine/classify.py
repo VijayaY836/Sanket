@@ -52,9 +52,9 @@ def load_task(task, max_n):
             rng = np.random.default_rng(3); P = [P[i] for i in sorted(rng.choice(len(P), max_n, replace=False))]
         y = np.array([int(sub[p["id"]].lower() == "basal") for p in P])
         return coh, np.array([p["pathways"] for p in P]), y, f"basal-like vs other subtypes ({col})"
-    if task in ORAL_TASKS:
-        coh = load_cohort(OUT / "oral_dx_cohort.json")
-        pos, neg = ORAL_TASKS[task]
+    if task in ORAL_TASKS or task in BREAST_TASKS:
+        coh = load_cohort(OUT / DX_COHORT[task])
+        pos, neg = DX_CLASSES[task]
         P = [p for p in coh["patients"] if p["diagnosis"] in (pos, neg)]
         return coh, np.array([p["pathways"] for p in P]), np.array([int(p["diagnosis"] == pos) for p in P]), f"{pos} vs {neg}"
     raise SystemExit(f"unknown task {task}")
@@ -62,14 +62,17 @@ def load_task(task, max_n):
 
 ORAL_TASKS = {"oral_cancer_normal": ("cancer", "normal"), "oral_dysplasia_normal": ("dysplasia", "normal"),
               "oral_cancer_dysplasia": ("cancer", "dysplasia")}
+BREAST_TASKS = {"breast_cancer_normal": ("cancer", "normal")}   # registered in docs/osf_breast_diagnosis.md
+DX_CLASSES = {**ORAL_TASKS, **BREAST_TASKS}
+DX_COHORT = {**{t: "oral_dx_cohort.json" for t in ORAL_TASKS}, **{t: "breast_dx_cohort.json" for t in BREAST_TASKS}}
 
 
 def task_groups(task):
     """Individual identifiers if any individual contributed more than one sample (else None: ordinary stratified CV)."""
-    if task not in ORAL_TASKS:
+    if task not in DX_CLASSES:
         return None
-    coh = load_cohort(OUT / "oral_dx_cohort.json")
-    pos, neg = ORAL_TASKS[task]
+    coh = load_cohort(OUT / DX_COHORT[task])
+    pos, neg = DX_CLASSES[task]
     g = [p["meta"].get("individual") for p in coh["patients"] if p["diagnosis"] in (pos, neg)]
     return np.array(g) if all(g) and len(set(g)) < len(g) else None
 
@@ -199,7 +202,7 @@ def corrected_ttest(d, n_train, n_test, k, r):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--task", required=True, choices=["golub", "metabric_basal", *ORAL_TASKS])
+    ap.add_argument("--task", required=True, choices=["golub", "metabric_basal", *ORAL_TASKS, *BREAST_TASKS])
     ap.add_argument("--external", action="store_true", help="oral_cancer_normal only: train on GSE30784, apply once to GSE23558")
     ap.add_argument("--repeats", type=int, default=None)
     ap.add_argument("--max-n", type=int, default=1200, help="patient cap for large cohorts (random subset)")
@@ -212,7 +215,7 @@ def main():
         return external_check(cfg)
     coh, Z, y, label = load_task(a.task, a.max_n)
     groups = task_groups(a.task)
-    reps = a.repeats or (10 if len(y) < 200 or a.task in ORAL_TASKS else 3)
+    reps = a.repeats or (10 if len(y) < 200 or a.task in DX_CLASSES else 3)
     if groups is not None:
         print(f"Grouped CV: {len(set(groups))} individuals for {len(y)} samples")
     print(f"{coh['name']}: {len(y)} patients, task {label}, positives {y.sum()}")

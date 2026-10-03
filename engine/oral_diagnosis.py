@@ -7,6 +7,8 @@ same 12 Hallmark pathways on its own; expression values are never pooled across 
     python -m engine.oral_diagnosis --dataset gse23558 --inspect #   repeated individuals, submitter (no model output)
     python -m engine.oral_diagnosis                              # GSE30784 -> out/oral_dx_cohort.json
     python -m engine.oral_diagnosis --dataset gse23558           # GSE23558 -> out/oral_dx_external_cohort.json
+    python -m engine.oral_diagnosis --dataset gse42568           # breast: GSE42568 -> out/breast_dx_cohort.json
+    python -m engine.oral_diagnosis --dataset gse10810           # breast: GSE10810 -> out/breast_dx_external_cohort.json
     python -m engine.oral_diagnosis --accession GSE12345         # any GEO tissue dataset -> out/dx_GSE12345.json,
                                                                  #   loadable on the app's Detect page
 
@@ -31,7 +33,15 @@ DATASETS = {
                  "name": "GSE30784 oral tissue diagnosis", "role": "main"},
     "gse23558": {"accession": "GSE23558", "out": "oral_dx_external_cohort.json", "expected": None,
                  "name": "GSE23558 oral cancer (external check)", "role": "external"},
+    # Breast detection, registered in docs/osf_breast_diagnosis.md
+    "gse42568": {"accession": "GSE42568", "out": "breast_dx_cohort.json", "expected": {"cancer": 104, "normal": 17},
+                 "name": "GSE42568 breast tissue diagnosis", "role": "main",
+                 "disease": "Breast: normal breast tissue, invasive breast cancer"},
+    "gse10810": {"accession": "GSE10810", "out": "breast_dx_external_cohort.json", "expected": None,
+                 "name": "GSE10810 breast cancer (external check)", "role": "external",
+                 "disease": "Breast: normal breast tissue, breast cancer"},
 }
+ORAL_DISEASE = "Oral cavity: normal mucosa, dysplasia, squamous cell carcinoma"
 CLASS_PATTERNS = {
     "dysplasia": re.compile(r"dysplas", re.I),
     "cancer": re.compile(r"carcinoma|cancer|\boscc\b|\bscc\b|tumou?r|malignan", re.I),
@@ -128,7 +138,7 @@ def main():
         return
     exp = spec["expected"]
     if exp and dict(counts) != exp and not a.allow_mismatch:
-        raise SystemExit(f"Class counts {dict(counts)} differ from the registered {exp}. Record this in docs/osf_oral_diagnosis.md, then re-run with --allow-mismatch.")
+        raise SystemExit(f"Class counts {dict(counts)} differ from the registered {exp}. Record this in the analysis plan (docs/osf_*_diagnosis.md), then re-run with --allow-mismatch.")
 
     keep = lab.dropna().index
     expr = expression_by_gene(gse)
@@ -149,7 +159,7 @@ def main():
                          "pathwaysES": [round(float(v), 5) for v in esscores.loc[sid, keys]],
                          "diagnosis": lab[sid], "meta": meta})
     cohort = {
-        "name": spec["name"], "disease": "Oral cavity: normal mucosa, dysplasia, squamous cell carcinoma", "source": "real",
+        "name": spec["name"], "disease": spec.get("disease", ORAL_DISEASE), "source": "real",
         "task": "classification", "role": spec["role"], "classes": dict(counts), "geo": origin,
         "description": f"ssGSEA Hallmark scores from {spec['accession']}, z-scored within this dataset; raw scores kept for external transfer.",
         "pathways": [{"key": k, "label": l, "short": s, "group": g} for k, l, s, g in cfg["pathways"]], "edges": edges,

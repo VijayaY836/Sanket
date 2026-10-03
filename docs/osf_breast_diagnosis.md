@@ -46,4 +46,7 @@ All three results, whichever way they go, in `out/results_classify_breast_cancer
 
 ## Amendments
 
-*(none yet)*
+### N1 · 3 October 2026 · Inspection notes (before any scoring)
+
+- GSE42568: 104 cancer, 17 normal, all labelled, no repeated individuals. Matches the plan.
+- GSE10810: 31 cancer, 27 normal, all labelled. Many samples are tumour–normal pairs from the same women ("Tumor paired N" in the sample text), which the loader does not detect as repeated individuals. This does not affect H3: the check is applied once with no cross-validation, so pairing cannot leak information between training and testing. The bootstrap 95% interval treats samples as independent and is therefore slightly optimistic; it is reported as descriptive.

@@ -1,0 +1,164 @@
+{
+ "task": "breast_cancer_normal_external",
+ "registered": "docs/osf_breast_diagnosis.md H3",
+ "label": "breast cancer vs normal, trained on GSE42568, applied once to GSE10810, each dataset standardised on its own",
+ "cohort": "GSE10810 breast cancer (external check)",
+ "n": 58,
+ "positives": 31,
+ "train_n": 121,
+ "external": true,
+ "geo": {
+  "accession": "GSE10810",
+  "title": "Gene expression signatures in breast cancer distinguish phenotype charact., histological subtypes, and tumor invasivness",
+  "contact_institute": "Hospital Universitario San Cecilio",
+  "contact_city": "Granada",
+  "contact_country": "Spain",
+  "pubmed_id": "20029976",
+  "platform": [
+   "GPL570"
+  ]
+ },
+ "summary": {
+  "proj": {
+   "auc": 0.7909199522102749,
+   "auc_ci": [
+    0.6511350059737157,
+    0.9056451612903225
+   ],
+   "sensitivity": 1.0,
+   "specificity": 0.4074074074074074,
+   "ppv": 0.6595744680851063,
+   "npv": 1.0
+  },
+  "fid": {
+   "auc": 0.7586618876941458,
+   "auc_ci": [
+    0.6152628434886499,
+    0.8853046594982079
+   ],
+   "sensitivity": 1.0,
+   "specificity": 0.37037037037037035,
+   "ppv": 0.6458333333333334,
+   "npv": 1.0
+  },
+  "rbf": {
+   "auc": 0.8697729988052569,
+   "auc_ci": [
+    0.7706093189964158,
+    0.946236559139785
+   ],
+   "sensitivity": 1.0,
+   "specificity": 0.4074074074074074,
+   "ppv": 0.6595744680851063,
+   "npv": 1.0
+  },
+  "logistic": {
+   "auc": 0.909199522102748,
+   "auc_ci": [
+    0.8290621266427718,
+    0.970131421744325
+   ],
+   "sensitivity": 1.0,
+   "specificity": 0.3333333333333333,
+   "ppv": 0.6326530612244898,
+   "npv": 1.0
+  },
+  "random_forest": {
+   "auc": 0.8805256869772999,
+   "auc_ci": [
+    0.7741935483870968,
+    0.962962962962963
+   ],
+   "sensitivity": 1.0,
+   "specificity": 0.07407407407407407,
+   "ppv": 0.5535714285714286,
+   "npv": 1.0
+  },
+  "gradient_boosting": {
+   "auc": 0.7956989247311828,
+   "auc_ci": [
+    0.6762246117084827,
+    0.9020310633213859
+   ],
+   "sensitivity": 1.0,
+   "specificity": 0.25925925925925924,
+   "ppv": 0.6078431372549019,
+   "npv": 1.0
+  }
+ },
+ "biology": [
+  {
+   "pathway": "MYC",
+   "diff_train": 0.03902731334841636,
+   "diff_external": 0.07108457586618888,
+   "same_direction": true
+  },
+  {
+   "pathway": "E2F",
+   "diff_train": 0.17290955316742107,
+   "diff_external": 0.19482037037037037,
+   "same_direction": true
+  },
+  {
+   "pathway": "G2M",
+   "diff_train": 0.1697619626696829,
+   "diff_external": 0.17072821983273592,
+   "same_direction": true
+  },
+  {
+   "pathway": "mTORC1",
+   "diff_train": 0.02726429864253399,
+   "diff_external": 0.09612951015531673,
+   "same_direction": true
+  },
+  {
+   "pathway": "UPR",
+   "diff_train": 0.035422205882352675,
+   "diff_external": 0.11449150537634417,
+   "same_direction": true
+  },
+  {
+   "pathway": "OXPHOS",
+   "diff_train": -0.06344657805429854,
+   "diff_external": -0.018543643966547063,
+   "same_direction": true
+  },
+  {
+   "pathway": "p53",
+   "diff_train": 0.008949253393664924,
+   "diff_external": -0.020915292712066935,
+   "same_direction": false
+  },
+  {
+   "pathway": "DNA repair",
+   "diff_train": 0.03140311651583694,
+   "diff_external": 0.10206891278375144,
+   "same_direction": true
+  },
+  {
+   "pathway": "Hypoxia",
+   "diff_train": -0.041199734162895685,
+   "diff_external": -0.06599962962962969,
+   "same_direction": true
+  },
+  {
+   "pathway": "EMT",
+   "diff_train": -0.016379089366515887,
+   "diff_external": -0.05779842293906806,
+   "same_direction": true
+  },
+  {
+   "pathway": "TNF-α",
+   "diff_train": -0.05054698529411772,
+   "diff_external": -0.09023715651135011,
+   "same_direction": true
+  },
+  {
+   "pathway": "Inflammation",
+   "diff_train": -0.0052802828054299145,
+   "diff_external": -0.010066332138590206,
+   "same_direction": true
+  }
+ ],
+ "biology_agree": 11
+}
