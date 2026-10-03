@@ -1,7 +1,7 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="docs/logo-dark.png"/>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.png"/>
   <img src="docs/logo.png" alt="SANKET: Quantum Intelligence for Cancer Prevention" width="380"/>
 </picture>
 
