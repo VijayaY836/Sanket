@@ -343,7 +343,17 @@ export function Story({ cohort, model, pair, stats, onOpenCase, onEvidence }: St
             </li>
           ))}
         </ol>
-        <div className="story-hint" style={{ opacity: prog < 0.03 ? 1 : 0 }}>Scroll to follow one {terms.sample} through SANKET</div>
+        {/* Scroll cue: the full invitation on arrival, then a compact chapter counter; click to move one chapter on. */}
+        {chap < CHAPTERS.length - 1 && (
+          <button className={`story-hint${prog < 0.03 ? " story-hint-full" : ""}`}
+            onClick={() => { const el = section.current; if (!el) return; const total = el.offsetHeight - window.innerHeight; window.scrollTo({ top: el.offsetTop + total * ((chap + 1 + 0.55) / CHAPTERS.length), behavior: "smooth" }); }}
+            aria-label={`Scroll down: chapter ${chap + 2} of ${CHAPTERS.length}`}>
+            <span className="scroll-mouse" aria-hidden="true" />
+            {prog < 0.03
+              ? <span>Scroll to follow one {terms.sample} through SANKET <span className="story-hint-count">{CHAPTERS.length} short chapters</span></span>
+              : <span>Chapter {chap + 1} of {CHAPTERS.length}, keep scrolling</span>}
+          </button>
+        )}
         <div className="story-bar"><span style={{ transform: `scaleX(${prog})` }} /></div>
       </div>
     </section>
