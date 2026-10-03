@@ -15,7 +15,7 @@ The video runs 3:00 in ten scenes: a 12-second title, 2 minutes 34 seconds of th
 | 5 | 1:08 – 1:45 | App: Patient case | It predicts when a precancer may turn malignant |
 | 6 | 1:45 – 1:58 | App: Constellation | The quantum part is real and biology-shaped |
 | 7 | 1:58 – 2:16 | App: Hardware | It ran on a real IBM quantum computer |
-| 8 | 2:16 – 2:32 | App: sidebar switch to Breast cancer, then Detect | One platform, three cancers; detection for oral and breast (2,573 samples) |
+| 8 | 2:16 – 2:32 | App: sidebar switch to Breast cancer, then Detect | One platform, two cancers plus a leukaemia benchmark (2,573 samples) |
 | 9 | 2:32 – 2:46 | App: Evidence | We test honestly |
 | 10 | 2:46 – 3:00 | PPT slide 5, then slide 6 (QR) | Impact for India, and where to verify |
 
@@ -101,7 +101,7 @@ Each scene lists what is on screen, what your hands do, and the exact words. The
 
 > We ran all eighty-six patients on IBM's 156-qubit Heron processor, ibm\_fez. Each circuit needs only forty-nine two-qubit gates, and the hardware results agree with exact simulation at zero point nine eight: about five times fewer gates than the standard quantum feature map.
 
-### Scene 8 · One pipeline, three cancers (2:16 – 2:32)
+### Scene 8 · One pipeline, two cancers (2:16 – 2:32)
 
 **Show:** the sidebar's **Oral cancer / Breast cancer** switch, the Overview hero in breast cancer mode ("Same diagnosis. Two different futures."), then the Detect page's breast cancer numbers.
 
@@ -111,7 +111,7 @@ Each scene lists what is on screen, what your hands do, and the exact words. The
 2. Hold on the breast cancer Overview hero for one sentence.
 3. Click Detect so the breast cancer hero numbers (0.98, 89%, 94%) are on screen as you say "zero point nine eight".
 
-> The same pipeline, changed only by a config file, detects breast cancer in tissue at an AUC of zero point nine eight, predicts five-year relapse for 1,975 breast cancer patients, and tells two leukaemia types apart: 2,573 real samples across three cancers.
+> The same pipeline, changed only by a config file, detects breast cancer in tissue at an AUC of zero point nine eight, predicts five-year relapse for 1,975 breast cancer patients, and passes a leukaemia benchmark: 2,573 real samples from seven cohorts.
 
 ### Scene 9 · Honest evidence (2:32 – 2:46)
 
