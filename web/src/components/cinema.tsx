@@ -203,8 +203,10 @@ export function SplitArt() {
 }
 
 /** Three groups of tissue samples (normal, dysplasia, cancer) drifting apart. */
-export function TissueArt() {
-  const groups: [string, number, number, number][] = [["#4fd1c5", 92, 150, 0], ["#e9b44c", 160, 92, 1], ["#ff7a9f", 228, 158, 2]];
+export function TissueArt({ twoClass = false }: { twoClass?: boolean }) {
+  const groups: [string, number, number, number][] = twoClass
+    ? [["#4fd1c5", 104, 132, 0], ["#ff7a9f", 216, 132, 2]]
+    : [["#4fd1c5", 92, 150, 0], ["#e9b44c", 160, 92, 1], ["#ff7a9f", 228, 158, 2]];
   return (
     <svg viewBox="0 0 320 260" className="cine-svg">
       <Defs />
@@ -214,9 +216,14 @@ export function TissueArt() {
           {Array.from({ length: g === 1 ? 9 : 22 }, (_, i) => { const a = i * 2.39996 + g, r = 4 + 5.2 * Math.sqrt(i); return <circle key={i} cx={gx + Math.cos(a) * r} cy={gy + Math.sin(a) * r} r={3.3} fill={c} opacity={0.88} />; })}
         </g>
       ))}
-      <text x={92} y={212} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">normal</text>
-      <text x={160} y={44} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">dysplasia</text>
-      <text x={228} y={220} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">cancer</text>
+      {twoClass ? <>
+        <text x={104} y={194} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">normal</text>
+        <text x={216} y={194} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">cancer</text>
+      </> : <>
+        <text x={92} y={212} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">normal</text>
+        <text x={160} y={44} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">dysplasia</text>
+        <text x={228} y={220} fill="rgba(238,235,250,.6)" fontSize={12} textAnchor="middle">cancer</text>
+      </>}
     </svg>
   );
 }

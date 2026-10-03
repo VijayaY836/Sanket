@@ -174,7 +174,7 @@ export default function Evidence() {
         <div className="panel">
           <div className="h2">What each kernel sees</div>
           <p className="small muted" style={{ marginTop: 0 }}>Patient-by-patient similarity, sorted by predicted risk. Block structure means risk-similar patients look alike to the model.</p>
-          {large ? <p className="small muted">Kernel heatmaps are omitted in the browser for 1,975 patients because rendering the full matrices would block the page. The full heatmaps are available from the engine results.</p> : (
+          {large ? <p className="small muted">Kernel heatmaps are omitted in the browser for {model.n.toLocaleString()} patients because rendering the full matrices would block the page. The full heatmaps are available from the engine results.</p> : (
             <div className="row" style={{ alignItems: "flex-start" }}>
               <Heatmap K={model.K.proj} order={order} size={210} label="Projected quantum kernel" themeKey={theme} />
               <Heatmap K={model.K.rbf} order={order} size={210} label="Classical RBF kernel" themeKey={theme} />
@@ -187,10 +187,11 @@ export default function Evidence() {
 }
 
 function LargeCohortNotice() {
+  const { model } = useApp();
   return (
     <section className="panel">
       <div className="h2">Clinical usefulness</div>
-      <p className="small muted" style={{ marginBottom: 0 }}>Calibration, Brier scores and decision curves for this 1,975-patient cohort are computed by the registered Python analysis so the browser stays responsive. Run <code>python -m engine.clinical --cohort out/metabric_cohort.json --repeats 1</code> and load the resulting report from the engine output.</p>
+      <p className="small muted" style={{ marginBottom: 0 }}>Calibration, Brier scores and decision curves for this {model.n.toLocaleString()}-patient cohort are computed by the registered Python analysis so the browser stays responsive. Run <code>python -m engine.clinical --cohort out/metabric_cohort.json --repeats 1</code> and load the resulting report from the engine output.</p>
     </section>
   );
 }

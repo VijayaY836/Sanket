@@ -38,6 +38,8 @@ export interface Cohort {
   measuredJob?: Record<string, string>;
   /** Encoding used for the recorded hardware run (written by engine/hardware_run.py). */
   featureMap?: { reps: number; beta: number; scale: number };
+  /** Set when this cohort is a random sample of a larger one (the app's breast cancer view: 300 of METABRIC's 1,975). */
+  sampleOf?: number;
   /** Optional wording overrides; see outcomeTerms. */
   terms?: Partial<Omit<CohortTerms, "hook">> & { hook?: Partial<CohortTerms["hook"]> };
 }

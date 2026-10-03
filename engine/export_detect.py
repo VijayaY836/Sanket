@@ -108,6 +108,9 @@ def main():
                                   "models": {m: {k: r4(v.get(k)) for k in ("auc", "sensitivity", "specificity", "auc_ci")} for m, v in be["summary"].items()},
                                   "agree": be["biology_agree"],
                                   "opposite": [b["pathway"] for b in be["biology"] if not b["same_direction"]]}
+        breast["samples"] = [{"id": p["id"], "d": SHORT[p["diagnosis"]], "z": [round(v, 3) for v in p["pathways"]]}
+                             for p in bc["patients"] if p["diagnosis"] in ("cancer", "normal")]
+        breast["edges"] = bc["edges"]; breast["platform"] = g.get("platform")
         out["breast"] = breast
     path = ROOT / "web/src/data/oral_detect.json"
     path.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")

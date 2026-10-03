@@ -4,6 +4,7 @@ import { predictPatient, verdict } from "../lib/analysis";
 import { CountUp } from "../components/tissue";
 import { Story } from "../components/story";
 import { outcomeTerms } from "../lib/cohort";
+import { TwoCancers } from "../components/cancer";
 
 export default function Overview() {
   const { model, go, setSel, nested, nestedProgress, cohort, large } = useApp();
@@ -36,6 +37,8 @@ export default function Overview() {
           hwKernel: hwBest?.kernel_agreement,
         }}
         onOpenCase={() => { setSel(pair[0].i); go("case"); }} onEvidence={() => go("evidence")} />
+
+      <TwoCancers />
 
       <section className="panel-flat" style={{ padding: "16px 20px" }}>
         <div className="row" style={{ gap: 10 }}>

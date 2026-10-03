@@ -5,6 +5,8 @@ import { mulberry32 } from "../lib/rng";
 import { Bars, BlochSphere } from "../components/viz";
 import { Chapter, PageHero, Reveal, TissueArt } from "../components/cinema";
 import { IUpload } from "../icons";
+import { Swatch } from "../components/cancer";
+import { CANCER_NAME } from "../store";
 import detect from "../data/oral_detect.json";
 import hallmark from "../data/hallmark12.json";
 import { parseExpression, ssgseaScores } from "../lib/ssgsea";
@@ -45,12 +47,16 @@ const EXT = (detect.external as unknown as { corrected?: { models: Record<string
 type BreastData = {
   accession: string; institute: string; city: string; country: string; n: number; positives: number; primaryP: number; repeats?: number;
   models: Record<string, { auc: number; auc_sd: number; sensitivity: number; specificity: number }>;
-  screening?: ModelSet;
+  screening?: ModelSet; samples?: Sample[]; edges?: [number, number][];
   external?: { accession: string; institute: string; city: string; country: string; n: number; positives: number; agree: number; opposite: string[];
                models: Record<string, Metrics & { auc_ci: [number, number] }> };
 };
 /** Breast detection (docs/osf_breast_diagnosis.md): cancer vs normal on GSE42568, screening cut-off, independent check. */
 const BREAST = (detect as unknown as { breast?: BreastData }).breast ?? null;
+const BUNDLED_BREAST: DxData | null = BREAST?.samples ? {
+  name: `${BREAST.accession} breast tissue`, source: `${BREAST.institute}, ${BREAST.country}`, bundled: true,
+  samples: BREAST.samples, edges: BREAST.edges ?? (detect.edges as [number, number][]), pathways: detect.pathways,
+} : null;
 const TARGET = (detect as unknown as { screeningTarget?: number | null }).screeningTarget ?? 0.9;
 
 const BUNDLED: DxData = {
@@ -183,8 +189,11 @@ function neighbourVote(row: number[], samples: Sample[], self = -1) {
 }
 
 export default function Detect() {
-  const { go } = useApp();
-  const [data, setData] = useState<DxData>(BUNDLED);
+  const { go, cancer, chooseCancer, pending } = useApp();
+  const organ: "oral" | "breast" = cancer === "breast" && BUNDLED_BREAST ? "breast" : "oral";
+  const home = organ === "breast" ? BUNDLED_BREAST! : BUNDLED;
+  const [data, setData] = useState<DxData>(home);
+  useEffect(() => { setData(home); setErr(null); }, [home]); // the cancer switch brings its own tissue samples
   const [err, setErr] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const space = useQuantumSpace(data);
@@ -245,9 +254,17 @@ export default function Detect() {
 
   return (
     <div className="grid">
-      <PageHero kicker="Detect · Oral tissue" title={<>Normal, dysplasia or <em>cancer</em>?</>}
-        lede="Before predicting whether a precancer will progress, SANKET can read the tissue itself. The same 12 pathways and the same quantum circuit, tested the same honest way."
-        stats={data.bundled ? [
+      <PageHero kicker={organ === "breast" ? "Detect · Breast cancer" : "Detect · Oral cancer"}
+        title={organ === "breast" ? <>Normal breast tissue, or <em>cancer</em>?</> : <>Normal, dysplasia or <em>cancer</em>?</>}
+        lede={organ === "breast"
+          ? "Before predicting whether breast cancer will relapse, SANKET can read the tissue itself. The same 12 pathways and the same quantum circuit as for oral cancer, tested the same honest way."
+          : "Before predicting whether a precancer will progress, SANKET can read the tissue itself. The same 12 pathways and the same quantum circuit, tested the same honest way."}
+        stats={data.bundled && organ === "breast" && BREAST ? [
+          { value: BREAST.models.proj.auc.toFixed(2), label: "AUC, breast cancer vs normal tissue (quantum kernel)" },
+          { value: BREAST.screening ? pct(BREAST.screening.proj.sensitivity) : "Tie", label: BREAST.screening ? "of breast cancers caught at the screening cut-off" : "quantum vs classical, as registered" },
+          { value: BREAST.screening ? pct(BREAST.screening.proj.specificity) : BREAST.n, label: BREAST.screening ? "of normal breast tissue cleared at the same cut-off" : "tissue samples" },
+          { value: BREAST.external ? BREAST.external.models.proj.auc.toFixed(2) : BREAST.n, label: BREAST.external ? "AUC on an independent cohort in Granada, Spain" : `tissue samples, ${BREAST.accession}` },
+        ] : data.bundled ? [
           { value: T.oral_cancer_normal.models.proj.auc.toFixed(2), label: "AUC, cancer vs normal (quantum kernel)" },
           { value: T.oral_dysplasia_normal.models.proj.auc.toFixed(2), label: "AUC, dysplasia vs normal (quantum kernel)" },
           { value: SCR ? pct(SCR.oral_dysplasia_normal.proj.sensitivity) : "Tie", label: SCR ? "of dysplasias caught at the screening cut-off" : "quantum vs classical on both, as registered in advance" },
@@ -256,19 +273,21 @@ export default function Detect() {
           { value: S.length, label: "samples in your dataset" },
           ...shown.map((d) => ({ value: counts[d], label: d === "u" ? "unlabelled, to estimate" : NAME[d].toLowerCase() })),
         ]}
-        art={<TissueArt />} />
+        art={<TissueArt twoClass={organ === "breast"} />} />
 
       <Reveal className="panel-flat" style={{ padding: "16px 20px" }}>
         <div className="row" style={{ gap: 10 }}>
           <b className="small">The whole path</b>
-          {[["Detect", "Is this tissue normal, dysplasia or cancer?", true], ["Predict", "For a precancer: will it become cancer, and when?", false], ["Explain and refer", "Which pathways drive it, and when to hand over to a specialist", false]].map(([t, d, on], i, arr) => (
+          {(organ === "breast"
+            ? [["Detect", "Is this breast tissue normal or cancer?", true], ["Predict", "After diagnosis: will it relapse, and when?", false], ["Explain and refer", "Which pathways drive it, and when to plan closer follow-up", false]]
+            : [["Detect", "Is this tissue normal, dysplasia or cancer?", true], ["Predict", "For a precancer: will it become cancer, and when?", false], ["Explain and refer", "Which pathways drive it, and when to hand over to a specialist", false]]).map(([t, d, on], i, arr) => (
             <span key={t as string} className="row" style={{ gap: 10 }}>
               <span className={`chip ${on ? "chip-violet" : "chip-grey"}`} style={{ whiteSpace: "normal" }} title={d as string}><b>{t}</b>&nbsp;· {d}</span>
               {i < arr.length - 1 && <span className="muted">→</span>}
             </span>
           ))}
           <span className="spacer" />
-          <button className="btn" onClick={() => go("case")}>Open a progression case →</button>
+          <button className="btn" onClick={() => go("case")}>{organ === "breast" ? "Open a breast cancer relapse case" : "Open an oral precancer case"}</button>
         </div>
         <div className="tiny muted" style={{ marginTop: 6 }}>Decision support alongside the pathologist, never a replacement for reading the biopsy. Research prototype, not for clinical use.</div>
       </Reveal>
@@ -283,7 +302,7 @@ export default function Detect() {
           <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,.json,text/csv,text/tab-separated-values,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) load(f); e.target.value = ""; }} />
           <button className="btn" disabled={!!busy} onClick={() => fileRef.current?.click()}><IUpload /> Upload gene activity or scores</button>
           {data.genes && <button className="btn btn-ghost" onClick={downloadScores}>Download pathway scores</button>}
-          {!data.bundled && <button className="btn btn-ghost" onClick={() => { setData(BUNDLED); setErr(null); }}>Back to {detect.source.accession}</button>}
+          {!data.bundled && <button className="btn btn-ghost" onClick={() => { setData(home); setErr(null); }}>Back to {home.name}</button>}
         </div>
         {busy && <div className="small" style={{ marginTop: 8 }}>{busy}</div>}
         {data.genes && (
@@ -411,6 +430,8 @@ export default function Detect() {
 
       {data.bundled ? (
         <>
+          {organ === "oral" && (
+            <>
           <Chapter n={4} title="Tested honestly" lede="Registered before any model was run (docs/osf_oral_diagnosis.md). Repeated stratified 5-fold cross-validation, 10 repeats, equal tuning budgets." />
           <Reveal className="panel">
             <div className="scroll-x">
@@ -519,9 +540,22 @@ export default function Detect() {
             {!EXT && <p className="small" style={{ marginBottom: 0 }}>Every model either called almost everything cancer or almost everything normal. The most likely cause is the platform change, but with only {detect.external.n - detect.external.positives} normals nothing firmer can be said. <b>This is why SANKET's roadmap needs Indian training data from a clinical partner</b>, rather than a model trained abroad.</p>}
           </Reveal>
 
-          {BREAST && (
+            </>
+          )}
+          {organ === "oral" && BREAST && (
+          <Reveal className={`panel detect-teaser cancer-breast`}>
+            <Swatch cancer="breast" size={44} />
+            <div>
+              <div className="h2">{CANCER_NAME.breast}: the same detection on breast tissue</div>
+              <p className="small" style={{ margin: 0 }}>{BREAST ? `AUC ${BREAST.models.proj.auc.toFixed(2)} for breast cancer vs normal tissue, checked on an independent cohort in Granada, Spain.` : "Registered breast tissue analysis."}</p>
+            </div>
+            <span className="spacer" />
+            <button className="btn" disabled={pending?.cancer === "breast"} onClick={() => chooseCancer("breast")}>{pending?.cancer === "breast" ? "Loading…" : "Show breast cancer"}</button>
+          </Reveal>
+          )}
+          {organ === "breast" && BREAST && (
             <Reveal className="panel">
-              <div className="row"><div className="h2">The same detection on breast tissue</div><span className="spacer" /><span className="chip chip-grey">Registered before it was run</span></div>
+              <div className="row"><div className="h2">Breast cancer detection, tested honestly</div><span className="spacer" /><span className="chip chip-grey">Registered before it was run</span></div>
               <p className="small" style={{ marginTop: 0 }}>Breast cancer is India's most common cancer. METABRIC, used for relapse prediction, holds tumours only, so detection uses {BREAST.accession} ({BREAST.institute}, {BREAST.country}): {BREAST.positives} breast cancers and {BREAST.n - BREAST.positives} normal breast tissues, scored on the same 12 pathways with the same quantum circuit and the same {BREAST.repeats ?? 10}-repeat cross-validation (plan: docs/osf_breast_diagnosis.md).</p>
               <div className="scroll-x">
                 <table className="table">
@@ -544,6 +578,17 @@ export default function Detect() {
                 {BREAST.external && <p className="small" style={{ margin: 0 }}><b>Independent check on {BREAST.external.accession}</b> ({BREAST.external.institute}, {BREAST.external.city}, {BREAST.external.country}; {BREAST.external.positives} cancers, {BREAST.external.n - BREAST.external.positives} normals), applied once: the ranking transfers for every model, and cancer moves the same way in both datasets for {BREAST.external.agree} of 12 pathways{BREAST.external.opposite.length ? ` (not ${BREAST.external.opposite.join(", ")})` : ""}. The quantum kernels transfer worst here (AUC {BREAST.external.models.proj.auc.toFixed(2)} against {BREAST.external.models.logistic.auc.toFixed(2)} for logistic regression), and as in the oral Indian check every model catches every cancer but clears only a minority of normals: <b>the ranking carries across labs, the cut-off needs local calibration.</b></p>}
               </div>
             </Reveal>
+          )}
+          {organ === "breast" && (
+          <Reveal className={`panel detect-teaser cancer-oral`}>
+            <Swatch cancer="oral" size={44} />
+            <div>
+              <div className="h2">{CANCER_NAME.oral}: detection with a precancer stage</div>
+              <p className="small" style={{ margin: 0 }}>Oral cancer detection also separates dysplasia, the precancer, from normal tissue, and was checked on Indian patients from Tata Memorial Centre.</p>
+            </div>
+            <span className="spacer" />
+            <button className="btn" disabled={pending?.cancer === "oral"} onClick={() => chooseCancer("oral")}>{pending?.cancer === "oral" ? "Loading…" : "Show oral cancer"}</button>
+          </Reveal>
           )}
         </>
       ) : (

@@ -69,10 +69,10 @@ Oral cancer is the flagship story: it has the precancer stage SANKET is built ar
 |---|---|---|---|
 | **Detect from tissue** | ✓ Normal / dysplasia / cancer: AUC 0.98 cancer vs normal, 0.95 dysplasia vs normal; screening cut-off catches 87% of dysplasias (GSE30784, 229) | ✓ Cancer vs normal: AUC 0.98; screening cut-off 89% sensitivity, 94% specificity (GSE42568, 121) | Subtype only: AML vs ALL (Golub, 72), used as a calibration task |
 | **Predict the future** | ✓ Precancer → cancer: whether and when (GSE26549, 86 with follow-up) | ✓ 5-year relapse (METABRIC, 1,975); pathways add value to the clinical NPI (C-index 0.639 → 0.662) | – |
-| **Independent check** | ✓ Tata Memorial Centre, India (GSE23558): AUC 0.90 after correcting a scaling error | ✓ Granada, Spain (GSE10810): AUC 0.79–0.91 across models | – |
+| **Independent check** | ✓ Tata Memorial Centre, India (GSE23558): AUC 0.90 after correcting a scaling error | ✓ Granada, Spain (GSE10810): AUC 0.76–0.91 across models | – |
 | **IBM quantum hardware** | ✓ All 86 patients on `ibm_fez`, agreement 0.98 | ✓ Pilot: 8 patients on `ibm_fez`, agreement 0.99 | – |
 | **Quantum vs classical** | Tie on every task | Tie within datasets; quantum transfers worst to Spain | Classical ahead |
-| **In the app** | Detect page (live map, upload), patient case files, constellation, hardware | Detect page results; METABRIC cohort loads on the Data page (patient cases, evidence) | Readiness Check sample data |
+| **In the app** | Every page: Detect (live tissue map, upload), patient case files, constellation, evidence, hardware | Every page, one click on the sidebar switch: Detect (live tissue map), relapse case files (300 of 1,975 METABRIC patients), constellation, evidence, hardware | Readiness Check sample data |
 
 Across both cancers the pattern is the same: detection works within a dataset, the ranking carries across labs and countries, and the cut-off needs local calibration, which is why SANKET's roadmap trains on Indian data with a clinical partner.
 
@@ -575,7 +575,7 @@ npm install
 npm run dev              # open the printed localhost link
 ```
 
-The app opens on a clearly labelled synthetic cohort. Load the real cohorts from the **Data** page: `out/cohort.json` (oral precancer, with the IBM hardware run) or `out/metabric_cohort.json` (breast cancer). `npm run build:single` produces one self-contained HTML file for offline demos.
+The app opens on real oral cancer patients (GSE26549, with the IBM hardware run). The **Oral cancer / Breast cancer** switch at the top of the sidebar swaps every page to breast cancer: a random, relapse-balanced 300 of METABRIC's 1,975 patients, including the 8 run on IBM hardware, so quantum kernels build in seconds in the browser (`python -m engine.export_app_cohorts` rebuilds both bundles). A synthetic cohort, or any cohort file from the engine, loads from the **Data** page. `npm run build:single` produces one self-contained HTML file for offline demos.
 
 ### Set up the engine
 
