@@ -34,6 +34,16 @@ interface DxData {
   genes?: { n: number; coverage: { key: string; found: number; size: number }[] }; // set when scored here from gene activity
 }
 
+type Metrics = { auc: number; sensitivity: number; specificity: number; ppv: number | null; npv: number | null };
+type ModelSet = Record<string, Metrics>;
+/** Declared amendments (docs/osf_oral_diagnosis.md): A2 screening cut-off, A3 class weighting, A1 corrected external check. */
+const SCR = (Object.values(detect.tasks)[0] as unknown as { screening?: ModelSet }).screening
+  ? (Object.fromEntries(Object.entries(detect.tasks).map(([k, t]) => [k, (t as unknown as { screening: ModelSet }).screening])) as Record<string, ModelSet>)
+  : null;
+const BAL = (detect.tasks.oral_cancer_dysplasia as unknown as { balanced?: ModelSet }).balanced ?? null;
+const EXT = (detect.external as unknown as { corrected?: { models: Record<string, Metrics & { auc_ci: [number, number] }>; biology: { pathway: string; train: number; external: number; same: boolean }[]; agree: number } }).corrected ?? null;
+const TARGET = (detect as unknown as { screeningTarget?: number | null }).screeningTarget ?? 0.9;
+
 const BUNDLED: DxData = {
   name: `${detect.source.accession} oral tissue`, source: `${detect.source.institute}, ${detect.source.country}`, bundled: true,
   samples: detect.samples as Sample[], edges: detect.edges as [number, number][], pathways: detect.pathways,
@@ -231,8 +241,8 @@ export default function Detect() {
         stats={data.bundled ? [
           { value: T.oral_cancer_normal.models.proj.auc.toFixed(2), label: "AUC, cancer vs normal (quantum kernel)" },
           { value: T.oral_dysplasia_normal.models.proj.auc.toFixed(2), label: "AUC, dysplasia vs normal (quantum kernel)" },
-          { value: "Tie", label: "quantum vs classical on both, as registered in advance" },
-          { value: S.length, label: `tissue samples, ${detect.source.accession}` },
+          { value: SCR ? pct(SCR.oral_dysplasia_normal.proj.sensitivity) : "Tie", label: SCR ? "of dysplasias caught at the screening cut-off" : "quantum vs classical on both, as registered in advance" },
+          { value: EXT ? EXT.models.proj.auc.toFixed(2) : S.length, label: EXT ? "AUC on an independent Indian cohort" : `tissue samples, ${detect.source.accession}` },
         ] : [
           { value: S.length, label: "samples in your dataset" },
           ...shown.map((d) => ({ value: counts[d], label: d === "u" ? "unlabelled, to estimate" : NAME[d].toLowerCase() })),
@@ -384,7 +394,7 @@ export default function Detect() {
                   </div>
                 </>
               ) : <p className="small muted">Simulating…</p>}
-              <div className="tier tier-intermediate" style={{ marginTop: 10 }}><b>Read this before using pasted scores</b>Scores must be on this dataset's scale: ssGSEA pathway scores standardised with this dataset's means, from the same array type. A sample from another platform or scored on its own will land in the wrong place; the independent check below shows how badly models transfer across platforms. Illustrative only, never a diagnosis.</div>
+              <div className="tier tier-intermediate" style={{ marginTop: 10 }}><b>Read this before using pasted scores</b>Scores must be on this dataset's scale: ssGSEA pathway scores standardised with this dataset's means, from the same array type. A sample from another platform or another dataset's scale will land in the wrong place; the independent check below shows how much the scale matters. Illustrative only, never a diagnosis.</div>
             </div>
           </div>
         ) : <p className="small muted" style={{ margin: 0 }}>Click <b>Start from {s.id}</b> to copy the selected sample's scores into sliders, then move them: for example raise inflammation and EMT in a normal sample and watch its neighbours change.</p>}
@@ -418,14 +428,75 @@ export default function Detect() {
             </div>
             <div className="grid" style={{ gap: 6, marginTop: 10 }}>
               <p className="small" style={{ margin: 0 }}><b>Cancer vs normal</b> works as a ranking and as a yes/no call, for every model. It checks that the pipeline works; nobody expected quantum to win it.</p>
-              <p className="small" style={{ margin: 0 }}><b>Dysplasia vs normal</b> ranks well (AUC {T.oral_dysplasia_normal.models.proj.auc.toFixed(2)}), but at the default threshold the quantum model catches only {pct(T.oral_dysplasia_normal.models.proj.sensitivity)} of dysplasias. A screening threshold set for sensitivity would be needed, and is planned as a declared amendment.</p>
-              <p className="small" style={{ margin: 0 }}><b>Cancer vs dysplasia</b> is not usable yet: with {T.oral_cancer_dysplasia.positives} cancers against {T.oral_cancer_dysplasia.n - T.oral_cancer_dysplasia.positives} dysplasias, every model labels nearly all dysplasias as cancer (quantum specificity {pct(T.oral_cancer_dysplasia.models.proj.specificity)}).</p>
+              <p className="small" style={{ margin: 0 }}><b>Dysplasia vs normal</b> ranks well (AUC {T.oral_dysplasia_normal.models.proj.auc.toFixed(2)}), but at the default threshold the quantum model catches only {pct(T.oral_dysplasia_normal.models.proj.sensitivity)} of dysplasias.{SCR ? <> With the declared screening cut-off it catches <b>{pct(SCR.oral_dysplasia_normal.proj.sensitivity)}</b> and still clears {pct(SCR.oral_dysplasia_normal.proj.specificity)} of normal tissue (below).</> : " A screening threshold set for sensitivity is planned as a declared amendment."}</p>
+              <p className="small" style={{ margin: 0 }}><b>Cancer vs dysplasia</b> is the hard boundary: with {T.oral_cancer_dysplasia.positives} cancers against {T.oral_cancer_dysplasia.n - T.oral_cancer_dysplasia.positives} dysplasias, every model labels nearly all dysplasias as cancer at the default settings (quantum specificity {pct(T.oral_cancer_dysplasia.models.proj.specificity)}).{BAL ? <> Weighting the two classes equally lifts the kernel models to AUC {BAL.proj.auc.toFixed(2)} (exploratory, below).</> : ""}</p>
             </div>
           </Reveal>
 
+          {SCR && (
+            <Reveal className="panel">
+              <div className="row"><div className="h2">Declared amendments</div><span className="spacer" /><span className="chip chip-grey">Written before they were run</span></div>
+              <p className="small" style={{ marginTop: 0 }}><b>A2 · Screening cut-off.</b> In screening, missing a precancer is worse than a false alarm. Within each training fold the cut-off is set to catch at least {pct(TARGET)} of positives on the training samples, then applied unchanged to the held-out fold; the same rule as SANKET's progression referral. Same folds as above.</p>
+              <div className="scroll-x">
+                <table className="table">
+                  <thead><tr><th>Task</th><th>Model</th><th>Sensitivity</th><th>Specificity</th><th>NPV</th><th>PPV</th></tr></thead>
+                  <tbody>
+                    {(Object.keys(T) as (keyof typeof T)[]).flatMap((key) => (["proj", "rbf"] as const).map((m, j) => {
+                      const v = SCR[key][m];
+                      return (
+                        <tr key={key + m}>
+                          <td>{j === 0 ? <b>{T[key].label}</b> : ""}</td><td>{MODEL_NAME[m] ?? m}</td>
+                          <td>{pct(v.sensitivity)}</td><td>{pct(v.specificity)}</td><td>{v.npv == null ? "–" : pct(v.npv)}</td><td>{v.ppv == null ? "–" : pct(v.ppv)}</td>
+                        </tr>
+                      );
+                    }))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="grid" style={{ gap: 6, marginTop: 10 }}>
+                <p className="small" style={{ margin: 0 }}><b>Dysplasia vs normal becomes usable for screening:</b> {pct(SCR.oral_dysplasia_normal.proj.sensitivity)} of dysplasias caught (was {pct(T.oral_dysplasia_normal.models.proj.sensitivity)}), and a "normal" result is right {pct(SCR.oral_dysplasia_normal.proj.npv ?? 0)} of the time.</p>
+                <p className="small" style={{ margin: 0 }}><b>Cancer vs normal</b> already caught {pct(T.oral_cancer_normal.models.proj.sensitivity)} of cancers at the default cut-off, so the rule moves the other way (fewer false alarms, {pct(SCR.oral_cancer_normal.proj.sensitivity)} caught). For screening the default stays the better operating point on this task.</p>
+                <p className="small" style={{ margin: 0 }}><b>Cancer vs dysplasia</b> clears {pct(SCR.oral_cancer_dysplasia.proj.specificity)} of dysplasias instead of {pct(T.oral_cancer_dysplasia.models.proj.specificity)}, but its NPV stays low: still not usable.</p>
+              </div>
+              {BAL && (
+                <>
+                  <p className="small" style={{ marginBottom: 6 }}><b>A3 · Class weighting, cancer vs dysplasia (exploratory).</b> The same task with both classes weighted equally, default cut-off, same folds.</p>
+                  <div className="scroll-x">
+                    <table className="table">
+                      <thead><tr><th>Model</th><th>AUC (registered)</th><th>AUC (weighted)</th><th>Sensitivity</th><th>Specificity</th></tr></thead>
+                      <tbody>
+                        {Object.entries(BAL).map(([m, v]) => (
+                          <tr key={m}><td>{MODEL_NAME[m] ?? m}</td><td>{(T.oral_cancer_dysplasia.models as Record<string, { auc: number }>)[m].auc.toFixed(3)}</td><td><b>{v.auc.toFixed(3)}</b></td><td>{pct(v.sensitivity)}</td><td>{pct(v.specificity)}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="small" style={{ marginBottom: 0 }}>The kernel models, quantum and classical, gain the most and now lead (projected {BAL.proj.auc.toFixed(3)}, RBF {BAL.rbf.auc.toFixed(3)}): a tie, not a quantum win. With {T.oral_cancer_dysplasia.n - T.oral_cancer_dysplasia.positives} dysplasias, about three per test fold, this is a promising signal, not a claim.</p>
+                </>
+              )}
+            </Reveal>
+          )}
+
           <Reveal className="panel">
-            <div className="row"><div className="h2">Independent check: an Indian cohort</div><span className="spacer" /><span className="chip chip-amber">Did not transfer</span></div>
+            <div className="row"><div className="h2">Independent check: an Indian cohort</div><span className="spacer" /><span className={`chip ${EXT ? "chip-teal" : "chip-amber"}`}>{EXT ? "Ranking transfers after correction" : "Did not transfer"}</span></div>
             <p className="small" style={{ marginTop: 0 }}>The cancer-vs-normal models, trained on {detect.source.accession} ({detect.source.institute}, {detect.source.country}), were applied once, unchanged, to {detect.external.accession} from {detect.external.institute?.split(",").slice(-1)[0]?.trim() || detect.external.institute}, {detect.external.city}, {detect.external.country}: {detect.external.positives} cancers and {detect.external.n - detect.external.positives} normals on a different microarray platform ({(detect.external.platform ?? []).join(", ")} vs {detect.source.platform.join(", ")}).</p>
+            {EXT && (
+              <>
+                <p className="small"><b>What went wrong first, and the fix (Amendment A1).</b> The registered check failed: every model called almost everything cancer or almost everything normal. The cause was a scaling error, not biology. gseapy's normalised enrichment score is rescaled across each whole dataset, so the two datasets' scores were on different scales and could not be mapped with the training means. With each dataset standardised on its own (label-free), the ranking transfers. This correction was found after the registered result, so it is reported as a post-hoc correction and the original stays below.</p>
+                <div className="scroll-x">
+                  <table className="table">
+                    <thead><tr><th>Model</th><th>AUC (95% CI, descriptive)</th><th>Sensitivity (cancers)</th><th>Specificity (normals)</th></tr></thead>
+                    <tbody>
+                      {Object.entries(EXT.models).map(([k, v]) => (
+                        <tr key={k}><td>{MODEL_NAME[k] ?? k}</td><td><b>{v.auc.toFixed(2)}</b> <span className="tiny muted">({v.auc_ci[0].toFixed(2)}–{v.auc_ci[1].toFixed(2)})</span></td><td>{pct(v.sensitivity)}</td><td>{pct(v.specificity)}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="small">The biology agrees across the two countries: cancer moves in the same direction as in {detect.source.accession} for <b>{EXT.agree} of 12 pathways</b>{EXT.biology.filter((b) => !b.same).length ? ` (the exception: ${EXT.biology.filter((b) => !b.same).map((b) => b.pathway).join(", ")})` : ""}. The default cut-off still clears only a few of the {detect.external.n - detect.external.positives} Indian normals, so the ranking transfers but the calibration does not. <b>Calibrating it needs Indian training data from a clinical partner</b>, which is the next step in SANKET's roadmap.</p>
+                <p className="tiny muted" style={{ marginBottom: 6 }}>Registered check (scores on mismatched scales), kept for the record:</p>
+              </>
+            )}
             <div className="scroll-x">
               <table className="table">
                 <thead><tr><th>Model</th><th>Sensitivity (cancers)</th><th>Specificity (normals)</th><th>AUC (descriptive)</th></tr></thead>
@@ -436,7 +507,7 @@ export default function Detect() {
                 </tbody>
               </table>
             </div>
-            <p className="small" style={{ marginBottom: 0 }}>Every model either called almost everything cancer or almost everything normal. The most likely cause is the platform change, but with only {detect.external.n - detect.external.positives} normals nothing firmer can be said. <b>This is why SANKET's roadmap needs Indian training data from a clinical partner</b>, rather than a model trained abroad.</p>
+            {!EXT && <p className="small" style={{ marginBottom: 0 }}>Every model either called almost everything cancer or almost everything normal. The most likely cause is the platform change, but with only {detect.external.n - detect.external.positives} normals nothing firmer can be said. <b>This is why SANKET's roadmap needs Indian training data from a clinical partner</b>, rather than a model trained abroad.</p>}
           </Reveal>
         </>
       ) : (

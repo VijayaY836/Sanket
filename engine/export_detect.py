@@ -1,7 +1,8 @@
 """Bundle the oral diagnosis cohort and its registered results for the app's Detect page.
 
 Reads out/oral_dx_cohort.json, out/oral_dx_external_cohort.json and out/results_classify_oral_*.json (built by
-engine.oral_diagnosis and engine.classify) and writes a compact web/src/data/oral_detect.json.
+engine.oral_diagnosis and engine.classify), plus the declared amendments out/results_amend_a*.json when present (built by
+engine.oral_amendments), and writes a compact web/src/data/oral_detect.json.
 
 Also writes web/src/data/hallmark12.json: the member genes of the 12 Hallmark pathways in config.yaml, which the app
 uses to score uploaded gene-activity files in the browser exactly as engine.pathways does.
@@ -55,6 +56,19 @@ def main():
         tasks[key] = {"label": label, "n": r["n"], "positives": r["positives"], "repeats": r["cv"]["repeats"],
                       "models": {m: {k: round(v[k], 4) for k in keep if k in v} for m, v in r["summary"].items()},
                       "primaryP": round(prim["p"], 4)}
+    r4 = lambda v: round(v, 4) if isinstance(v, float) else ([round(x, 3) for x in v] if isinstance(v, list) else v)
+    metric_keys = ("auc", "sensitivity", "specificity", "ppv", "npv")
+    if (OUT / "results_amend_a2_screening.json").exists():          # Amendment A2: screening threshold
+        a2 = load("results_amend_a2_screening.json")
+        for key, r in a2["tasks"].items():
+            if key in tasks:
+                tasks[key]["screening"] = {m: {k: r4(v.get(k)) for k in metric_keys} for m, v in r["summary"].items()}
+        target = a2.get("target_sensitivity")
+    else:
+        target = None
+    if (OUT / "results_amend_a3_balanced.json").exists():           # Amendment A3: class weighting, cancer vs dysplasia
+        a3 = load("results_amend_a3_balanced.json")
+        tasks["oral_cancer_dysplasia"]["balanced"] = {m: {k: r4(v.get(k)) for k in metric_keys} for m, v in a3["summary"].items()}
     ext = load("results_classify_oral_cancer_normal_external.json")
     geo = ext.get("geo") or {}
     out = {
@@ -67,7 +81,15 @@ def main():
                      "country": geo.get("contact_country"), "platform": geo.get("platform"), "n": ext["n"], "positives": ext["positives"],
                      "models": {m: {k: (round(v[k], 4) if isinstance(v[k], float) else v[k]) for k in ("auc", "sensitivity", "specificity", "auc_ci") if k in v}
                                 for m, v in ext["summary"].items()}},
+        "screeningTarget": target,
     }
+    if (OUT / "results_amend_a1_external.json").exists():           # Amendment A1: corrected external check
+        a1 = load("results_amend_a1_external.json")
+        out["external"]["corrected"] = {
+            "models": {m: {k: r4(v.get(k)) for k in ("auc", "sensitivity", "specificity", "auc_ci")} for m, v in a1["summary"].items()},
+            "biology": [{"pathway": b["pathway"], "train": round(b["diff_train"], 3), "external": round(b["diff_external"], 3),
+                         "same": b["same_direction"]} for b in a1["biology"]],
+            "agree": a1["biology_agree"]}
     path = ROOT / "web/src/data/oral_detect.json"
     path.write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
     print(f"wrote {path} ({path.stat().st_size // 1024} KB, {len(out['samples'])} samples)")
