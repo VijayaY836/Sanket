@@ -18,7 +18,7 @@
 [![Status](https://img.shields.io/badge/status-research%20prototype-a86e0a)](#limitations-and-intended-use)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2b7a3d)](LICENSE)
 [![Live demo](https://img.shields.io/badge/live%20demo-sanket--sepia.vercel.app-13807e)](https://sanket-sepia.vercel.app/)
-[![Demo video](https://img.shields.io/badge/demo%20video-YouTube-c4302b?logo=youtube&logoColor=white)](https://youtu.be/ciEIn5Lqo3E)
+[![Demo video](https://img.shields.io/badge/demo%20video-YouTube-c4302b?logo=youtube&logoColor=white)](https://youtu.be/EwtZm_rv8bg?si=4zvAWLIy-9MmiJxW)
 [![Technical report](https://img.shields.io/badge/technical%20report-PDF-1f3864)](docs/SANKET_technical_report.pdf)
 
 **Team Yukthi6G** (Team ID 165798) · BVRIT Hyderabad College of Engineering for Women
@@ -44,7 +44,7 @@
 
 <img src="docs/screenshots/overview.jpg" alt="SANKET overview: a scroll-driven story that follows one biopsy from 20,000 genes to a quantum risk estimate" width="900"/>
 
-**Live demo:** https://sanket-sepia.vercel.app/ · **Demo video:** https://youtu.be/ciEIn5Lqo3E
+**Live demo:** https://sanket-sepia.vercel.app/ · **Demo video:** https://youtu.be/EwtZm_rv8bg?si=4zvAWLIy-9MmiJxW
 
 </div>
 
