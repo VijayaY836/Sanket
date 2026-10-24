@@ -24,7 +24,7 @@
 **Team Yukthi6G** (Team ID 165798) · BVRIT Hyderabad College of Engineering for Women
 
 **[Live demo](https://sanket-sepia.vercel.app/)** ·
-**[Demo video](https://youtu.be/ciEIn5Lqo3E)** ·
+**[Demo video](https://youtu.be/EwtZm_rv8bg?si=4zvAWLIy-9MmiJxW)** ·
 [At a glance](#at-a-glance) ·
 [Overview](#overview) ·
 [Key results](#key-results) ·
